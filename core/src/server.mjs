@@ -91,5 +91,5 @@ export async function startServer({ port = 0, host = '127.0.0.1', token = loadOr
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });
   const actual = server.address().port;
   allowedHosts = new Set([`127.0.0.1:${actual}`, `localhost:${actual}`, `[::1]:${actual}`]);
-  return { server, port: actual, url: `http://127.0.0.1:${actual}/#token=${token}`, launch, close: async () => { clearInterval(workerTimer); clearInterval(maintTimer); clearTimeout(maintFirst); const { stopWorker } = await import('./api.mjs'); await stopWorker(); await new Promise(r => server.close(r)); db.close(); } };
+  return { server, db, maintain: async () => { await maintenancePass(db, { actor: 'user', force: true }); kickWorker(db); }, port: actual, url: `http://127.0.0.1:${actual}/#token=${token}`, launch, close: async () => { clearInterval(workerTimer); clearInterval(maintTimer); clearTimeout(maintFirst); const { stopWorker } = await import('./api.mjs'); await stopWorker(); await new Promise(r => server.close(r)); db.close(); } };
 }
