@@ -1,6 +1,6 @@
 import { h, relTime, fmtDate, fmtInt, fill } from '../lib/dom.js';
 import { icon, brandMark } from '../lib/icons.js';
-import { api, btn, status, badge, panel, pageHead, empty, notice, kv, table, toast, meter, when, segmented } from '../lib/ui.js';
+import { api, btn, status, badge, panel, pageHead, empty, notice, kv, table, toast, meter, when, segmented, pager } from '../lib/ui.js';
 import { go, params, applyTheme, currentTheme, applyMotion, currentMotion } from '../app.js';
 import { withProgress } from '../lib/opmodal.js';
 
@@ -42,6 +42,10 @@ export async function jobs() {
 
 export async function audit() {
   const [log, approvals, txs] = await Promise.all([api('auditLog', { limit: 500 }), api('approvals'), api('transactions')]);
+  let auditPage = 0;
+  const actWrap = h('div');
+  const drawAct = () => fill(actWrap, panel({ title: 'Activity', meta: `${log.entries.length} most recent`, flush: true }, table([{ label: '#', num: true, cell: e => e.id }, { label: 'When', cell: e => when(e.ts) }, { label: 'Actor', cell: e => e.actor }, { label: 'Action', cell: e => h('span', { class: 'mono' }, e.action) }, { label: 'Target', cell: e => h('span', { class: 'mono' }, e.target || '—') }, { label: 'Hash', cell: e => h('span', { class: 'mono muted' }, e.hash.slice(0, 12)) }], log.entries.slice(auditPage * 50, (auditPage + 1) * 50))), pager(log.entries.length, auditPage, 50, n => { auditPage = n; drawAct(); }, { noun: 'entries' }));
+  drawAct();
   return h('div', { class: 'page' },
     pageHead({ eyebrow: 'System', title: 'Audit', sub: 'Append-only log with a SHA-256 hash chain: changing a past entry breaks the chain.' }),
     h('section', { class: `panel bridge-hero ${log.chain.ok ? 'ok' : 'bad'}` }, h('div', { class: 'panel-body bh-status' }, h('span', { class: `result-ic ${log.chain.ok ? 'good' : 'bad'}` }, icon(log.chain.ok ? 'lock' : 'alert', 'lg')),
@@ -49,7 +53,7 @@ export async function audit() {
     h('div', { class: 'stack-lg reveal' },
       panel({ title: 'Approvals', flush: true }, table([{ label: 'Action', cell: a => h('span', { class: 'mono' }, a.action) }, { label: 'Risk', cell: a => badge(a.risk_class, 'warn') }, { label: 'Decision', cell: a => status(a.decision) }, { label: 'Actor', cell: a => a.actor }, { label: 'Policy', cell: a => a.policy_version }, { label: 'When', cell: a => when(a.created_at) }], approvals, { emptyText: 'No approvals recorded.' })),
       panel({ title: 'Transactions', flush: true }, table([{ label: 'ID', cell: t => h('span', { class: 'mono' }, t.id) }, { label: 'Status', cell: t => status(t.status) }, { label: 'Manifest', cell: t => h('details', null, h('summary', { class: 'muted' }, 'ver'), h('pre', null, JSON.stringify(t.manifest, null, 2))) }], txs, { emptyText: 'No transactions.' })),
-      panel({ title: 'Activity', meta: `${log.entries.length} most recent`, flush: true }, table([{ label: '#', num: true, cell: e => e.id }, { label: 'When', cell: e => when(e.ts) }, { label: 'Actor', cell: e => e.actor }, { label: 'Action', cell: e => h('span', { class: 'mono' }, e.action) }, { label: 'Target', cell: e => h('span', { class: 'mono' }, e.target || '—') }, { label: 'Hash', cell: e => h('span', { class: 'mono muted' }, e.hash.slice(0, 12)) }], log.entries))));
+      actWrap));
 }
 
 export async function settings() {

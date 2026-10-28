@@ -56,8 +56,25 @@ function constellation(map, agents) {
     ...groups);
 }
 
+// Three plain doors into the app, then what arrived lately from any agent or account.
+function startHere(inv) {
+  const items = inv.places.flatMap(p => p.groups.flatMap(g => g.items.filter(it => it.added_at).map(it => ({ it, p }))))
+    .sort((a, b) => b.it.added_at.localeCompare(a.it.added_at)).slice(0, 5);
+  const door = (ic, title, text, to) => { const b = h('button', { type: 'button', class: 'door' }, h('span', { class: 'ic' }, icon(ic)), h('strong', null, title), h('span', null, text), h('span', { class: 'go' }, icon('chevron', 'sm'))); b.addEventListener('click', () => go(to)); return b; };
+  const total = inv.places.reduce((n, p) => n + p.count, 0);
+  return h('section', { class: 'start' },
+    h('div', { class: 'doors' },
+      door('check', 'See what I have', `${total} things across your agents, your claude.ai account and this computer.`, 'library?tab=installed&place='),
+      door('download', 'Get something new', 'Browse the catalogue and install in one click, with progress.', 'library?tab=catalogue'),
+      door('map', 'What can my agents do?', 'Capabilities in plain words, and the one step that adds each missing one.', 'capabilities')),
+    items.length ? h('div', { class: 'recent-box' },
+      h('div', { class: 'sec' }, h('h2', null, 'Recently added'), h('span', { class: 'end' }, btn('See all', () => go('library?tab=installed&place=recent'), { kind: 'ghost', size: 'sm', iconName: 'arrow' }))),
+      h('ul', { class: 'plain-list' }, items.map(({ it, p }) => h('li', null, icon(p.kind === 'account' ? 'cloud' : p.kind === 'computer' ? 'device' : 'agent', 'sm'),
+        h('div', { class: 'grow' }, h('div', null, it.name), h('div', { class: 't2' }, `${p.label} · ${relTime(it.added_at)}`)))))) : null);
+}
+
 export async function home() {
-  const [map, dev, maint, pol, cands, lib] = await Promise.all([api('capabilityMap'), api('device'), api('maintenance'), api('policy'), api('candidatesAll', { limit: 200 }).catch(() => []), api('library')]);
+  const [map, dev, maint, pol, cands, lib, inv] = await Promise.all([api('capabilityMap'), api('device'), api('maintenance'), api('policy'), api('candidatesAll', { limit: 200 }).catch(() => []), api('library'), api('installed').catch(() => ({ places: [] }))]);
   const agents = dev.scan?.agents || [];
   const presentAgents = agents.filter(a => a.present);
   const here = lib.filter(r => ['installed', 'configured', 'account'].includes(r.state));
@@ -90,6 +107,7 @@ export async function home() {
         stmt('bolt', 'n', 'Mode ', h('b', null, MODE[pol.consent.mode] || pol.consent.mode), last ? `: last maintenance ${relTime(last.at)}, ${last.queued} task(s) done on its own${last.suggestions ? `, ${last.suggestions} waiting for permission` : ''}.` : ': automatic maintenance hasn\'t run yet.',
           ' ', h('a', { href: '#/automation', class: 'link' }, 'Adjust'))),
       h('figure', { style: { margin: 0 } }, constellation(map, agents), h('figcaption', { class: 'legend-inline' }, h('span', null, h('i', { style: { background: 'var(--presence)' } }), 'available'), h('span', null, h('i', { style: { background: 'var(--one-step)', opacity: '.6' } }), 'one step away'), h('span', null, h('i', { style: { background: 'var(--surface-4)' } }), 'not yet available')))),
+    startHere(inv),
     h('div', { class: 'cols-home' },
       h('section', null,
         h('div', { class: 'sec' }, h('h2', null, 'Next steps'), h('span', { class: 'meta' }, 'what adds the most to your agents'), h('span', { class: 'end' }, btn('All capabilities', () => go('capabilities'), { kind: 'ghost', size: 'sm', iconName: 'arrow' }))),

@@ -8,6 +8,9 @@ import { OS, run, which } from './platform.mjs';
 import { claudeHome, claudeJsonPath } from './paths.mjs';
 import { findClaudeBinary } from './env.mjs';
 
+// When something landed on disk: creation time where the file system keeps it, else last change.
+export const addedAt = p => { try { const st = fs.statSync(p); return (st.birthtimeMs > 0 ? st.birthtime : st.mtime).toISOString(); } catch { return null; } };
+
 const HOME = os.homedir();
 const APPDATA = process.env.APPDATA || path.join(HOME, 'AppData', 'Roaming');
 const appSupport = name => (OS === 'macos' ? path.join(HOME, 'Library', 'Application Support', name) : OS === 'windows' ? path.join(APPDATA, name) : path.join(process.env.XDG_CONFIG_HOME || path.join(HOME, '.config'), name));
@@ -32,7 +35,7 @@ function skillsIn(dir, scope) {
     try { text = fs.readFileSync(md, 'utf8').slice(0, 4000); } catch {}
     const marker = readJson(path.join(dir, e.name, '.curi-managed.json'));
     const fm = frontmatter(text);
-    out.push({ name: e.name, title: fm.name || e.name, description: fm.description, path: path.join(dir, e.name), scope, managed_by: marker ? 'curi' : 'external', repo: marker?.repo || null, commit: marker?.commit || null });
+    out.push({ name: e.name, title: fm.name || e.name, description: fm.description, path: path.join(dir, e.name), added_at: addedAt(path.join(dir, e.name)), scope, managed_by: marker ? 'curi' : 'external', repo: marker?.repo || null, commit: marker?.commit || null });
   }
   return out;
 }
@@ -71,7 +74,8 @@ async function claudeCode() {
   let plugins = [], pluginsError = null;
   if (bin) {
     const t = await run(bin, ['plugin', 'list', '--json'], 30000);
-    try { plugins = JSON.parse(t).map(p => ({ id: p.id, name: String(p.id).split('@')[0], marketplace: String(p.id).split('@')[1] || null, version: p.version || null, scope: p.scope, enabled: Boolean(p.enabled), managed_by: p.scope === 'synced' ? 'account' : 'local' })); }
+    const when = readJson(path.join(claudeHome(), 'plugins', 'installed_plugins.json'))?.plugins || {};
+    try { plugins = JSON.parse(t).map(p => ({ added_at: p.installedAt || [].concat(when[p.id] || []).find(x => x.scope === p.scope)?.installedAt || [].concat(when[p.id] || [])[0]?.installedAt || null, id: p.id, name: String(p.id).split('@')[0], marketplace: String(p.id).split('@')[1] || null, version: p.version || null, scope: p.scope, enabled: Boolean(p.enabled), managed_by: p.scope === 'synced' ? 'account' : 'local' })); }
     catch { pluginsError = 'Claude Code didn\'t return the plugin list.'; }
   }
   return { id: 'claude-code', label: 'Claude Code', present: Boolean(bin) || exists(claudeHome()), binary: bin, config: claudeJsonPath(), writable: Boolean(bin), mcp, skills, plugins, notes: pluginsError ? [pluginsError] : [], manage: { kind: 'cli', how: 'CURI installs, enables and removes through Claude Code itself (claude mcp / claude plugin).' } };
@@ -87,7 +91,7 @@ function claudeDesktop() {
   try {
     for (const a of fs.readdirSync(sp)) for (const b of fs.readdirSync(path.join(sp, a))) {
       const m = readJson(path.join(sp, a, b, 'manifest.json'));
-      for (const s of m?.skills || []) account.push({ name: s.name, description: (s.description || '').slice(0, 240), enabled: s.enabled !== false, origin: s.creatorType === 'user' ? 'Added by you' : s.creatorType === 'anthropic' ? 'Anthropic' : (s.creatorType || null), updated_at: s.updatedAt || null, scope: 'account', managed_by: 'account' });
+      for (const s of m?.skills || []) account.push({ name: s.name, description: (s.description || '').slice(0, 240), enabled: s.enabled !== false, origin: s.creatorType === 'user' ? 'Added by you' : s.creatorType === 'anthropic' ? 'Anthropic' : (s.creatorType || null), updated_at: s.updatedAt || null, added_at: s.createdAt || s.updatedAt || null, scope: 'account', managed_by: 'account' });
     }
   } catch {}
   const seen = new Set();

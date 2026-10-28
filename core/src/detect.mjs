@@ -17,6 +17,7 @@ import { profile } from './profile.mjs';
 const DETECTION_OWNED = ['CATALOGUED', 'NEEDS_VERIFICATION', 'ON_DEMAND', 'INSTALLED', 'CONFIGURED'];
 export const LOCAL_TYPES = new Set(['bin', 'app', 'brew', 'cask', 'pip', 'npm', 'uv', 'pipx', 'cargo', 'winget', 'scoop', 'flatpak', 'skill', 'dir', 'env']);
 const GENERIC = new Set(['cli', 'app', 'run', 'server', 'mcp', 'main', 'test', 'dev', 'start', 'build', 'index', 'tool', 'tools', 'agent', 'skills', 'review', 'code-review', 'debug', 'docs', 'help', 'setup', 'init', 'install', 'python', 'node', 'git', 'time', 'fetch', 'memory', 'search', 'browser', 'design', 'frontend-design', 'testing', 'security']);
+const slug = x => String(x).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 export const detectors = () => JSON.parse(fs.readFileSync(path.join(CORE_ROOT, 'data', 'detectors.json'), 'utf8')).resources;
 
 // Same name is not enough for skills: the description must also agree when both are known.
@@ -36,7 +37,7 @@ function buildIndex(db, ctx) {
   const det = detectors();
   const rows = db.prepare('SELECT * FROM resources').all();
   const idx = new Map();
-  const claims = { bin: new Map(), skill: new Map(), plugin: new Map() };
+  const claims = { bin: new Map(), skill: new Map(), plugin: new Map(), self: new Map() };
   const descs = new Map();
   const claim = (kind, key, id, desc) => { if (!key || key.length < 3 || GENERIC.has(key)) return; const s = claims[kind].get(key) || new Set(); s.add(id); claims[kind].set(key, s); if (desc) descs.set(`${kind}:${key}`, desc); };
   for (const r of rows) {
@@ -66,10 +67,12 @@ function buildIndex(db, ctx) {
     if (f?.plugin?.name) claim('plugin', f.plugin.name, r.id);
     for (const s of (f?.skills || []).filter(s => !s.internal)) claim('skill', s.name, r.id, s.description);
     idx.set(r.id, { r, sig, kind: p.kind });
+    // A skill named exactly like the project itself (repo or resource name) is that project.
+    for (const n of new Set([r.gh_full_name?.split('/')[1], r.name].filter(Boolean).map(slug))) claim('self', n, r.id);
   }
   // A name only identifies a resource when exactly one resource claims it.
   const unique = kind => new Map([...claims[kind]].filter(([, s]) => s.size === 1).map(([k, s]) => [k, [...s][0]]));
-  return { idx, bins: unique('bin'), skills: unique('skill'), plugins: unique('plugin'), descs };
+  return { idx, bins: unique('bin'), skills: unique('skill'), plugins: unique('plugin'), selves: unique('self'), descs };
 }
 
 export async function scanSystem(db, { onStage = () => {}, cancelled = () => false } = {}) {
@@ -79,9 +82,16 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
   const managers = await packageManagers();
   const ctx = { managers, runtimes: deviceContext(db).runtimes };
   onStage('Preparing catalogue matching', 0.08);
-  const { idx, bins: binClaims, skills: skillClaims, plugins: pluginClaims, descs } = buildIndex(db, ctx);
+  const { idx, bins: binClaims, skills: skillClaims, plugins: pluginClaims, selves, descs } = buildIndex(db, ctx);
   // Account skills need positive description evidence; local skill folders may lack a description.
-  const skillId = (s, strict = false) => { const id = skillClaims.get(s.name); if (!id) return null; const sim = similar(s.description, descs.get(`skill:${s.name}`)); return (sim === null && !strict) || sim >= 0.3 ? id : null; };
+  const skillId = (s, strict = false) => {
+    const repo = String(s.description || '').match(/github\.com\/([A-Za-z0-9-]+\/[A-Za-z0-9._-]+)/)?.[1]?.replace(/\.git$/, '').toLowerCase();
+    const byLink = repo && [...idx.values()].find(x => x.r.gh_full_name?.toLowerCase() === repo)?.r.id;
+    if (byLink) return byLink;
+    const id = skillClaims.get(s.name);
+    if (id) { const sim = similar(s.description, descs.get(`skill:${s.name}`)); if ((sim === null && !strict) || sim >= 0.3) return id; }
+    return selves.get(slug(s.name)) || null;
+  };
 
   onStage('Looking for command-line tools', 0.12);
   const probeBins = new Set([...idx.values()].flatMap(x => x.sig.probes.filter(p => p.bin).map(p => p.bin)));
@@ -211,9 +221,9 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
     agents: agents.map(a => ({ id: a.id, label: a.label, present: a.present, config: a.config, writable: a.writable, manage: a.manage, notes: a.notes,
       counts: { mcp: a.mcp.length, skills: a.skills.length, plugins: a.plugins.length, account_skills: (a.account_skills || []).length },
       mcp: a.mcp.map(m => ({ ...m, matched: claimedMcp.has(`${a.id}:${m.name}`) })),
-      skills: a.skills.map(s => ({ name: s.name, description: s.description, scope: s.scope, managed_by: s.managed_by, repo: s.repo, matched: claimedSkill.has(`${a.id}:${s.name}`) })),
+      skills: a.skills.map(s => ({ name: s.name, description: s.description, added_at: s.added_at || null, scope: s.scope, managed_by: s.managed_by, repo: s.repo, matched: claimedSkill.has(`${a.id}:${s.name}`) })),
       plugins: a.plugins.map(p => ({ ...p, matched: claimedPlugin.has(p.id) })),
-      account_skills: (a.account_skills || []).map(s => ({ name: s.name, description: s.description, enabled: s.enabled, origin: s.origin, matched: claimedSkill.has(`${a.id}:${s.name}`) })) })),
+      account_skills: (a.account_skills || []).map(s => ({ name: s.name, description: s.description, enabled: s.enabled, origin: s.origin, added_at: s.added_at || null, matched: claimedSkill.has(`${a.id}:${s.name}`) })) })),
     matched: results.map(m => ({ ...m, name: idx.get(m.id)?.r.name || m.id, kind: idx.get(m.id)?.kind })),
     sources: { executables_checked: probeBins.size, executables_found: bins.size, apps: apps.size, packages: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, v.size])), pip_packages: pip.pkgs.size, pythons: pip.pythons, agents: agents.filter(a => a.present).length },
     not_in_catalog: { apps: [...apps.keys()].filter(a => !claimedApp.has(a) && !knownApps.has(a)).sort(), npm_global: [...(lists.npm?.keys() || [])].filter(n => ![...idx.values()].some(x => x.sig.pkgs.npm.has(n))) },

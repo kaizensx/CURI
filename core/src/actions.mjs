@@ -106,8 +106,8 @@ export function resourceView(db, id) {
   }
   const ready = actions.install.filter(a => !a.disabled && !a.shared);
   // Primary: what most people want next for this kind in this state.
-  if (pres.state === 'account' && ready.length) actions.primary = ready.find(a => a.op.kind !== 'skill.install') || null;
-  else if (!pres.state) actions.primary = ready.find(a => a.op.kind === 'plugin.install') || ready.find(a => a.op.kind === 'mcp.add') || ready.find(a => a.op.kind === 'package.install') || (ready.length === 1 ? ready[0] : null);
+  // Already here (on this computer, in an agent or in the claude.ai account): never pushed as an install.
+  if (!pres.state) actions.primary = ready.find(a => a.op.kind === 'plugin.install') || ready.find(a => a.op.kind === 'mcp.add') || ready.find(a => a.op.kind === 'package.install') || (ready.length === 1 ? ready[0] : null);
   else if (pres.state === 'configured' && ready.some(a => a.op.kind === 'package.install')) actions.primary = null;
   actions.docs.push(open('Documentation', prof.docs));
   if (r.gh_full_name) actions.docs.push(open('Repository', `https://github.com/${r.gh_full_name}`));

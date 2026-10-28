@@ -514,3 +514,55 @@ button.dv-li { cursor: pointer; } @media (hover: hover) { button.dv-li:hover { b
 .dv-li .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-4); }
 .dv-li .dot.good { background: var(--presence); box-shadow: 0 0 0 3px var(--presence-wash); }
 @media (max-width: 1100px) { .dv-hero { grid-template-columns: 1fr; } .dv-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dv-cols { grid-template-columns: 1fr; } }
+
+/* ---------- Pagination ---------- */
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 2px 4px; flex-wrap: wrap; }
+.pg-info { font-size: 12px; color: var(--ink-3); }
+.pg-nums { display: inline-flex; align-items: center; gap: 2px; }
+.pg-n { min-width: 30px; height: 30px; padding: 0 8px; border: 0; border-radius: 8px; background: none; color: var(--ink-2); font: 550 12.5px/1 inherit; font-variant-numeric: tabular-nums; cursor: pointer; transition: background var(--d-fast) ease; }
+@media (hover: hover) { .pg-n:hover { background: var(--surface-2); color: var(--ink-1); } }
+.pg-n[aria-current="page"] { background: var(--surface-4); color: var(--ink-1); box-shadow: var(--highlight); }
+.pg-gap { color: var(--ink-4); padding: 0 4px; }
+.pg-prev svg { transform: rotate(180deg); }
+.inv-side-head { margin: 10px 10px 4px; }
+.inv-place.recent .pi { color: var(--signal); background: var(--signal-wash); }
+.inv-where .when { color: var(--ink-3); }
+
+/* ---------- Back / forward and where you are ---------- */
+.pagebar { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 var(--s8); background: color-mix(in srgb, var(--bg-0) 78%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); box-shadow: inset 0 -1px 0 var(--hairline); }
+html.native .pagebar { height: var(--titlebar-h); min-height: 40px; }
+main > .pagebar + .page, html:not(.native) main > .pagebar + .page { padding-top: 22px; }
+main > .pagebar:has(+ .page.home) { background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.pagebar .arrows { display: inline-flex; gap: 2px; }
+.nav-arrow { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 7px; background: none; color: var(--ink-2); cursor: pointer; transition: background var(--d-fast) ease, transform 120ms var(--ease-out); }
+.nav-arrow svg { transform: rotate(180deg); }
+.nav-arrow.fwd svg { transform: none; }
+@media (hover: hover) { .nav-arrow:not(:disabled):hover { background: var(--surface-2); color: var(--ink-1); } }
+.nav-arrow:active:not(:disabled) { transform: scale(.94); }
+.nav-arrow:disabled { color: var(--ink-4); cursor: default; }
+.crumbs { display: flex; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 12.5px; color: var(--ink-3); min-width: 0; }
+.crumbs li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crumbs li + li::before { content: '›'; margin-right: 6px; color: var(--ink-4); }
+.crumbs a { color: var(--ink-2); text-decoration: none; } .crumbs a:hover { color: var(--ink-1); }
+.crumbs [aria-current] { color: var(--ink-1); font-weight: 550; }
+
+/* Sidebar: each place says what it's for, in a few words. */
+.nav a:has(.nav-txt small) { height: auto; min-height: 40px; padding-top: 5px; padding-bottom: 5px; }
+.nav-txt { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.nav-txt small { font-size: 11px; font-weight: 450; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.nav a[aria-current="page"] .nav-txt small { color: var(--ink-2); }
+
+/* Home: three plain doors and what arrived lately */
+.start { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); align-items: start; gap: 16px; margin: 8px 0 28px; }
+.doors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.door { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 16px 16px 18px; border: 0; border-radius: var(--r-lg); background: var(--surface-1); box-shadow: inset 0 0 0 1px var(--hairline); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background var(--d-fast) ease, transform 140ms var(--ease-out); }
+.door:active { transform: scale(.985); }
+@media (hover: hover) { .door:hover { background: var(--surface-2); } .door:hover .go { color: var(--signal); transform: translateX(2px); } }
+.door .ic { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--signal-wash); color: var(--signal); margin-bottom: 4px; }
+.door strong { font-size: 14px; font-weight: 650; }
+.door > span:not(.ic):not(.go) { font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
+.door .go { position: absolute; top: 16px; right: 14px; color: var(--ink-4); transition: color var(--d-fast) ease, transform 160ms var(--ease-out); }
+.recent-box { padding: 4px 16px 10px; border-radius: var(--r-lg); background: var(--surface-1); box-shadow: inset 0 0 0 1px var(--hairline); }
+.recent-box .sec { margin-top: 10px; }
+@media (max-width: 1100px) { .start { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .doors { grid-template-columns: 1fr; } }
