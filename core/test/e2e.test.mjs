@@ -9,7 +9,7 @@ sandbox('e2e', { realClaude: true });
 const { findClaudeBinary, mcpHealth } = await import('../src/env.mjs');
 const bin = findClaudeBinary();
 
-test('T01/T07/T15/T16 real Claude CLI: bootstrap → READY → live MCP health → rollback', { skip: !bin && 'Claude Code CLI não encontrada', timeout: 240000 }, async () => {
+test('T01/T07/T15/T16 real Claude CLI: bootstrap → READY → live MCP health → rollback', { skip: !bin && 'Claude Code CLI not found', timeout: 240000 }, async () => {
   const { openDb } = await import('../src/db.mjs');
   const boot = await import('../src/bootstrap.mjs');
   const db = openDb();
@@ -32,7 +32,7 @@ test('T01/T07/T15/T16 real Claude CLI: bootstrap → READY → live MCP health �
   db.close();
 });
 
-test('S5 approved MCP server (Context7) is registered through the CURI launcher and Claude Code connects to it', { skip: !bin && 'Claude Code CLI não encontrada', timeout: 300000 }, async () => {
+test('S5 approved MCP server (Context7) is registered through the CURI launcher and Claude Code connects to it', { skip: !bin && 'Claude Code CLI not found', timeout: 300000 }, async () => {
   const { openDb } = await import('../src/db.mjs');
   const ops = await import('../src/operations.mjs');
   const policy = await import('../src/policy.mjs');
@@ -43,10 +43,10 @@ test('S5 approved MCP server (Context7) is registered through the CURI launcher 
   ACTIONS.mcpDefine(db, preset);
   policy.grantMode(db, 'maximum');
   const op = await ops.enqueue(db, 'mcp.enable', { name: 'context7' }, { actor: 'agent' });
-  assert.equal(op.status, 'queued', 'editor de confiança + Autonomia Máxima = sem pedido');
+  assert.equal(op.status, 'queued', 'trusted publisher + Maximum autonomy = no prompt');
   const r = await ops.runNext(db);
   const entry = JSON.parse(fs.readFileSync(path.join(process.env.CLAUDE_CONFIG_DIR, '.claude.json'), 'utf8')).mcpServers.context7;
-  assert.deepEqual(entry.args, mcpLauncherSpec('context7').args, 'o Claude arranca o launcher do CURI, não o pacote diretamente');
+  assert.deepEqual(entry.args, mcpLauncherSpec('context7').args, 'Claude starts the CURI launcher, not the package directly');
   assert.equal(r.verification.listed, true);
   assert.equal(r.status, 'verified', JSON.stringify(r.verification));
   await ops.enqueue(db, 'mcp.disable', { name: 'context7' }, { actor: 'user-approved' });

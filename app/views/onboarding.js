@@ -5,12 +5,12 @@ import { go, mount, setPoll } from '../app.js';
 import { modePicker, claudeCard } from './control.js';
 
 const WPS = [
-  ['WP1-preflight', 'Verificar o Mac', 'Sistema, ferramentas, Claude Code e o que já está instalado — só leitura.', 'terminal'],
-  ['WP2-snapshot', 'Cópia de segurança', 'Cópia com checksums das suas configurações Claude antes de qualquer alteração.', 'database'],
-  ['WP3-import', 'Catálogo semente', 'Importar o catálogo inicial para o registo local, sem perder nenhum URL.', 'library'],
-  ['WP4-plan', 'Rever e aprovar', 'Cada alteração ao seu perfil tem a sua própria aprovação.', 'shield'],
-  ['WP5-provision', 'Aplicar', 'Escrever apenas o que aprovou, com transação reversível.', 'bolt'],
-  ['WP6-verify', 'Verificar', 'Testes independentes do estado real — não confia em promessas.', 'check'],
+  ['WP1-preflight', 'Check this device', 'System, tools, Claude Code and what\'s already installed. Read-only.', 'terminal'],
+  ['WP2-snapshot', 'Backup', 'A checksummed copy of your Claude configuration before any change.', 'database'],
+  ['WP3-import', 'Seed catalogue', 'Import the starter catalogue into the local registry, without losing a single URL.', 'library'],
+  ['WP4-plan', 'Review and approve', 'Every change to your profile has its own approval.', 'shield'],
+  ['WP5-provision', 'Apply', 'Write only what you approved, in a reversible transaction.', 'bolt'],
+  ['WP6-verify', 'Verify', 'Independent checks of the real state. No promises taken on trust.', 'check'],
 ];
 
 export async function welcome() {
@@ -20,17 +20,17 @@ export async function welcome() {
     h('section', { class: 'hero' },
       h('div', { class: 'hero-mark', 'aria-hidden': 'true' }, brandMark({ size: 52 })),
       h('div', { class: 'micro' }, 'Claude Universal Resource Intelligence'),
-      h('h1', null, 'A ferramenta certa, no momento certo.'),
-      h('p', null, 'O CURI mantém um registo local e verificável de skills, servidores MCP, bibliotecas e documentação — e dá ao Claude Code uma forma leve de os encontrar, comparar e propor, sem instalar nada às escondidas.'),
+      h('h1', null, 'The right tool, at the right moment.'),
+      h('p', null, 'CURI keeps a local, verifiable registry of skills, MCP servers, libraries and tools. It shows you what your agents already have, installs what\'s missing with one click, and never installs anything behind your back.'),
       h('div', { class: 'row', style: { justifyContent: 'center' } },
-        linkBtn(['READY', 'PARTIAL_READY'].includes(b.state) ? 'Rever configuração' : started ? 'Continuar configuração' : 'Começar configuração', '#/wizard', { kind: 'primary', iconName: 'wizard' }),
-        s.resources ? linkBtn('Explorar em modo só leitura', '#/library', { iconName: 'library' })
-          : btn('Explorar em modo só leitura', async () => { await api('bootstrapAdvance'); toast('A preparar o catálogo local…'); setTimeout(() => go('library'), 1500); }, { iconName: 'library' })),
-      h('div', { class: 'hero-state' }, 'Estado atual ', status(b.state))),
+        linkBtn(['READY', 'PARTIAL_READY'].includes(b.state) ? 'Review setup' : started ? 'Continue setup' : 'Start setup', '#/wizard', { kind: 'primary', iconName: 'wizard' }),
+        s.resources ? linkBtn('Explore in read-only mode', '#/library', { iconName: 'library' })
+          : btn('Explore in read-only mode', async () => { await api('bootstrapAdvance'); toast('Preparing the local catalogue…'); setTimeout(() => go('library'), 1500); }, { iconName: 'library' })),
+      h('div', { class: 'hero-state' }, 'Current state ', status(b.state))),
     h('div', { class: 'grid cols-3 reveal' },
-      pillar('lock', 'Local e privado', 'Base de dados no seu Mac. Sem telemetria. Interface só em 127.0.0.1 com token.'),
-      pillar('shield', 'Nada sem aprovação', 'Exatamente duas alterações possíveis ao perfil Claude, cada uma aprovada à parte e reversível.'),
-      pillar('check', 'Provado, não prometido', 'Só mostra "Pronto" depois de verificações independentes ao estado real.')));
+      pillar('lock', 'Local and private', 'The database lives on your computer. No telemetry. The interface only listens on 127.0.0.1, with a token.'),
+      pillar('shield', 'Nothing without approval', 'Exactly two possible changes to your Claude profile, each approved separately and reversible.'),
+      pillar('check', 'Proven, not promised', 'It only says "Ready" after independent checks of the real state.')));
 }
 const pillar = (ic, t, d) => h('div', { class: 'pillar' }, h('span', { class: 'itile' }, icon(ic)), h('h3', null, t), h('p', null, d));
 
@@ -47,38 +47,38 @@ export async function wizard() {
     const currentIdx = WPS.findIndex(([id]) => !done[id]);
     const terminal = ['READY', 'PARTIAL_READY', 'FAILED', 'CANCELLED'].includes(b.state);
 
-    const stepper = h('ol', { class: 'stepper', 'aria-label': 'Passos da configuração' }, WPS.map(([id, title, desc, ic], i) => {
+    const stepper = h('ol', { class: 'stepper', 'aria-label': 'Setup steps' }, WPS.map(([id, title, desc, ic], i) => {
       const st = done[id] ? 'done' : i === currentIdx && !terminal ? (busy ? 'active' : b.state === 'APPROVAL_REQUIRED' && id === 'WP5-provision' ? 'waiting' : 'next') : 'todo';
       return h('li', { class: `step ${st}`, 'aria-current': st === 'active' || st === 'waiting' ? 'step' : null },
         h('span', { class: 'step-node' }, st === 'done' ? icon('check', 'sm') : st === 'active' ? h('span', { class: 'spin' }) : icon(ic, 'sm')),
-        h('div', null, h('div', { class: 'step-title' }, title), h('div', { class: 'step-desc' }, done[id] ? `Concluído ${relTime(done[id].at)}` : desc)));
+        h('div', null, h('div', { class: 'step-title' }, title), h('div', { class: 'step-desc' }, done[id] ? `Done ${relTime(done[id].at)}` : desc)));
     }));
 
     const controls = h('div', { class: 'row' },
       ['UNINITIALIZED', 'PREFLIGHT', 'ENVIRONMENT_AUDITED', 'PLAN_READY', 'RECOVERING', 'VERIFYING', 'PROVISIONING'].includes(b.state)
-        ? btn(b.state === 'UNINITIALIZED' ? 'Começar' : 'Continuar', async () => { await api('bootstrapAdvance'); setTimeout(render, 300); }, { kind: 'primary', iconName: 'play', disabled: busy }) : null,
-      b.state === 'PAUSED' ? btn('Retomar', async () => { await api('bootstrapResume'); render(); }, { iconName: 'play' })
-        : !terminal ? btn('Pausar', async () => { await api('bootstrapPause'); render(); }, { kind: 'ghost', iconName: 'pause' }) : null,
-      done['WP5-provision'] ? btn('Reverter integração', async () => {
-        if (!await confirmDialog({ title: 'Reverter a integração Claude?', body: 'Remove apenas o que o CURI escreveu (skill e entrada MCP). Alterações feitas por si a esses ficheiros bloqueiam a remoção.', confirm: 'Reverter', danger: true })) return;
-        const r = await api('bootstrapRollback'); toast(`Reversão: ${r.rollback.status}`, r.rollback.status === 'rolled_back' ? 'good' : 'bad'); render();
+        ? btn(b.state === 'UNINITIALIZED' ? 'Start' : 'Continue', async () => { await api('bootstrapAdvance'); setTimeout(render, 300); }, { kind: 'primary', iconName: 'play', disabled: busy }) : null,
+      b.state === 'PAUSED' ? btn('Resume', async () => { await api('bootstrapResume'); render(); }, { iconName: 'play' })
+        : !terminal ? btn('Pause', async () => { await api('bootstrapPause'); render(); }, { kind: 'ghost', iconName: 'pause' }) : null,
+      done['WP5-provision'] ? btn('Revert integration', async () => {
+        if (!await confirmDialog({ title: 'Revert the Claude integration?', body: 'Removes only what CURI wrote (the skill and the MCP entry). Changes you made to those files block the removal.', confirm: 'Revert', danger: true })) return;
+        const r = await api('bootstrapRollback'); toast(`Rollback: ${r.rollback.status}`, r.rollback.status === 'rolled_back' ? 'good' : 'bad'); render();
       }, { kind: 'ghost danger', iconName: 'undo' }) : null,
-      !terminal && b.state !== 'UNINITIALIZED' ? btn('Cancelar', async () => { if (await confirmDialog({ title: 'Cancelar a configuração?', body: 'O progresso fica guardado; pode retomar mais tarde.', confirm: 'Cancelar configuração' })) { await api('bootstrapCancel'); render(); } }, { kind: 'ghost' }) : null);
+      !terminal && b.state !== 'UNINITIALIZED' ? btn('Cancel', async () => { if (await confirmDialog({ title: 'Cancel setup?', body: 'Progress is saved; you can resume later.', confirm: 'Cancel setup' })) { await api('bootstrapCancel'); render(); } }, { kind: 'ghost' }) : null);
 
     const sections = [];
     const pf = b.data?.preflight;
-    if (pf) sections.push(panel({ title: 'O seu Mac', meta: relTime(pf.checked_at) }, kv([
-      ['Sistema', `macOS ${pf.os.macos || pf.os.release} · ${pf.os.arch} · ${pf.disk_free_gb} GB livres`],
-      ['Ferramentas', `Node ${pf.toolchain.node} · ${pf.toolchain.git || 'git ausente'} · Rust ${pf.toolchain.rust ? 'instalado' : 'ausente'}`],
-      ['GitHub', pf.network.github ? status('ok', 'acessível') : status('unreachable')],
-      ['Claude Code', pf.claude.binary ? `${pf.claude.version}${pf.claude.on_path ? '' : ' (embutido na app Claude)'}` : status('fail', 'não encontrado')],
-      ['Ligação Claude', pf.claude.auth?.loggedIn === true ? status('ok', 'ligado') : h('span', null, status('blocked', 'não ligado'), ' ', h('a', { href: '#/connections', class: 'ext' }, 'Ligar Claude'))],
-      ['Já instalado', `${b.data.inventory?.skills?.length ?? 0} skills · ${b.data.inventory?.mcp?.length ?? 0} servidores MCP · CLAUDE.md ${b.data.inventory?.claude_md?.exists ? 'existe (não será tocado)' : 'inexistente'}`]])));
-    if (done['WP2-snapshot']) sections.push(panel({ title: 'Cópia de segurança', meta: `${done['WP2-snapshot'].evidence.files.filter(f => f.existed).length} ficheiros`, flush: true },
-      h('div', { class: 'rows' }, done['WP2-snapshot'].evidence.files.map(f => h('div', { class: 'r' }, icon(f.existed ? 'check' : 'x', 'sm'), h('div', { class: 'grow' }, h('div', { class: 't1 mono' }, f.path), h('div', { class: 't2 mono' }, f.sha256 ? `sha256 ${f.sha256.slice(0, 24)}…` : 'não existia')))))));
-    if (done['WP3-import']) { const e = done['WP3-import'].evidence; sections.push(panel({ title: 'Catálogo' }, h('div', { class: 'flow' },
-      flowStep(fmtInt(e.occurrences), 'ocorrências de URL'), icon('chevron'), flowStep(fmtInt(e.unique_urls), 'URLs originais'), icon('chevron'), flowStep(fmtInt(e.after), 'recursos canónicos')),
-      h('p', { class: 'muted', style: { margin: '12px 0 0' } }, `${e.created} criados agora · ${e.linked} avistamentos ligados · ${e.invalid} inválidos. Todos começam como catalogados, não verificados.`))); }
+    if (pf) sections.push(panel({ title: 'Your computer', meta: relTime(pf.checked_at) }, kv([
+      ['System', `macOS ${pf.os.macos || pf.os.release} · ${pf.os.arch} · ${pf.disk_free_gb} GB livres`],
+      ['Tools', `Node ${pf.toolchain.node} · ${pf.toolchain.git || 'no git'} · Rust ${pf.toolchain.rust ? 'installed' : 'missing'}`],
+      ['GitHub', pf.network.github ? status('ok', 'reachable') : status('unreachable')],
+      ['Claude Code', pf.claude.binary ? `${pf.claude.version}${pf.claude.on_path ? '' : ' (bundled with the Claude app)'}` : status('fail', 'not found')],
+      ['Claude connection', pf.claude.auth?.loggedIn === true ? status('ok', 'connected') : h('span', null, status('blocked', 'not connected'), ' ', h('a', { href: '#/connections', class: 'ext' }, 'Connect Claude'))],
+      ['Already installed', `${b.data.inventory?.skills?.length ?? 0} skills · ${b.data.inventory?.mcp?.length ?? 0} servidores MCP · CLAUDE.md ${b.data.inventory?.claude_md?.exists ? 'exists (won\'t be touched)' : 'inexistente'}`]])));
+    if (done['WP2-snapshot']) sections.push(panel({ title: 'Backup', meta: `${done['WP2-snapshot'].evidence.files.filter(f => f.existed).length} files`, flush: true },
+      h('div', { class: 'rows' }, done['WP2-snapshot'].evidence.files.map(f => h('div', { class: 'r' }, icon(f.existed ? 'check' : 'x', 'sm'), h('div', { class: 'grow' }, h('div', { class: 't1 mono' }, f.path), h('div', { class: 't2 mono' }, f.sha256 ? `sha256 ${f.sha256.slice(0, 24)}…` : 'didn\'t exist')))))));
+    if (done['WP3-import']) { const e = done['WP3-import'].evidence; sections.push(panel({ title: 'Catalogue' }, h('div', { class: 'flow' },
+      flowStep(fmtInt(e.occurrences), 'URL occurrences'), icon('chevron'), flowStep(fmtInt(e.unique_urls), 'URLs originais'), icon('chevron'), flowStep(fmtInt(e.after), 'canonical resources')),
+      h('p', { class: 'muted', style: { margin: '12px 0 0' } }, `${e.created} created now · ${e.linked} sightings linked · ${e.invalid} invalid. All start as catalogued, not verified.`))); }
 
     if (b.state === 'APPROVAL_REQUIRED' && b.data.plan) {
       const p = b.data.plan;
@@ -87,49 +87,49 @@ export async function wizard() {
       const nv = h('input', { type: 'checkbox', role: 'switch', id: 'ap-net' }), cs = h('input', { type: 'checkbox', role: 'switch', id: 'ap-cs' });
       const opt = (input, title, risk, kind, desc, detail) => h('label', { class: 'approval', for: input.id }, h('span', { class: 'switch' }, input, h('span')),
         h('div', { class: 'grow' }, h('div', { class: 'row' }, h('strong', null, title), badge(risk, kind)), h('div', { class: 'muted' }, desc), detail ? h('div', { class: 'mono path' }, detail) : null));
-      sections.unshift(panel({ title: 'Rever e aprovar', meta: 'nada é escrito sem aprovação', cls: 'approvals' },
+      sections.unshift(panel({ title: 'Review and approve', meta: 'nothing is written without approval', cls: 'approvals' },
         h('div', { class: 'stack' },
-          pending.length ? toggles.map(({ a, input }) => opt(input, a.id === 'skill.write' ? 'Instalar a skill curi-resource-router' : a.state === 'update' ? 'Atualizar a entrada MCP "curi"' : 'Registar o servidor MCP "curi"', a.risk, 'warn',
-            a.id === 'skill.write' ? 'Uma skill compacta (≈2 KB) que ensina o Claude a consultar o registo.' : a.exposes || 'Servidor stdio só de leitura; arrancado pelo Claude Code quando precisar.', a.path || a.via)) : notice('info', 'A integração já está aplicada.'),
-          p.conflicts.map(c => notice('bad', `Conflito (${c.action}): ${c.reason}`)),
-          h('div', { class: 'micro', style: { marginTop: '8px' } }, 'Opcional'),
-          opt(nv, 'Verificar fontes online', 'NETWORK_DISCOVERY', 'info', 'git ls-remote em até 40 repositórios. Sem quota da API, sem executar código.'),
-          opt(cs, 'Testar com um pedido real ao Claude', 'COST_BEARING', 'warn', 'Faz um pedido ao Claude que usa a ferramenta curi, para provar a integração de ponta a ponta. Consome uso da sua conta; requer o Claude ligado.'),
-          h('details', { class: 'untouched' }, h('summary', null, 'O que nunca é tocado'), h('ul', { class: 'plain' }, p.untouched.map(u => h('li', null, icon('lock', 'sm'), u)))),
-          h('div', { class: 'row' }, h('span', { class: 'spacer' }), btn('Continuar com estas escolhas', async () => {
+          pending.length ? toggles.map(({ a, input }) => opt(input, a.id === 'skill.write' ? 'Install the curi-resource-router skill' : a.state === 'update' ? 'Update the "curi" MCP entry' : 'Register the "curi" MCP server', a.risk, 'warn',
+            a.id === 'skill.write' ? 'A compact skill (≈2 KB) that teaches Claude to query the registry.' : a.exposes || 'Read-only stdio server, started by Claude Code when needed.', a.path || a.via)) : notice('info', 'The integration is already applied.'),
+          p.conflicts.map(c => notice('bad', `Conflict (${c.action}): ${c.reason}`)),
+          h('div', { class: 'micro', style: { marginTop: '8px' } }, 'Optional'),
+          opt(nv, 'Verify sources online', 'NETWORK_DISCOVERY', 'info', 'git ls-remote on up to 40 repositories. No API quota, no code runs.'),
+          opt(cs, 'Test with a real request to Claude', 'COST_BEARING', 'warn', 'Sends Claude a request that uses the curi tool, to prove the integration end to end. Uses your account\'s quota; needs Claude connected.'),
+          h('details', { class: 'untouched' }, h('summary', null, 'What\'s never touched'), h('ul', { class: 'plain' }, p.untouched.map(u => h('li', null, icon('lock', 'sm'), u)))),
+          h('div', { class: 'row' }, h('span', { class: 'spacer' }), btn('Continue with these choices', async () => {
             await api('bootstrapAdvance', { decisions: { approve: toggles.filter(t => t.input.checked).map(t => t.a.id).concat(p.actions.filter(a => a.state === 'already-applied').map(a => a.id)), networkVerify: nv.checked, cleanSession: cs.checked } });
-            toast('Aprovações registadas no registo de auditoria.', 'good');
+            toast('Approvals recorded in the audit log.', 'good');
             setTimeout(render, 300);
           }, { kind: 'primary', iconName: 'check' })))));
     }
 
     const ver = done['WP6-verify']?.evidence;
-    if (ver) sections.unshift(panel({ title: 'Resultado', cls: `result ${ver.verdict}` },
+    if (ver) sections.unshift(panel({ title: 'Result', cls: `result ${ver.verdict}` },
       h('div', { class: 'result-hero' }, h('span', { class: `result-ic ${ver.verdict === 'READY' ? 'good' : ver.verdict === 'FAILED' ? 'bad' : 'warn'}` }, icon(ver.verdict === 'READY' ? 'check' : ver.verdict === 'FAILED' ? 'x' : 'alert', 'lg')),
-        h('div', null, h('h3', null, ver.verdict === 'READY' ? 'Tudo verificado' : ver.verdict === 'PARTIAL_READY' ? 'Pronto, com limitações' : 'A verificação falhou'), h('p', { class: 'muted' }, `${ver.passed} de ${ver.total} verificações passaram.`))),
+        h('div', null, h('h3', null, ver.verdict === 'READY' ? 'All verified' : ver.verdict === 'PARTIAL_READY' ? 'Ready, with limitations' : 'Verification failed'), h('p', { class: 'muted' }, `${ver.passed} of ${ver.total} checks passed.`))),
       h('div', { class: 'segmeter' }, Array.from({ length: ver.total }, (_, i) => h('i', { class: i < ver.passed ? 'pass' : 'fail' }))),
-      ver.mandatory_failed?.length ? notice('bad', `Obrigatórias falhadas: ${ver.mandatory_failed.join(', ')}`) : null,
-      [...(ver.optional_unavailable || []), ...(ver.missing || [])].length ? notice('warn', `Indisponível: ${[...(ver.optional_unavailable || []), ...(ver.missing || [])].join(' · ')}`) : null,
-      h('div', { class: 'row', style: { marginTop: '12px' } }, linkBtn('Abrir o painel', '#/dashboard', { kind: 'primary', iconName: 'dashboard' }), linkBtn('Detalhes da verificação', '#/bridge', { kind: 'ghost' }))));
+      ver.mandatory_failed?.length ? notice('bad', `Required checks failed: ${ver.mandatory_failed.join(', ')}`) : null,
+      [...(ver.optional_unavailable || []), ...(ver.missing || [])].length ? notice('warn', `Unavailable: ${[...(ver.optional_unavailable || []), ...(ver.missing || [])].join(' · ')}`) : null,
+      h('div', { class: 'row', style: { marginTop: '12px' } }, linkBtn('Open Home', '#/dashboard', { kind: 'primary', iconName: 'dashboard' }), linkBtn('Verification details', '#/bridge', { kind: 'ghost' }))));
 
     // Consent and Claude connection are part of onboarding, but never block the catalogue.
-    if (pol.consent.implicit) sections.unshift(panel({ title: 'Instalação automática e gestão do sistema', cls: 'consent' },
-      h('p', { class: 'muted', style: { marginTop: 0 } }, 'Escolha o que o CURI pode fazer sem lhe perguntar. Pode mudar ou revogar em Automação e permissões a qualquer momento.'),
+    if (pol.consent.implicit) sections.unshift(panel({ title: 'Automatic installs and system management', cls: 'consent' },
+      h('p', { class: 'muted', style: { marginTop: 0 } }, 'Choose what CURI may do without asking. You can change or revoke it any time in Settings › Autonomy.'),
       modePicker(pol, render),
-      h('div', { class: 'row', style: { marginTop: '12px' } }, h('a', { class: 'btn ghost', href: '#/automation' }, 'Rever permissões em detalhe'), h('span', { class: 'spacer' }),
-        btn('Continuar com aprovação manual', async () => { await api('policyGrant', { mode: 'standard' }); toast('Modo Padrão: aprova cada instalação.', 'good'); render(); }, { kind: 'ghost' }))));
+      h('div', { class: 'row', style: { marginTop: '12px' } }, h('a', { class: 'btn ghost', href: '#/automation' }, 'Review permissions in detail'), h('span', { class: 'spacer' }),
+        btn('Continue with manual approval', async () => { await api('policyGrant', { mode: 'standard' }); toast('Standard mode: you approve every install.', 'good'); render(); }, { kind: 'ghost' }))));
     if (!['connected', 'verified', 'external_provider'].includes(cs.state)) sections.unshift(claudeCard(cs, render));
-    if (!sections.length) sections.push(panel({}, h('div', { class: 'empty' }, h('div', { class: 'glyph' }, icon('wizard', 'lg')), h('h4', null, 'Pronto para começar'), h('p', null, 'O primeiro passo é só de leitura: inspeciona o seu Mac e o Claude Code. Pode pausar ou cancelar a qualquer momento — o progresso é guardado.'))));
+    if (!sections.length) sections.push(panel({}, h('div', { class: 'empty' }, h('div', { class: 'glyph' }, icon('wizard', 'lg')), h('h4', null, 'Ready to start'), h('p', null, 'The first step is read-only: it inspects your computer and Claude Code. You can pause or cancel at any time; progress is saved.'))));
 
     const log = jobs.filter(j => j.job === 'bootstrap').slice(0, 40);
     fill(root, 
-      pageHead({ eyebrow: 'Configuração', title: terminal ? 'Configuração concluída' : 'Configuração guiada', sub: 'Cada passo grava um checkpoint durável. Pode fechar a app: ao reabrir, retoma no primeiro passo não verificado e nada é aplicado duas vezes.', actions: [status(b.state), controls] }),
+      pageHead({ eyebrow: 'Setup', title: terminal ? 'Setup complete' : 'Guided setup', sub: 'Each step saves a durable checkpoint. You can close the app: when you reopen it, it resumes at the first unverified step and nothing is applied twice.', actions: [status(b.state), controls] }),
       h('div', { class: 'wizard-grid' },
-        h('aside', { class: 'panel wizard-steps' }, h('div', { class: 'panel-body' }, h('div', { class: 'row', style: { marginBottom: '14px' } }, h('span', { class: 'micro' }, 'Progresso'), h('span', { class: 'spacer' }), h('span', { class: 'num' }, `${doneCount}/${WPS.length} verificados`)), stepper)),
+        h('aside', { class: 'panel wizard-steps' }, h('div', { class: 'panel-body' }, h('div', { class: 'row', style: { marginBottom: '14px' } }, h('span', { class: 'micro' }, 'Progress'), h('span', { class: 'spacer' }), h('span', { class: 'num' }, `${doneCount}/${WPS.length} verificados`)), stepper)),
         h('div', { class: 'stack' }, ...sections,
-          h('details', { class: 'panel log-panel' }, h('summary', { class: 'panel-head' }, h('h2', null, 'Registo de eventos'), h('span', { class: 'micro' }, `${log.length}`)),
+          h('details', { class: 'panel log-panel' }, h('summary', { class: 'panel-head' }, h('h2', null, 'Event log'), h('span', { class: 'micro' }, `${log.length}`)),
             h('div', { class: 'panel-body' }, h('div', { class: 'log', role: 'log' }, log.map(j => h('div', { class: j.level }, h('span', { class: 'muted' }, fmtDate(j.ts)), ' ', j.step || '', ' — ', j.message))))))));
-    if (lastState && lastState !== b.state && ['READY', 'PARTIAL_READY', 'FAILED'].includes(b.state)) api('notify', { title: 'CURI', body: `Configuração: ${b.state}` }).catch(() => {});
+    if (lastState && lastState !== b.state && ['READY', 'PARTIAL_READY', 'FAILED'].includes(b.state)) api('notify', { title: 'CURI', body: `Setup: ${b.state}` }).catch(() => {});
     lastState = b.state;
     return busy;
   }

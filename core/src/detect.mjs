@@ -75,15 +75,15 @@ function buildIndex(db, ctx) {
 export async function scanSystem(db, { onStage = () => {}, cancelled = () => false } = {}) {
   const ts = now();
   const device = deviceInfo();
-  onStage('A identificar gestores de pacotes', 0.04);
+  onStage('Finding package managers', 0.04);
   const managers = await packageManagers();
   const ctx = { managers, runtimes: deviceContext(db).runtimes };
-  onStage('A preparar a correspondência com o catálogo', 0.08);
+  onStage('Preparing catalogue matching', 0.08);
   const { idx, bins: binClaims, skills: skillClaims, plugins: pluginClaims, descs } = buildIndex(db, ctx);
   // Account skills need positive description evidence; local skill folders may lack a description.
   const skillId = (s, strict = false) => { const id = skillClaims.get(s.name); if (!id) return null; const sim = similar(s.description, descs.get(`skill:${s.name}`)); return (sim === null && !strict) || sim >= 0.3 ? id : null; };
 
-  onStage('A procurar ferramentas de linha de comando', 0.12);
+  onStage('Looking for command-line tools', 0.12);
   const probeBins = new Set([...idx.values()].flatMap(x => x.sig.probes.filter(p => p.bin).map(p => p.bin)));
   for (const b of binClaims.keys()) probeBins.add(b);
   const RUNTIME_BINS = ['node', 'python3', 'python', 'git', 'uv', 'cargo', 'docker', 'brew', 'npm', 'go', 'java', 'ffmpeg', 'rea', 'codex', 'gh'];
@@ -94,11 +94,11 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
     if (cancelled()) return { cancelled: true };
     const p = which(b);
     if (p) bins.set(b, { path: p, version: null });
-    if (++i % 40 === 0) onStage(`Ferramentas de linha de comando (${i}/${probeBins.size})`, 0.12 + 0.16 * (i / probeBins.size));
+    if (++i % 40 === 0) onStage(`Command-line tools (${i}/${probeBins.size})`, 0.12 + 0.16 * (i / probeBins.size));
   }
   const binVersion = async b => { const e = bins.get(b); if (!e) return null; if (e.version === null) { const probe = [...idx.values()].flatMap(x => x.sig.probes).find(x => x.bin === b); e.version = versionOf(await run(e.path, probe?.args || ['--version'], 5000)) || ''; } return e.version || null; };
 
-  onStage('A listar aplicações', 0.3);
+  onStage('Listing apps', 0.3);
   const apps = await installedApps();
   if (cancelled()) return { cancelled: true };
 
@@ -113,11 +113,11 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
   onStage('A consultar pacotes Python', 0.62);
   const pip = await pythonPackages();
 
-  onStage('A ler agentes: Claude Code, Claude Desktop, Codex, Cursor…', 0.7);
+  onStage('Reading agents: Claude Code, Claude Desktop, Codex, Cursor…', 0.7);
   const agents = await inspectAgents();
   if (cancelled()) return { cancelled: true };
 
-  onStage('A associar ao catálogo', 0.86);
+  onStage('Matching to the catalogue', 0.86);
   const byId = new Map();
   const claimedMcp = new Set(), claimedSkill = new Set(), claimedPlugin = new Set(), claimedApp = new Set();
   const mcpFound = (a, m) => ({ type: 'mcp', name: m.name, agent: a.id, agent_label: a.label, scope: m.scope, enabled: m.enabled, detail: m.line.slice(0, 200) });
@@ -154,7 +154,7 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
     }
     for (const s of a.account_skills || []) {
       const id = skillId(s, true);
-      if (id) { claimedSkill.add(`${a.id}:${s.name}`); byId.get(id).push({ type: 'account-skill', name: s.name, agent: 'claude-account', agent_label: 'Conta claude.ai', enabled: s.enabled, managed_by: 'account' }); }
+      if (id) { claimedSkill.add(`${a.id}:${s.name}`); byId.get(id).push({ type: 'account-skill', name: s.name, agent: 'claude-account', agent_label: 'claude.ai account', enabled: s.enabled, managed_by: 'account' }); }
     }
     for (const pl of a.plugins) {
       const id = [...idx.values()].find(x => pl.marketplace && x.sig.marketplaces.has(pl.marketplace))?.r.id || pluginClaims.get(pl.name);
@@ -180,7 +180,7 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
         (next === 'INSTALLED' ? changes.installed : changes.configured).push(m.id);
       }
       const summary = m.found.slice(0, 6).map(f => `${f.type} ${f.name}${f.version ? ` ${f.version}` : ''}${f.agent_label ? ` (${f.agent_label})` : ''}`).join(' · ');
-      const text = `Encontrado neste dispositivo: ${summary}`;
+      const text = `Found on this device: ${summary}`;
       const last = db.prepare("SELECT summary FROM evidence WHERE resource_id=? AND kind='detection' ORDER BY id DESC LIMIT 1").get(m.id);
       if (last?.summary !== text) db.prepare('INSERT INTO evidence(resource_id,kind,class,summary,data,captured_at) VALUES (?,?,?,?,?,?)').run(m.id, 'detection', 'original', text, JSON.stringify(m.found), ts);
       prev.delete(m.id);
@@ -190,7 +190,7 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
       const r = db.prepare('SELECT status FROM resources WHERE id=?').get(id);
       if (r && ['INSTALLED', 'CONFIGURED'].includes(r.status) && !db.prepare('SELECT 1 FROM installed_instances WHERE resource_id=? AND managed_by_curi=1').get(id)) {
         db.prepare("UPDATE resources SET status='CATALOGUED', updated_at=? WHERE id=?").run(ts, id);
-        db.prepare('INSERT INTO evidence(resource_id,kind,class,summary,captured_at) VALUES (?,?,?,?,?)').run(id, 'detection', 'original', 'Já não foi encontrado neste dispositivo.', ts);
+        db.prepare('INSERT INTO evidence(resource_id,kind,class,summary,captured_at) VALUES (?,?,?,?,?)').run(id, 'detection', 'original', 'No longer found on this device.', ts);
         changes.removed.push(id);
       }
     }
@@ -221,7 +221,7 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
   };
   setPref(db, 'last_system_scan', report);
   audit(db, 'system', 'system.scan', null, { matched: results.length, agents: report.sources.agents, ...Object.fromEntries(Object.entries(changes).map(([k, v]) => [k, v.length])) });
-  onStage('Concluído', 1);
+  onStage('Done', 1);
   return report;
 }
 

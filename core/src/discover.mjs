@@ -12,7 +12,7 @@ export const WINDOWS = { '24h': 1, '7d': 7, '30d': 30, '90d': 90 };
 
 export function windowStart(win, ref = new Date()) {
   const days = WINDOWS[win];
-  if (!days) throw new Error(`Janela inválida: ${win}`);
+  if (!days) throw new Error(`Invalid window: ${win}`);
   return new Date(ref.getTime() - days * 86400000).toISOString().slice(0, 10);
 }
 
@@ -59,7 +59,7 @@ async function runQueries(db, scanId, queries, { intentText, perQuery = 10, dela
       res = await ghFetch(db, `/search/repositories?q=${encodeURIComponent(q.q)}&sort=${q.kind === 'task' ? 'best-match' : 'stars'}&order=desc&per_page=${perQuery}`);
     } catch (e) {
       errors++;
-      jobEvent(db, job, 'error', q.kind, `Consulta falhou: ${e.message}`, q);
+      jobEvent(db, job, 'error', q.kind, `Query failed: ${e.message}`, q);
       onEvent({ level: 'error', q, error: e.message });
       if (e.code === 'RATE_LIMIT' || e.code === 'OFFLINE') break;
       continue;
@@ -79,7 +79,7 @@ async function runQueries(db, scanId, queries, { intentText, perQuery = 10, dela
       }
     });
     total += items.length;
-    jobEvent(db, job, 'info', q.kind, `${items.length} resultados para "${q.q}"`, { rateLimit: res.rateLimit });
+    jobEvent(db, job, 'info', q.kind, `${items.length} results for "${q.q}"`, { rateLimit: res.rateLimit });
     onEvent({ level: 'info', q, n: items.length });
   }
   return { total, errors };
@@ -88,7 +88,7 @@ async function runQueries(db, scanId, queries, { intentText, perQuery = 10, dela
 export async function discover(db, { mode = 'task', intent = '', windows, maxQueries = 6, perQuery = 10, delayMs, actor = 'user', onEvent, onPlan } = {}) {
   let queries;
   if (mode === 'task') {
-    if (!intent.trim()) throw new Error('Modo task exige uma intenção.');
+    if (!intent.trim()) throw new Error('Task mode needs an intent.');
     const caps = detectCapabilities(intent);
     const kw = contentTokens(intent).slice(0, 5).join(' ');
     queries = [{ kind: 'task', window: null, q: `${kw} stars:>=10` }];
@@ -98,7 +98,7 @@ export async function discover(db, { mode = 'task', intent = '', windows, maxQue
     queries.push({ kind: 'task', window: null, q: `${kw} mcp stars:>=5` }, { kind: 'task', window: null, q: `${kw} cli stars:>=10` });
   } else if (mode === 'frontier') {
     queries = planFrontierQueries(db, { windows: windows || ['7d', '30d'], maxQueries });
-  } else throw new Error(`Modo de descoberta desconhecido: ${mode}`);
+  } else throw new Error(`Unknown discovery mode: ${mode}`);
   onPlan?.(queries);
   const scanId = db.prepare('INSERT INTO scans(mode,params,status,queries,started_at) VALUES (?,?,?,?,?)').run(mode, JSON.stringify({ intent, windows, maxQueries }), 'running', JSON.stringify(queries), now()).lastInsertRowid;
   audit(db, actor, 'discover.start', `scan:${scanId}`, { mode, queries: queries.length });
@@ -124,14 +124,14 @@ export function listCandidates(db, scanId, { onlyNew = false, limit = 100 } = {}
 // Promotion catalogues the candidate as NEEDS_VERIFICATION. It never installs or executes anything.
 export function promoteCandidate(db, candidateId, { actor = 'user' } = {}) {
   const c = db.prepare('SELECT * FROM scan_candidates WHERE id=?').get(candidateId);
-  if (!c) throw new Error('Candidato inexistente.');
-  const r = addUrl(db, c.url, { source: `discovery:scan-${c.scan_id}`, actor, hints: { description: c.description, topics: JSON.parse(c.topics || '[]'), title: c.full_name.split('/')[1] }, note: `Descoberto via "${c.query}" (${c.query_kind})` });
+  if (!c) throw new Error('Unknown candidate.');
+  const r = addUrl(db, c.url, { source: `discovery:scan-${c.scan_id}`, actor, hints: { description: c.description, topics: JSON.parse(c.topics || '[]'), title: c.full_name.split('/')[1] }, note: `Discovered via "${c.query}" (${c.query_kind})` });
   db.prepare('UPDATE scan_candidates SET decision=\'promoted\', in_registry=1 WHERE id=?').run(candidateId);
   return r;
 }
 
 export function rejectCandidate(db, candidateId, reason, { actor = 'user' } = {}) {
-  db.prepare('UPDATE scan_candidates SET decision=\'rejected\', reason=? WHERE id=?').run(String(reason || 'rejeitado pelo utilizador').slice(0, 500), candidateId);
+  db.prepare('UPDATE scan_candidates SET decision=\'rejected\', reason=? WHERE id=?').run(String(reason || 'rejected by the user').slice(0, 500), candidateId);
   audit(db, actor, 'candidate.reject', `candidate:${candidateId}`, { reason });
 }
 
@@ -175,12 +175,12 @@ export function gapAudit(db) {
 // The user's own GitHub stars, triaged for agent relevance and reconciled with the catalogue.
 export async function importStars(db, { maxPages = 5, onStage = () => {}, actor = 'user' } = {}) {
   const me = await ghFetch(db, '/user');
-  if (me.status !== 200) throw Object.assign(new Error('É preciso ligar o GitHub (Ligações) para ler as suas estrelas.'), { code: 'AUTH' });
+  if (me.status !== 200) throw Object.assign(new Error('Connect GitHub (Connections) to read your stars.'), { code: 'AUTH' });
   const login = me.body.login;
-  const scanId = db.prepare('INSERT INTO scans(mode,params,status,queries,started_at) VALUES (?,?,?,?,?)').run('stars', JSON.stringify({ login }), 'running', JSON.stringify([{ kind: 'stars', q: `estrelas de @${login}` }]), now()).lastInsertRowid;
+  const scanId = db.prepare('INSERT INTO scans(mode,params,status,queries,started_at) VALUES (?,?,?,?,?)').run('stars', JSON.stringify({ login }), 'running', JSON.stringify([{ kind: 'stars', q: `stars of @${login}` }]), now()).lastInsertRowid;
   let total = 0, relevant = 0, known = 0;
   for (let page = 1; page <= maxPages; page++) {
-    onStage(`A ler as estrelas de @${login} (página ${page})`, page / (maxPages + 1));
+    onStage(`Reading @${login}'s stars (page ${page})`, page / (maxPages + 1));
     const r = await ghFetch(db, `/user/starred?per_page=100&page=${page}`);
     if (r.status !== 200 || !Array.isArray(r.body) || !r.body.length) break;
     tx(db, () => {
@@ -191,7 +191,7 @@ export async function importStars(db, { maxPages = 5, onStage = () => {}, actor 
         known += inReg ? 1 : 0;
         relevant += !rel.noise && !inReg ? 1 : 0;
         db.prepare(`INSERT OR IGNORE INTO scan_candidates(scan_id,full_name,url,description,stars,gh_created_at,gh_pushed_at,license,topics,query,query_kind,in_registry,score,decision,reason,captured_at)
-          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(scanId, full, it.html_url, (it.description || '').slice(0, 500), it.stargazers_count, it.created_at, it.pushed_at, it.license?.spdx_id || null, JSON.stringify(it.topics || []), `estrelas de @${login}`, 'stars', inReg ? 1 : 0, JSON.stringify({ agent: rel, total: rel.score }), rel.noise ? 'filtered' : 'candidate', rel.noise, now());
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(scanId, full, it.html_url, (it.description || '').slice(0, 500), it.stargazers_count, it.created_at, it.pushed_at, it.license?.spdx_id || null, JSON.stringify(it.topics || []), `stars of @${login}`, 'stars', inReg ? 1 : 0, JSON.stringify({ agent: rel, total: rel.score }), rel.noise ? 'filtered' : 'candidate', rel.noise, now());
       }
     });
     total += r.body.length;

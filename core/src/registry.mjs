@@ -132,7 +132,7 @@ function upsertFromClassification(db, c, { status, source, section, line, batchI
   if (c.name !== existing.name) db.prepare('INSERT OR IGNORE INTO aliases(resource_id,alias) VALUES (?,?)').run(id, c.name);
   if (created && c.provenance === 'curator-model-knowledge' && c.description) {
     db.prepare('INSERT INTO evidence(resource_id,kind,class,summary,source_url,captured_at) VALUES (?,?,?,?,?,?)')
-      .run(id, 'classification', 'speculative', 'Descrição/capacidades iniciais a partir de conhecimento do curador (não verificado).', null, ts);
+      .run(id, 'classification', 'speculative', 'Initial description/capabilities from curator knowledge (not verified).', null, ts);
   }
   indexResource(db, id);
   return { id, created };
@@ -219,10 +219,10 @@ export function listResources(db, { status, type, capability, tier, limit = 500,
 }
 
 export function setStatus(db, id, status, { actor = 'user', reason = null } = {}) {
-  if (!STATUSES.includes(status)) throw new Error(`Estado inválido: ${status}`);
+  if (!STATUSES.includes(status)) throw new Error(`Invalid status: ${status}`);
   if (status === 'INSTALLED') {
     const inst = db.prepare("SELECT 1 FROM installed_instances WHERE resource_id=? AND health IN ('verified','detected','files-ok','configured')").get(id);
-    if (!inst) throw new Error('INSTALLED exige evidência de instalação verificada (installed_instances com health=verified).');
+    if (!inst) throw new Error('INSTALLED needs verified install evidence (installed_instances with health=verified).');
   }
   tx(db, () => {
     db.prepare('UPDATE resources SET status=?, updated_at=? WHERE id=?').run(status, now(), id);
@@ -236,8 +236,8 @@ export function exportRegistry(db) {
 }
 
 export function importRegistry(db, data, { actor = 'user', dryRun = false } = {}) {
-  if (data?.format !== EXPORT_FORMAT) throw new Error('Formato de exportação desconhecido.');
-  if (data.version > EXPORT_VERSION) throw new Error(`Exportação v${data.version} mais recente que o suportado (v${EXPORT_VERSION}).`);
+  if (data?.format !== EXPORT_FORMAT) throw new Error('Unknown export format.');
+  if (data.version > EXPORT_VERSION) throw new Error(`Export v${data.version} is newer than supported (v${EXPORT_VERSION}).`);
   const report = { incoming: data.resources.length, created: 0, merged: 0, dryRun };
   if (dryRun) {
     for (const r of data.resources) (db.prepare('SELECT 1 FROM resources WHERE id=?').get(r.id) ? report.merged++ : report.created++);

@@ -1,6 +1,6 @@
-# Fontes de fronteira
+# Frontier sources
 
-## Agentes: fronteira, investigação e interoperabilidade
+## Agents: frontier, research and interoperability
 https://github.com/NVIDIA/skillspector
 https://github.com/HKUDS/CLI-Anything
 https://github.com/K-Dense-AI/scientific-agent-skills
@@ -23,7 +23,7 @@ https://github.com/humanlayer/skills
 https://github.com/akitaonrails/ai-memory
 https://github.com/xerj-org/xerj
 
-## Sistemas de design e conhecimento de UX para agentes
+## Design systems and UX knowledge for agents
 https://github.com/vercel-labs/web-interface-guidelines
 https://github.com/plexormedia/claude-code-frontend-design-toolkit
 https://designengineers.dev/taste
@@ -36,7 +36,7 @@ https://github.com/vercel-labs/agent-skills
 https://github.com/vercel-labs/skills
 https://github.com/addyosmani/agent-skills
 
-## Skills, MCP, integrações e descoberta
+## Skills, MCP, integrations and discovery
 https://github.com/anthropics/claude-plugins-official
 https://github.com/anthropics/knowledge-work-plugins
 https://github.com/addyosmani/agent-skills
@@ -64,7 +64,7 @@ https://registry.modelcontextprotocol.io/
 https://github.com/modelcontextprotocol/servers
 https://github.com/punkpeye/awesome-mcp-servers
 
-## Orquestração e especificação
+## Orchestration and specification
 https://github.com/Fission-AI/OpenSpec
 https://github.com/github/spec-kit
 https://github.com/bmad-code-org/BMAD-METHOD
@@ -75,7 +75,7 @@ https://github.com/paperclipai/paperclip
 https://github.com/anomalyco/opencode
 https://github.com/wshobson/agents
 
-## Fontes de descoberta no GitHub
+## GitHub discovery sources
 https://github.com/trending
 https://github.com/topics/claude-code
 https://github.com/topics/agent-skills
@@ -97,7 +97,7 @@ https://news.ycombinator.com/
 https://paperswithcode.com/
 https://huggingface.co/papers
 
-## Animação, vídeo, 3D, áudio e software criativo
+## Animation, video, 3D, audio and creative software
 https://github.com/motiondivision/motion
 https://github.com/greensock/GSAP
 https://github.com/pmndrs/react-three-fiber
@@ -132,7 +132,7 @@ https://github.com/openscad/openscad
 https://github.com/prusa3d/PrusaSlicer
 https://github.com/SoftFever/OrcaSlicer
 
-## Engenharia reversa, segurança e forense
+## Reverse engineering, security and forensics
 https://github.com/morluto/rea
 https://github.com/NationalSecurityAgency/ghidra
 https://github.com/rizinorg/rizin
@@ -151,7 +151,7 @@ https://github.com/aquasecurity/trivy
 https://github.com/gitleaks/gitleaks
 https://github.com/NVIDIA/skillspector
 
-## Testes, browser, backend, infraestrutura e mobile
+## Testing, browser, backend, infrastructure and mobile
 https://github.com/microsoft/playwright-mcp
 https://github.com/ChromeDevTools/chrome-devtools-mcp
 https://github.com/vercel-labs/agent-browser
@@ -194,7 +194,7 @@ https://developer.apple.com/design/human-interface-guidelines/
 https://developer.apple.com/documentation/swiftui/
 https://developer.android.com/develop/ui/compose
 
-## Ciência, investigação, sistemas embebidos e IA
+## Science, research, embedded systems and AI
 https://github.com/K-Dense-AI/scientific-agent-skills
 https://github.com/huggingface/transformers
 https://github.com/pytorch/pytorch

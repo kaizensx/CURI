@@ -115,7 +115,7 @@ export async function runVerification(db, { requireBridge = true, cleanSession =
   checks.push(await check('bridge.idempotent_plan', requireBridge, () => ({ ok: plan.conflicts.length === 0 && plan.actions.every(a => a.state === 'already-applied'), evidence: { actions: plan.actions.map(a => ({ id: a.id, state: a.state })), conflicts: plan.conflicts } })));
   checks.push(await check('bridge.mcp_health_via_claude', requireBridge && Boolean(findClaudeBinary()), async () => {
     const bin = findClaudeBinary();
-    if (!bin) return { status: 'blocked', evidence: { reason: 'Claude CLI não encontrada' } };
+    if (!bin) return { status: 'blocked', evidence: { reason: 'Claude CLI not found' } };
     const h = await mcpHealth(bin);
     const s = h.servers.find(x => x.name === MCP_NAME);
     return { ok: Boolean(s?.healthy), evidence: { server: s || null, listed: h.servers.map(x => x.name) } };

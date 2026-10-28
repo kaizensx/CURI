@@ -1,18 +1,18 @@
-name: Problema
-description: Algo não funciona como descrito.
+name: Bug
+description: Something doesn't work as described.
 labels: [bug]
 body:
   - type: textarea
     id: what
-    attributes: { label: O que aconteceu, description: "O que fez, o que esperava e o que viu." }
+    attributes: { label: What happened, description: "What you did, what you expected and what you saw." }
     validations: { required: true }
   - type: input
     id: version
-    attributes: { label: Versão do CURI, placeholder: "Sobre → Versão (ex.: 3.1.0)" }
+    attributes: { label: CURI version, placeholder: "Settings › About (e.g. 3.2.0)" }
     validations: { required: true }
   - type: input
-    id: macos
-    attributes: { label: macOS e chip, placeholder: "ex.: macOS 15.2, Apple M2" }
+    id: os
+    attributes: { label: Operating system and chip, placeholder: "e.g. macOS 15.2, Apple M2" }
   - type: textarea
     id: diag
-    attributes: { label: Diagnóstico, description: "Operações → abra a operação → Registo. Não cole chaves, tokens nem caminhos privados." }
+    attributes: { label: Diagnostics, description: "Activity › open the operation › Log. Don't paste keys, tokens or private paths." }

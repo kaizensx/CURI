@@ -50,7 +50,7 @@ test('S3 manual mode: agent work waits for approval; approval runs it', async ()
   assert.equal(policy.currentConsent(db).mode, 'standard');
   const op = await ops.enqueue(db, 'skill.install', { repo: 'anthropics/skills', path: 'skills/frontend-design' }, { actor: 'agent' });
   assert.equal(op.status, 'awaiting_approval');
-  assert.equal(await ops.runNext(db), null, 'nada corre sem aprovação');
+  assert.equal(await ops.runNext(db), null, 'nothing runs without approval');
   ops.approve(db, op.id);
   const done = await ops.runNext(db);
   assert.equal(done.status, 'verified', JSON.stringify(done.logs));
@@ -76,7 +76,7 @@ test('S1/S4 Automatic mode: trusted skill without code installs unattended; one 
   const r = await ops.runNext(db);
   assert.equal(r.status, 'awaiting_approval');
   assert.match(r.decision_reasons.join(' '), /script/);
-  assert.ok(!fs.existsSync(path.join(skillsDir, 'pdf')), 'nada instalado antes da revisão');
+  assert.ok(!fs.existsSync(path.join(skillsDir, 'pdf')), 'nothing installed before review');
   ops.reject(db, b.id);
 });
 
@@ -88,16 +88,16 @@ test('S2 Maximum Autonomy: trusted skill with scripts and clean scan installs; M
   const prev = await ops.preview(db, 'agent.install', {});
   assert.equal(prev.decision, 'auto');
   const destr = await ops.preview(db, 'skill.remove', { name: 'pdf' });
-  assert.equal(destr.decision, 'ask', 'remoções pedem sempre consentimento');
+  assert.equal(destr.decision, 'ask', 'removals always ask');
   const priv = await ops.preview(db, 'cli.link', {});
-  assert.equal(priv.decision, 'ask', 'ações de administrador pedem sempre consentimento');
+  assert.equal(priv.decision, 'ask', 'admin actions always ask');
 });
 
 test('S8 unknown publisher stays "ask" even in Maximum Autonomy', async () => {
   const p = await ops.preview(db, 'skill.install', { repo: 'someone-unknown/skills', path: 'skills/x' });
   assert.equal(p.category, 'untrusted');
   assert.equal(p.decision, 'ask');
-  assert.match(p.reasons.join(' '), /não está na lista de confiança/);
+  assert.match(p.reasons.join(' '), /isn't on the trusted list/);
 });
 
 test('S12 revoking consent re-evaluates queued unattended work', async () => {
@@ -117,7 +117,7 @@ test('S10 conflict: an unmanaged skill with the same name is never overwritten',
   await ops.enqueue(db, 'skill.install', { repo: 'anthropics/skills', path: 'skills/docx' }, { actor: 'user-approved' });
   const r = await ops.runNext(db);
   assert.equal(r.status, 'failed');
-  assert.match(r.error, /não é gerida pelo CURI/);
+  assert.match(r.error, /isn't managed by CURI/);
   assert.equal(fs.readFileSync(path.join(skillsDir, 'docx', 'SKILL.md'), 'utf8'), '---\nname: docx\n---\nmine');
 });
 
@@ -162,11 +162,11 @@ test('S7 MCP needing a provider secret is blocked until the credential exists', 
   ACTIONS.mcpDefine(db, preset);
   const p = await ops.preview(db, 'mcp.enable', { name: 'firecrawl' });
   assert.equal(p.decision, 'block');
-  assert.match(p.reasons.join(' '), /Requer ligação a secret:firecrawl/);
+  assert.match(p.reasons.join(' '), /Needs a connection to secret:firecrawl/);
   await conns.saveNamedSecret(db, 'secret:firecrawl', 'fc-test-not-real');
   const p2 = await ops.preview(db, 'mcp.enable', { name: 'firecrawl' });
   assert.notEqual(p2.decision, 'block');
-  assert.throws(() => ACTIONS.mcpDefine(db, { name: 'leaky', command: 'npx', args: [], env: { OPENAI_API_KEY: 'sk-123' } }), /parece um segredo/);
+  assert.throws(() => ACTIONS.mcpDefine(db, { name: 'leaky', command: 'npx', args: [], env: { OPENAI_API_KEY: 'sk-123' } }), /looks like a secret/);
 });
 
 test('S23/S19 invalid GitHub token is rejected by the real API, never stored, never logged', async () => {
@@ -178,8 +178,8 @@ test('S23/S19 invalid GitHub token is rejected by the real API, never stored, ne
   await conns.saveCredential(db, 'github', SECRET, { skipTest: true });
   assert.equal(await conns.credentialFor('github'), SECRET);
   const dbBytes = fs.readFileSync(paths.db).toString('latin1') + (fs.existsSync(paths.db + '-wal') ? fs.readFileSync(paths.db + '-wal').toString('latin1') : '');
-  assert.ok(!dbBytes.includes(SECRET), 'segredo ausente da base de dados');
-  assert.ok(!JSON.stringify(exportRegistry(db)).includes(SECRET), 'segredo ausente da exportação');
+  assert.ok(!dbBytes.includes(SECRET), 'secret absent from the database');
+  assert.ok(!JSON.stringify(exportRegistry(db)).includes(SECRET), 'secret absent from the export');
   const listed = conns.listConnections(db).find(c => c.provider === 'github');
   assert.equal(listed.has_secret, true);
   assert.ok(!JSON.stringify(listed).includes(SECRET), 'a UI nunca recebe o segredo');
@@ -216,7 +216,7 @@ test('S21/S24 Claude connection: disconnected → login → cancel → retry →
   assert.equal((await claudeAuth.status()).state, 'failed');
   claudeAuth.startLogin(db);
   await new Promise(r => setTimeout(r, 300));
-  assert.throws(() => claudeAuth.submitCode('bad code with spaces'), /formato/);
+  assert.throws(() => claudeAuth.submitCode('bad code with spaces'), /invalid format/);
   claudeAuth.submitCode('GOODCODE12345');
   await new Promise(r => setTimeout(r, 600));
   s = await claudeAuth.status();
@@ -228,7 +228,7 @@ test('S21/S24 Claude connection: disconnected → login → cancel → retry →
   assert.equal((await claudeAuth.logout(db)).state === 'disconnected' || true, true);
   assert.ok(!fs.existsSync(state));
   const log = db.prepare("SELECT details FROM audit_log WHERE action LIKE 'claude.%'").all().map(r => r.details || '').join(' ');
-  assert.ok(!/GOODCODE/.test(log), 'o código de autorização não é registado');
+  assert.ok(!/GOODCODE/.test(log), 'the authorisation code is never logged');
 });
 
 test('S15 approved work runs from the background agent entry point with the app closed', async () => {
@@ -264,7 +264,7 @@ test('detection: a tool appearing on PATH becomes INSTALLED with its version; re
   db3.prepare("UPDATE resources SET status='REJECTED' WHERE id='gh:aquasecurity/trivy'").run();
   try {
     const op = await ops.enqueue(db3, 'system.scan', {}, { actor: 'agent' });
-    assert.equal(op.status, 'queued', 'observação corre sem pedido em qualquer modo');
+    assert.equal(op.status, 'queued', 'observation runs without asking in any mode');
     const r = await ops.runNext(db3);
     assert.equal(r.status, 'verified');
     const sem = db3.prepare("SELECT status FROM resources WHERE id='gh:semgrep/semgrep'").get();
@@ -277,6 +277,6 @@ test('detection: a tool appearing on PATH becomes INSTALLED with its version; re
     await ops.enqueue(db3, 'system.scan', {}, { actor: 'agent' });
     await ops.runNext(db3);
     assert.equal(db3.prepare("SELECT status FROM resources WHERE id='gh:semgrep/semgrep'").get().status, 'CATALOGUED');
-    assert.match(db3.prepare("SELECT summary FROM evidence WHERE resource_id='gh:semgrep/semgrep' ORDER BY id DESC LIMIT 1").get().summary, /Já não foi encontrado/);
+    assert.match(db3.prepare("SELECT summary FROM evidence WHERE resource_id='gh:semgrep/semgrep' ORDER BY id DESC LIMIT 1").get().summary, /No longer found/);
   } finally { process.env.PATH = oldPath; db3.close(); }
 });

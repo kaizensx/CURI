@@ -28,7 +28,7 @@ export function loadOrCreateToken() {
 }
 
 export async function startServer({ port = 0, host = '127.0.0.1', token = loadOrCreateToken() } = {}) {
-  if (!['127.0.0.1', '::1', 'localhost'].includes(host)) throw new Error('O servidor da app só aceita loopback.');
+  if (!['127.0.0.1', '::1', 'localhost'].includes(host)) throw new Error('The app server only accepts loopback.');
   const db = openDb();
   const launch = await launchCheck(db);
   try { const { seedFacts } = await import('./facts.mjs'); launch.facts_seeded = seedFacts(db); } catch {}
@@ -61,19 +61,19 @@ export async function startServer({ port = 0, host = '127.0.0.1', token = loadOr
       res.writeHead(code, { 'Content-Type': type, ...SEC_HEADERS });
       res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
     };
-    if (!allowedHosts.has(req.headers.host)) return send(421, { error: 'Host não permitido' });
+    if (!allowedHosts.has(req.headers.host)) return send(421, { error: 'Host not allowed' });
     const url = new URL(req.url, `http://${req.headers.host}`);
     if (url.pathname.startsWith('/api/')) {
       if (req.method !== 'POST') return send(405, { error: 'Use POST' });
       const origin = req.headers.origin;
-      if (origin && !allowedHosts.has(origin.replace(/^http:\/\//, ''))) return send(403, { error: 'Origem não permitida' });
+      if (origin && !allowedHosts.has(origin.replace(/^http:\/\//, ''))) return send(403, { error: 'Origin not allowed' });
       const auth = Buffer.from(String(req.headers.authorization || '').replace(/^Bearer /, ''));
-      if (auth.length !== tokenBuf.length || !crypto.timingSafeEqual(auth, tokenBuf)) return send(401, { error: 'Token inválido' });
-      if (!String(req.headers['content-type'] || '').startsWith('application/json')) return send(415, { error: 'JSON obrigatório' });
+      if (auth.length !== tokenBuf.length || !crypto.timingSafeEqual(auth, tokenBuf)) return send(401, { error: 'Invalid token' });
+      if (!String(req.headers['content-type'] || '').startsWith('application/json')) return send(415, { error: 'JSON required' });
       let raw = '';
-      for await (const chunk of req) { raw += chunk; if (raw.length > 5e6) return send(413, { error: 'Pedido demasiado grande' }); }
+      for await (const chunk of req) { raw += chunk; if (raw.length > 5e6) return send(413, { error: 'Request too large' }); }
       let params = {};
-      try { params = raw ? JSON.parse(raw) : {}; } catch { return send(400, { error: 'JSON inválido' }); }
+      try { params = raw ? JSON.parse(raw) : {}; } catch { return send(400, { error: 'Invalid JSON' }); }
       try {
         const out = await dispatch(db, url.pathname.slice(5), params);
         return send(200, { ok: true, data: redact(out ?? null) });
@@ -81,10 +81,10 @@ export async function startServer({ port = 0, host = '127.0.0.1', token = loadOr
         return send(e.status || 400, { ok: false, error: e.message });
       }
     }
-    if (req.method !== 'GET') return send(405, { error: 'Método não permitido' });
+    if (req.method !== 'GET') return send(405, { error: 'Method not allowed' });
     const rel = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
     const file = path.resolve(paths.appDir, rel);
-    if (!file.startsWith(paths.appDir + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return send(404, 'Não encontrado', 'text/plain; charset=utf-8');
+    if (!file.startsWith(paths.appDir + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return send(404, 'Not found', 'text/plain; charset=utf-8');
     return send(200, fs.readFileSync(file), MIME[path.extname(file)] || 'application/octet-stream');
   });
 

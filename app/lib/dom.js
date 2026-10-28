@@ -48,20 +48,20 @@ export const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)'
 export function fmtDate(iso, opts = { dateStyle: 'short', timeStyle: 'short' }) {
   if (!iso) return '—';
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('pt-PT', opts);
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('en-GB', opts);
 }
 
 export function relTime(iso) {
   if (!iso) return '—';
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  const rtf = new Intl.RelativeTimeFormat('pt-PT', { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat('en-GB', { numeric: 'auto' });
   const steps = [[60, 'second'], [3600, 'minute', 60], [86400, 'hour', 3600], [2592000, 'day', 86400], [31536000, 'month', 2592000], [Infinity, 'year', 31536000]];
   for (const [lim, unit, div = 1] of steps) if (Math.abs(diff) < lim) return rtf.format(-Math.round(diff / div), unit);
   return '—';
 }
 
-export const fmtInt = n => (n == null ? '—' : new Intl.NumberFormat('pt-PT').format(n));
-export const compact = n => (n == null ? '—' : new Intl.NumberFormat('pt-PT', { notation: 'compact', maximumFractionDigits: 1 }).format(n));
+export const fmtInt = n => (n == null ? '—' : new Intl.NumberFormat('en-GB').format(n));
+export const compact = n => (n == null ? '—' : new Intl.NumberFormat('en-GB', { notation: 'compact', maximumFractionDigits: 1 }).format(n));
 export const host = url => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } };
 
 // replaceChildren() turns null into the text "null"; fill() drops empty slots so conditional UI stays clean.

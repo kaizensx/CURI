@@ -159,7 +159,7 @@ export async function pythonPackages() {
 }
 
 export function deviceInfo() {
-  return { os: OS, label: OS_LABEL[OS], support: SUPPORT[OS], arch: os.arch(), release: os.release(), credential_store: OS === 'macos' ? 'Keychain do macOS' : OS === 'windows' ? 'Gestor de Credenciais do Windows' : 'Secret Service (libsecret)' };
+  return { os: OS, label: OS_LABEL[OS], support: SUPPORT[OS], arch: os.arch(), release: os.release(), credential_store: OS === 'macos' ? 'macOS Keychain' : OS === 'windows' ? 'Windows Credential Manager' : 'Secret Service (libsecret)' };
 }
 
 // Open a URL in the default browser / reveal a file in the OS file manager (no shell interpolation).

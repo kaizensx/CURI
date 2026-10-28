@@ -72,9 +72,9 @@ async function claudeCode() {
   if (bin) {
     const t = await run(bin, ['plugin', 'list', '--json'], 30000);
     try { plugins = JSON.parse(t).map(p => ({ id: p.id, name: String(p.id).split('@')[0], marketplace: String(p.id).split('@')[1] || null, version: p.version || null, scope: p.scope, enabled: Boolean(p.enabled), managed_by: p.scope === 'synced' ? 'account' : 'local' })); }
-    catch { pluginsError = 'O Claude Code não devolveu a lista de plugins.'; }
+    catch { pluginsError = 'Claude Code didn\'t return the plugin list.'; }
   }
-  return { id: 'claude-code', label: 'Claude Code', present: Boolean(bin) || exists(claudeHome()), binary: bin, config: claudeJsonPath(), writable: Boolean(bin), mcp, skills, plugins, notes: pluginsError ? [pluginsError] : [], manage: { kind: 'cli', how: 'O CURI instala, ativa e remove através do próprio Claude Code (claude mcp / claude plugin).' } };
+  return { id: 'claude-code', label: 'Claude Code', present: Boolean(bin) || exists(claudeHome()), binary: bin, config: claudeJsonPath(), writable: Boolean(bin), mcp, skills, plugins, notes: pluginsError ? [pluginsError] : [], manage: { kind: 'cli', how: 'CURI installs, enables and removes through Claude Code itself (claude mcp / claude plugin).' } };
 }
 
 function claudeDesktop() {
@@ -93,8 +93,8 @@ function claudeDesktop() {
   const seen = new Set();
   const accountSkills = account.filter(s => (seen.has(s.name) ? false : seen.add(s.name)));
   return { id: 'claude-desktop', label: 'Claude Desktop', present: exists(dir), config: exists(cfgPath) ? cfgPath : null, writable: false, mcp: mcpFrom(cfg?.mcpServers, 'desktop'), skills: [], account_skills: accountSkills, plugins: [],
-    notes: accountSkills.length ? [`${accountSkills.length} skills da sua conta claude.ai, sincronizadas pelo Claude Desktop.`] : [],
-    manage: { kind: 'account', url: 'https://claude.ai/settings/capabilities', how: 'As skills e conectores da conta são geridos em claude.ai › Definições › Capacidades. Os servidores MCP locais do Claude Desktop estão em Definições › Programador.' } };
+    notes: accountSkills.length ? [`${accountSkills.length} skills from your claude.ai account, synced by Claude Desktop.`] : [],
+    manage: { kind: 'account', url: 'https://claude.ai/settings/capabilities', how: 'Account skills and connectors are managed in claude.ai › Settings › Capabilities. Claude Desktop\'s local MCP servers are in Settings › Developer.' } };
 }
 
 function codex() {
@@ -102,13 +102,13 @@ function codex() {
   const cfg = path.join(home, 'config.toml');
   let mcp = [];
   try { mcp = codexMcp(fs.readFileSync(cfg, 'utf8')); } catch {}
-  return { id: 'codex', label: 'Codex', present: exists(home), binary: which('codex'), config: exists(cfg) ? cfg : null, writable: false, mcp, skills: skillsIn(path.join(home, 'skills'), 'user'), plugins: [], notes: [], manage: { kind: 'file', how: 'Servidores MCP em ~/.codex/config.toml ([mcp_servers.*]); skills em ~/.codex/skills.' } };
+  return { id: 'codex', label: 'Codex', present: exists(home), binary: which('codex'), config: exists(cfg) ? cfg : null, writable: false, mcp, skills: skillsIn(path.join(home, 'skills'), 'user'), plugins: [], notes: [], manage: { kind: 'file', how: 'MCP servers in ~/.codex/config.toml ([mcp_servers.*]); skills in ~/.codex/skills.' } };
 }
 
 function jsonAgent(id, label, file, key, dirs = []) {
   const cfg = readJson(file);
   const present = exists(file) || dirs.some(exists);
-  return { id, label, present, config: exists(file) ? file : null, writable: false, mcp: mcpFrom(cfg?.[key], 'user'), skills: [], plugins: [], notes: [], manage: { kind: 'file', how: `Servidores MCP em ${file.replace(HOME, '~')}.` } };
+  return { id, label, present, config: exists(file) ? file : null, writable: false, mcp: mcpFrom(cfg?.[key], 'user'), skills: [], plugins: [], notes: [], manage: { kind: 'file', how: `MCP servers in ${file.replace(HOME, '~')}.` } };
 }
 
 export async function inspectAgents() {

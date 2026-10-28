@@ -17,49 +17,7 @@ for (let i = 1; i < argv.length; i++) {
 }
 const JSON_OUT = Boolean(flags.json);
 
-const HELP = `CURI — Claude Universal Resource Intelligence (Core CLI)
-
-Uso: curi <comando> [opções]   (acrescente --json para saída máquina)
-
-Consulta
-  status                         Estado do registo, bootstrap e fornecedores
-  doctor                         Preflight do dispositivo e da integração Claude
-  search <intenção> [--limit N] [--type T] [--status S] [--capability C]
-  suggest <tarefa>               Capacidades inferidas para uma tarefa
-  list [--status S] [--type T] [--capability C]
-  show <id>                      Registo completo de um recurso
-  compare <id1> <id2> [...]      Comparação lado a lado
-  gaps                           Auditoria de lacunas por domínio/capacidade
-  audit                          Duplicados, sobreposições de skills, riscos
-  inventory                      Skills/plugins/MCP existentes (só leitura)
-  plan <id>                      Plano de instalação descritivo (não executa)
-  scan <ficheiro>                Análise estática de segurança (SKILL.md, README...)
-  velocity <owner/repo>          Crescimento de estrelas (só com snapshots reais)
-  log [--limit N]                Registo de auditoria (cadeia de hashes)
-
-Alterações ao registo
-  add <url> [--note T] [--source S] [--pending]
-  import-seeds [--dry-run]       Importar o catálogo inicial (idempotente)
-  verify-source <id|--all-unverified> [--no-api] [--limit N]
-  discover --mode task --intent "<texto>" | --mode frontier [--windows 7d,30d] [--max-queries N]
-  candidates <scanId> [--new]    Candidatos de uma descoberta
-  promote <candidateId>          Catalogar candidato (NEEDS_VERIFICATION, nunca instala)
-  export [--out ficheiro]        Exportação JSON versionada
-  import <ficheiro> [--apply]    Importação (dry-run por omissão)
-  backup                         Cópia consistente da base de dados
-
-Integração Claude (altera ~/.claude — exige aprovação explícita)
-  bridge plan                    Mostra exatamente o que seria escrito
-  bridge install --approve skill.write,mcp.register
-  rollback <tx-id>               Reverte uma transação gerida pelo CURI
-  drift                          Deteta alterações externas aos ficheiros geridos
-  verify [--clean-session] [--no-bridge]   Verificação independente
-
-Bootstrap / app
-  bootstrap status|advance|pause|resume|cancel|rollback [--approve ...] [--network-verify] [--clean-session]
-  app [--port N] [--no-open]     Abre a aplicação desktop (servidor local loopback)
-  mcp                            Servidor MCP stdio (usado pelo Claude Code)
-`;
+const HELP = `CURI — Claude Universal Resource Intelligence (Core CLI)\n\nUsage: curi <command> [options]   (add --json for machine output)\n\nQuery\n  status                         Registry, setup and provider status\n  doctor                         Device and Claude integration preflight\n  search <intent> [--limit N] [--type T] [--status S] [--capability C]\n  suggest <task>                 Capabilities inferred for a task\n  list [--status S] [--type T] [--capability C]\n  show <id>                      Full record for a resource\n  compare <id1> <id2> [...]      Side-by-side comparison\n  gaps                           Gap audit by domain/capability\n  audit                          Duplicates, skill overlaps, risks\n  inventory                      Existing skills/plugins/MCP (read-only)\n  plan <id>                      Descriptive install plan (doesn't run anything)\n  scan <file>                    Static security scan (SKILL.md, README...)\n  velocity <owner/repo>          Star growth (real snapshots only)\n  log [--limit N]                Audit log (hash chain)\n\nRegistry changes\n  add <url> [--note T] [--source S] [--pending]\n  import-seeds [--dry-run]       Import the starter catalogue (idempotent)\n  verify-source <id|--all-unverified> [--no-api] [--limit N]\n  discover --mode task --intent "<text>" | --mode frontier [--windows 7d,30d] [--max-queries N]\n  candidates <scanId> [--new]    Candidates from a discovery run\n  promote <candidateId>          Catalogue a candidate (NEEDS_VERIFICATION, never installs)\n  export [--out file]            Versioned JSON export\n  import <file> [--apply]        Import (dry run by default)\n  backup                         Consistent database copy\n\nClaude integration (changes ~/.claude, needs explicit approval)\n  bridge plan                    Shows exactly what would be written\n  bridge install --approve skill.write,mcp.register\n  rollback <tx-id>               Rolls back a CURI-managed transaction\n  drift                          Detects external changes to managed files\n  verify [--clean-session] [--no-bridge]   Independent verification\n\nSetup / app\n  bootstrap status|advance|pause|resume|cancel|rollback [--approve ...] [--network-verify] [--clean-session]\n  app [--port N] [--no-open]     Opens the desktop app (local loopback server)\n  mcp                            stdio MCP server (used by Claude Code)\n`;
 
 function out(data, human) {
   if (JSON_OUT || !human) process.stdout.write(JSON.stringify(data, null, 2) + '\n');
@@ -84,11 +42,11 @@ async function main() {
       case 'status': {
         const { statusSummary } = await import('../src/status.mjs');
         return out(statusSummary(db), s => {
-          console.log(`Registo: ${s.resources} recursos · ${s.source_urls} URLs de origem · ${s.verified_sources} verificados · schema v${s.schema_version}`);
-          console.log(`Estados: ${Object.entries(s.by_status).map(([k, v]) => `${k}=${v}`).join(' ')}`);
-          console.log(`Bootstrap: ${s.bootstrap.state}${s.bootstrap.updated_at ? ` (${s.bootstrap.updated_at})` : ''}`);
-          console.log(`Integração gerida: ${s.installed_by_curi.map(i => `${i.kind}:${i.name}=${i.health}`).join(', ') || 'nenhuma'}`);
-          if (s.last_verification) console.log(`Última verificação: ${s.last_verification.verdict} (${s.last_verification.passed}/${s.last_verification.total}) em ${s.last_verification.ts}`);
+          console.log(`Registry: ${s.resources} resources · ${s.source_urls} source URLs · ${s.verified_sources} verified · schema v${s.schema_version}`);
+          console.log(`States: ${Object.entries(s.by_status).map(([k, v]) => `${k}=${v}`).join(' ')}`);
+          console.log(`Setup: ${s.bootstrap.state}${s.bootstrap.updated_at ? ` (${s.bootstrap.updated_at})` : ''}`);
+          console.log(`Managed integration: ${s.installed_by_curi.map(i => `${i.kind}:${i.name}=${i.health}`).join(', ') || 'none'}`);
+          if (s.last_verification) console.log(`Last verification: ${s.last_verification.verdict} (${s.last_verification.passed}/${s.last_verification.total}) at ${s.last_verification.ts}`);
         });
       }
       case 'doctor': {
@@ -98,18 +56,18 @@ async function main() {
         const pf = await preflight();
         const integ = Object.values(db.prepare('PRAGMA quick_check').get())[0];
         return out({ ...pf, db: { integrity: integ, schema: currentVersion(db) }, drift: driftReport(db) }, d => {
-          console.log(`SO: ${d.os.platform} ${d.os.macos || d.os.release} ${d.os.arch} · disco livre ${d.disk_free_gb} GB · GitHub ${d.network.github ? 'acessível' : 'inacessível'}`);
-          console.log(`Node ${d.toolchain.node} · ${d.toolchain.git || 'git ausente'} · Rust ${d.toolchain.rust || 'ausente'}`);
-          console.log(`Claude Code: ${d.claude.binary ? `${d.claude.version} (${d.claude.on_path ? 'no PATH' : 'embutido na app Claude'})` : 'NÃO encontrado'} · sessão CLI: ${d.claude.auth.loggedIn === true ? 'autenticada' : d.claude.auth.loggedIn === false ? 'NÃO autenticada' : 'desconhecida'}`);
-          console.log(`BD: ${d.db.integrity} · schema v${d.db.schema} · drift: ${d.drift.drift.length ? d.drift.drift.map(x => x.name).join(', ') : 'nenhum'}`);
+          console.log(`SO: ${d.os.platform} ${d.os.macos || d.os.release} ${d.os.arch} · disco livre ${d.disk_free_gb} GB · GitHub ${d.network.github ? 'reachable' : 'unreachable'}`);
+          console.log(`Node ${d.toolchain.node} · ${d.toolchain.git || 'no git'} · Rust ${d.toolchain.rust || 'missing'}`);
+          console.log(`Claude Code: ${d.claude.binary ? `${d.claude.version} (${d.claude.on_path ? 'on PATH' : 'bundled with the Claude app'})` : 'NOT found'} · CLI session: ${d.claude.auth.loggedIn === true ? 'signed in' : d.claude.auth.loggedIn === false ? 'NOT signed in' : 'unknown'}`);
+          console.log(`DB: ${d.db.integrity} · schema v${d.db.schema} · drift: ${d.drift.drift.length ? d.drift.drift.map(x => x.name).join(', ') : 'none'}`);
         });
       }
       case 'search': {
         const { search } = await import('../src/search.mjs');
         const q = pos.join(' ');
-        if (!q) throw new Error('Indique a intenção: curi search "<texto>"');
+        if (!q) throw new Error('Give an intent: curi search "<text>"');
         return out(search(db, q, { limit: Number(flags.limit) || 8, type: flags.type, status: flags.status, capability: flags.capability, tier: flags.tier, license: flags.license }), s => {
-          console.log(`Intenção: ${s.intent.capabilities.map(c => c.id).join(', ') || '(sem capacidade reconhecida)'} · cobertura ${s.coverage}`);
+          console.log(`Intent: ${s.intent.capabilities.map(c => c.id).join(', ') || '(no recognised capability)'} · coverage ${s.coverage}`);
           for (const r of s.results) console.log(`  ${r.score.toFixed(3)}  ${r.name}  [${r.type}/${r.status}${r.explanation.verified ? '/verificado' : ''}]  ${r.canonical_url}\n         ${r.explanation.matched_capabilities.join(', ') || 'texto'}${r.risk_notes ? `  ⚠ ${r.risk_notes}` : ''}`);
           console.log(s.advice);
         });
@@ -125,7 +83,7 @@ async function main() {
       case 'show': {
         const { getResource } = await import('../src/registry.mjs');
         const r = getResource(db, pos[0]);
-        if (!r) throw new Error(`Recurso inexistente: ${pos[0]}`);
+        if (!r) throw new Error(`Unknown resource: ${pos[0]}`);
         return out(r, null);
       }
       case 'compare': {
@@ -145,7 +103,7 @@ async function main() {
       case 'add': {
         const { addUrl } = await import('../src/registry.mjs');
         const r = addUrl(db, pos[0], { note: flags.note, source: flags.source || 'cli', actor: flags.source === 'claude' ? 'claude' : 'user', pending: Boolean(flags.pending) });
-        return out(r, x => console.log(`${x.duplicate ? 'Já existia (avistamento registado)' : 'Adicionado'}: ${x.id} [${x.type}/${x.status}] capacidades: ${x.capabilities.map(c => c.id).join(', ') || '—'}`));
+        return out(r, x => console.log(`${x.duplicate ? 'Already in the catalogue (sighting recorded)' : 'Added'}: ${x.id} [${x.type}/${x.status}] capacidades: ${x.capabilities.map(c => c.id).join(', ') || '—'}`));
       }
       case 'import-seeds': { const { importSeeds } = await import('../src/registry.mjs'); const rep = importSeeds(db, undefined, { dryRun: Boolean(flags['dry-run']) }); if (!flags['dry-run']) { const { seedFacts } = await import('../src/facts.mjs'); rep.facts = seedFacts(db); } return out(rep, null); }
       case 'verify-source': {
@@ -159,7 +117,7 @@ async function main() {
         const { discover } = await import('../src/discover.mjs');
         const r = await discover(db, { mode: flags.mode || 'task', intent: flags.intent || pos.join(' '), windows: flags.windows ? String(flags.windows).split(',') : undefined, maxQueries: Number(flags['max-queries']) || 6, onEvent: e => !JSON_OUT && process.stderr.write(`${e.level === 'error' ? '✗' : '·'} ${e.q.kind}: ${e.q.q}${e.error ? ` — ${e.error}` : ` (${e.n})`}\n`) });
         return out(r, x => {
-          console.log(`Scan ${x.scanId}: ${x.status} · ${x.total} resultados · fatia independente ${(x.independentShare * 100).toFixed(0)}%`);
+          console.log(`Scan ${x.scanId}: ${x.status} · ${x.total} results · independent share ${(x.independentShare * 100).toFixed(0)}%`);
           for (const c of x.candidates.filter(c => !c.in_registry).slice(0, 15)) console.log(`  [${c.id}] ${c.full_name} ★${c.stars} score=${c.score?.total ?? 'n/d'} conf=${c.score?.confidence} ${c.decision}${c.reason ? ` (${c.reason})` : ''}\n        ${c.description?.slice(0, 120) || ''}`);
         });
       }
@@ -168,7 +126,7 @@ async function main() {
       case 'export': {
         const { exportRegistry } = await import('../src/registry.mjs');
         const data = exportRegistry(db);
-        if (flags.out) { fs.writeFileSync(flags.out, JSON.stringify(data, null, 2)); return out({ written: flags.out, count: data.count }, x => console.log(`Exportados ${x.count} recursos para ${x.written}`)); }
+        if (flags.out) { fs.writeFileSync(flags.out, JSON.stringify(data, null, 2)); return out({ written: flags.out, count: data.count }, x => console.log(`Exported ${x.count} resources to ${x.written}`)); }
         return out(data, null);
       }
       case 'import': { const { importRegistry } = await import('../src/registry.mjs'); return out(importRegistry(db, JSON.parse(fs.readFileSync(pos[0], 'utf8')), { dryRun: !flags.apply }), null); }
@@ -182,10 +140,10 @@ async function main() {
       case 'bridge': {
         const b = await import('../src/bridge.mjs');
         if (pos[0] === 'plan') return out(b.planBridgeInstall(), p => {
-          console.log(`Claude home: ${p.claude_home}\nClaude JSON: ${p.claude_json}\nCLI Claude: ${p.claude_binary || 'não encontrada'}`);
+          console.log(`Claude home: ${p.claude_home}\nClaude JSON: ${p.claude_json}\nClaude CLI: ${p.claude_binary || 'not found'}`);
           for (const a of p.actions) console.log(`- ${a.id} [${a.risk}] ${a.state}: ${a.path || a.via || a.target}`);
           for (const c of p.conflicts) console.log(`! conflito ${c.action}: ${c.reason}`);
-          console.log(`Não tocado: ${p.untouched.join('; ')}`);
+          console.log(`Untouched: ${p.untouched.join('; ')}`);
         });
         if (pos[0] === 'install') return out(await b.applyBridgeInstall(db, { approve: flags.approve ? String(flags.approve).split(',') : [] }), null);
         throw new Error('Use: curi bridge plan | curi bridge install --approve skill.write,mcp.register');
@@ -197,7 +155,7 @@ async function main() {
         const r = await runVerification(db, { requireBridge: !flags['no-bridge'], cleanSession: Boolean(flags['clean-session']), actor: 'user' });
         return out(r, x => {
           for (const c of x.checks) console.log(`${c.status === 'pass' ? '✓' : c.status === 'blocked' ? '◌' : '✗'} ${c.id}${c.mandatory ? '' : ' (opcional)'} — ${c.status} (${c.ms} ms)`);
-          console.log(`Veredicto: ${x.verdict} · ${x.passed}/${x.total} · recibo ${x.receipt_file}`);
+          console.log(`Verdict: ${x.verdict} · ${x.passed}/${x.total} · receipt ${x.receipt_file}`);
         });
       }
       case 'bootstrap': {
@@ -209,7 +167,7 @@ async function main() {
         else if (['pause', 'resume', 'cancel'].includes(sub)) r = boot[sub](db);
         else if (sub === 'rollback') r = await boot.rollbackBootstrap(db);
         else throw new Error('bootstrap status|advance|pause|resume|cancel|rollback');
-        return out(r, x => console.log(`Estado: ${x.state || x.state?.state} · passo ${x.step || ''}\n${JSON.stringify(x.data?.completed ? Object.keys(x.data.completed) : x, null, 0)}`));
+        return out(r, x => console.log(`State: ${x.state || x.state?.state} · step ${x.step || ''}\n${JSON.stringify(x.data?.completed ? Object.keys(x.data.completed) : x, null, 0)}`));
       }
       case 'daemon': {
         // Background pass (LaunchAgent): recover interrupted work, run approved/auto operations, schedule observation.
@@ -237,8 +195,8 @@ async function main() {
         const { startServer } = await import('../src/server.mjs');
         db.close();
         const s = await startServer({ port: Number(flags.port) || 0 });
-        console.log(`CURI Desktop em ${s.url.replace(/#token=.*/, '')} (token local em ${(await import('../src/paths.mjs')).paths.uiToken})`);
-        console.log(`Estado: ${s.launch.state}${s.launch.needs_onboarding ? ' — onboarding pendente' : ''}. Ctrl+C para terminar.`);
+        console.log(`CURI Desktop at ${s.url.replace(/#token=.*/, '')} (local token in ${(await import('../src/paths.mjs')).paths.uiToken})`);
+        console.log(`State: ${s.launch.state}${s.launch.needs_onboarding ? ' (setup pending)' : ''}. Ctrl+C to stop.`);
         if (!flags['no-open']) {
           const { spawn } = await import('node:child_process');
           const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'explorer' : 'xdg-open';
@@ -250,7 +208,7 @@ async function main() {
         return;
       }
       default:
-        throw new Error(`Comando desconhecido: ${cmd}. Use "curi help".`);
+        throw new Error(`Unknown command: ${cmd}. Try "curi help".`);
     }
   } finally {
     if (cmd !== 'app') try { db.close(); } catch {}
@@ -259,6 +217,6 @@ async function main() {
 
 main().catch(e => {
   if (JSON_OUT) process.stdout.write(JSON.stringify({ ok: false, error: e.message }) + '\n');
-  else console.error(`Erro: ${e.message}`);
+  else console.error(`Error: ${e.message}`);
   process.exit(1);
 });

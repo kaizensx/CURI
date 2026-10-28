@@ -156,7 +156,7 @@ export async function inspectGithub(db, full, { onLog = () => {} } = {}) {
     xcode: files.some(f => f.endsWith('.xcodeproj/project.pbxproj')), gradle: has('build.gradle') || has('build.gradle.kts') || has('settings.gradle.kts'),
     install_sh: has('install.sh'), skills_product: skillFiles.filter(f => !INTERNAL.test(f)).length,
   };
-  onLog(`${full}: ${files.length} ficheiros, ${skillFiles.length} SKILL.md`);
+  onLog(`${full}: ${files.length} files, ${skillFiles.length} SKILL.md`);
   const readmePath = files.find(f => /^readme(\.[a-z]+)?$/i.test(f));
   const readme = readmePath ? (await getText(RAW(full, ref, readmePath))).text : null;
   facts.readme_chars = readme?.length || 0;

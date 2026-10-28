@@ -75,7 +75,7 @@ test('every API action the UI calls exists in Core (no dead buttons)', () => {
   for (const f of uiFiles.filter(f => f.endsWith('.js'))) for (const m of fs.readFileSync(f, 'utf8').matchAll(/api\('([A-Za-z]+)'/g)) used.add(m[1]);
   const missing = [...used].filter(a => !Object.hasOwn(ACTIONS, a));
   assert.deepEqual(missing, []);
-  assert.ok(used.size >= 30, `UI usa ${used.size} ações`);
+  assert.ok(used.size >= 30, `UI uses ${used.size} actions`);
 });
 test('UI never injects HTML strings (untrusted repo text stays text)', () => {
   for (const f of uiFiles.filter(f => f.endsWith('.js'))) assert.doesNotMatch(fs.readFileSync(f, 'utf8'), /\.innerHTML\s*=|insertAdjacentHTML|outerHTML\s*=/, f);
@@ -103,5 +103,5 @@ test('every operation kind the UI starts is registered in the engine', async () 
   const used = new Set();
   for (const f of uiFiles.filter(f => f.endsWith('.js'))) for (const m of fs.readFileSync(f, 'utf8').matchAll(/runOperation\('([\w.]+)'/g)) used.add(m[1]);
   assert.deepEqual([...used].filter(k => !kinds().includes(k)), []);
-  assert.ok(used.size >= 10, `UI usa ${used.size} tipos de operação`);
+  assert.ok(used.size >= 10, `UI uses ${used.size} operation kinds`);
 });

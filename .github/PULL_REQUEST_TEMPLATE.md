@@ -1,9 +1,9 @@
-## O que muda
+## What changes
 
-## Como foi verificado
+## How it was checked
 - [ ] `cd core && npm test`
-- [ ] Ecrãs afetados abertos na app e revistos (claro/escuro, 960 px)
-- [ ] Nenhum segredo, caminho pessoal ou dado de utilizador nos ficheiros
+- [ ] Affected screens opened in the app and reviewed (light/dark, 960 px)
+- [ ] No secrets, personal paths or user data in the files
 
-## Riscos
-Alterações a permissões, à política de autonomia, ao que é escrito em `~/.claude` ou a instaladores precisam de descrição explícita aqui.
+## Risks
+Changes to permissions, the autonomy policy, what gets written to `~/.claude`, or installers need a clear description here.

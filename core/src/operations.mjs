@@ -35,7 +35,7 @@ const set = (db, id, fields) => {
 // Enqueue: the handler's plan() describes category/publisher/checks; the policy decides auto/ask/block.
 export async function enqueue(db, kind, params = {}, { actor = 'user', dependsOn = [] } = {}) {
   const h = handlers.get(kind);
-  if (!h) throw new Error(`Operação não suportada: ${kind}`);
+  if (!h) throw new Error(`Unsupported operation: ${kind}`);
   const plan = await h.plan(db, params);
   const existing = db.prepare(`SELECT id FROM operations WHERE kind=? AND lock_key=? AND status IN ('queued','running','awaiting_approval','interrupted')`).get(kind, plan.lockKey);
   if (existing) return getOp(db, existing.id); // idempotent enqueue: no duplicate pending work
@@ -52,7 +52,7 @@ export async function enqueue(db, kind, params = {}, { actor = 'user', dependsOn
 // What would happen if this were enqueued now (no side effects).
 export async function preview(db, kind, params) {
   const h = handlers.get(kind);
-  if (!h) throw new Error(`Operação não suportada: ${kind}`);
+  if (!h) throw new Error(`Unsupported operation: ${kind}`);
   const plan = await h.plan(db, params);
   const ev = evaluate(db, plan);
   return { kind, resource: plan.resource, source: plan.source || null, category: ev.category, decision: ev.decision, mode: ev.mode, reasons: ev.reasons };
@@ -60,7 +60,7 @@ export async function preview(db, kind, params) {
 
 export function approve(db, id, { actor = 'user' } = {}) {
   const op = getOp(db, id);
-  if (!op || op.status !== 'awaiting_approval') throw new Error('Esta operação não está à espera de aprovação.');
+  if (!op || op.status !== 'awaiting_approval') throw new Error('This operation isn\'t waiting for approval.');
   set(db, id, { status: 'queued', approved_by: actor });
   audit(db, actor, 'operation.approve', id, { kind: op.kind, category: op.security_class });
   return getOp(db, id);
@@ -68,7 +68,7 @@ export function approve(db, id, { actor = 'user' } = {}) {
 
 export function reject(db, id, { actor = 'user' } = {}) {
   const op = getOp(db, id);
-  if (!op || !['awaiting_approval', 'queued', 'blocked', 'interrupted'].includes(op.status)) throw new Error('Não é possível rejeitar esta operação no estado atual.');
+  if (!op || !['awaiting_approval', 'queued', 'blocked', 'interrupted'].includes(op.status)) throw new Error('This operation can\'t be rejected in its current state.');
   set(db, id, { status: 'rejected', finished_at: now() });
   audit(db, actor, 'operation.reject', id, { kind: op.kind });
   return getOp(db, id);
@@ -77,8 +77,8 @@ export function reject(db, id, { actor = 'user' } = {}) {
 // Queued work is cancelled immediately; running work stops at its next safe boundary.
 export function cancel(db, id, { actor = 'user' } = {}) {
   const op = getOp(db, id);
-  if (!op) throw new Error('Operação inexistente.');
-  if (op.status === 'running') { set(db, id, { cancel_requested: 1 }); log(db, id, 'warn', 'Cancelamento pedido: a operação pára no próximo ponto seguro.'); }
+  if (!op) throw new Error('Unknown operation.');
+  if (op.status === 'running') { set(db, id, { cancel_requested: 1 }); log(db, id, 'warn', 'Cancellation requested: the operation stops at the next safe point.'); }
   else if (!TERMINAL.includes(op.status)) set(db, id, { status: 'cancelled', finished_at: now() });
   audit(db, actor, 'operation.cancel', id, { status: op.status });
   return getOp(db, id);
@@ -86,7 +86,7 @@ export function cancel(db, id, { actor = 'user' } = {}) {
 
 export function retry(db, id, { actor = 'user' } = {}) {
   const op = getOp(db, id);
-  if (!op || !['failed', 'interrupted', 'cancelled'].includes(op.status)) throw new Error('Só operações falhadas, interrompidas ou canceladas podem ser repetidas.');
+  if (!op || !['failed', 'interrupted', 'cancelled'].includes(op.status)) throw new Error('Only failed, interrupted or cancelled operations can be retried.');
   set(db, id, { status: 'queued', attempts: 0, error: null, cancel_requested: 0, not_before: null });
   audit(db, actor, 'operation.retry', id, null);
   return getOp(db, id);
@@ -107,7 +107,7 @@ export async function reevaluateQueued(db) {
 // After a crash, running work is marked interrupted and requeued; handlers are idempotent.
 export function recover(db) {
   const rows = db.prepare(`SELECT id FROM operations WHERE status='running'`).all();
-  for (const r of rows) { set(db, r.id, { status: 'queued', stage: 'recovered' }); log(db, r.id, 'warn', 'Retomada após interrupção do CURI.'); }
+  for (const r of rows) { set(db, r.id, { status: 'queued', stage: 'recovered' }); log(db, r.id, 'warn', 'Resumed after CURI was interrupted.'); }
   return rows.length;
 }
 
@@ -144,7 +144,7 @@ export async function runNext(db) {
     const out = await h.run(db, op.params, ctx);
     if (out?.needsApproval) { set(db, id, { status: 'awaiting_approval', decision: 'ask', decision_reasons: out.needsApproval, approved_by: null, attempts: 0 }); log(db, id, 'warn', out.needsApproval.join(' ')); audit(db, 'system', 'operation.paused_for_approval', id, { kind: op.kind }); return getOp(db, id); }
     if (out?.cancelled) { set(db, id, { status: 'cancelled', finished_at: now(), recovery: out.recovery || null }); audit(db, 'system', 'operation.cancelled', id, null); return getOp(db, id); }
-    set(db, id, { status: out?.verified ? 'verified' : 'completed', verification: out?.verification || null, recovery: out?.recovery || null, progress: 1, stage: out?.verified ? 'verificado' : 'concluído (sem verificação independente)', finished_at: now() });
+    set(db, id, { status: out?.verified ? 'verified' : 'completed', verification: out?.verification || null, recovery: out?.recovery || null, progress: 1, stage: out?.verified ? 'verificado' : 'done (no independent verification)', finished_at: now() });
     audit(db, 'system', 'operation.done', id, { kind: op.kind, verified: Boolean(out?.verified) });
   } catch (e) {
     const fresh = getOp(db, id);

@@ -1,30 +1,35 @@
-# Privacidade
+# Privacy
 
-O CURI guarda tudo localmente em `~/Library/Application Support/CURI/`. Não há conta CURI, servidor CURI, telemetria nem relatórios de falhas automáticos.
+Everything CURI knows stays on your computer, in its data folder. There's no CURI account, no CURI server, no telemetry and no automatic crash reports.
 
-## O que sai do seu Mac, e quando
+## What leaves your computer, and when
 
-| Destino | Quando | Conteúdo | Pode desligar |
+| Destination | When | What's sent | Can you turn it off |
 |---|---|---|---|
-| `api.github.com`, `github.com`, `codeload.github.com` | Verificar fontes, radar, instalar skills | Termos de pesquisa, nomes de repositórios; token se o ligou | Não usar o radar; sem token = anónimo |
-| `api.anthropic.com` | Verificar a disponibilidade de rede; testar a chave API se a guardou | Um pedido HEAD; `GET /v1/models` com a chave | Sim |
-| Claude (via Claude Code) | Só quando pede "Verificar com um pedido real" | Um prompt fixo de teste; consome uso da sua conta | Sim (nunca automático) |
-| `api.openai.com`, `generativelanguage.googleapis.com` | Testar a chave que guardou | Pedido de listagem de modelos | Sim |
-| `nodejs.org`, `registry.npmjs.org` | Instalar dependências em falta, ativar MCP via npx | Pedidos de download | Sim (com Node e Claude já instalados) |
-| `registry.npmjs.org`, `pypi.org`, `crates.io`, `formulae.brew.sh`, `raw.githubusercontent.com` | Atualizar os dados de um recurso | Nomes de pacotes e de repositórios | Sim (os dados das sementes vêm com a app) |
-| Gestores de pacotes (Homebrew, npm, uv, WinGet…) | Quando instala, atualiza ou remove algo | O que o gestor normalmente pede ao seu repositório | Sim |
-| `api.github.com/user/starred` | Quando pede para ler as suas estrelas, ou se ativar essa tarefa automática | O seu token GitHub | Sim |
-| Servidores MCP que ativar | Quando o Claude os usa | O que esse servidor envia, segundo a política dele | Desativar o servidor |
+| `api.github.com`, `github.com`, `codeload.github.com`, `raw.githubusercontent.com` | Checking sources, Discover, inspecting a project, installing skills | Search terms and repository names; your token if you connected one | Don't use Discover; without a token you're anonymous |
+| `registry.npmjs.org`, `pypi.org`, `crates.io`, `formulae.brew.sh` | Confirming that a package exists and belongs to the project | Package names | Yes (the starter catalogue's data ships with the app) |
+| Package managers (Homebrew, npm, uv, WinGet…) | When you install, update or remove something | Whatever the manager normally asks its own registry | Yes |
+| `api.github.com/user/starred` | When you ask CURI to read your stars, or you turn that task on | Your GitHub token | Yes |
+| `api.anthropic.com` | Checking connectivity; testing your API key if you saved one | A HEAD request; `GET /v1/models` with the key | Yes |
+| Claude (through Claude Code) | Only when you click "Verify with a real request" | A fixed test prompt; uses your account's quota | Yes (never automatic) |
+| `api.openai.com`, `generativelanguage.googleapis.com` | Testing a key you saved | A model listing request | Yes |
+| `nodejs.org` | Installing missing dependencies on first launch | Download requests | Yes (if Node and Claude Code are already there) |
+| MCP servers you enable | When Claude uses them | Whatever that server sends, under its own policy | Disable the server |
 
-## O que é lido no seu dispositivo (nunca enviado)
-Para reconhecer o que já tem, a deteção lê, só em leitura: nomes de aplicações e executáveis, listas dos gestores de pacotes, e a configuração de servidores MCP, skills e plugins de cada agente (`~/.claude.json`, `~/.claude/skills`, `.mcp.json` dos projetos conhecidos, `claude plugin list`, `claude_desktop_config.json`, `~/.codex/config.toml` e `~/.codex/skills`, `~/.cursor/mcp.json`, `~/.gemini/settings.json`, Windsurf e VS Code). Das skills da conta claude.ai lê apenas o manifesto que o Claude Desktop sincroniza (nome, descrição, ativo). Ficheiros de autenticação (`auth.json`, cookies, tokens) nunca são abertos. A sessão do GitHub CLI só é reutilizada quando carrega em "Reutilizar esta sessão", através do comando oficial `gh auth token`.
+## What CURI reads on your computer (never sent anywhere)
+To recognise what you already have, detection reads (read-only):
+- app and executable names, and package manager listings;
+- each agent's MCP server, skill and plugin configuration: `~/.claude.json`, `~/.claude/skills`, `.mcp.json` in known projects, `claude plugin list`, `claude_desktop_config.json`, `~/.codex/config.toml` and `~/.codex/skills`, `~/.cursor/mcp.json`, `~/.gemini/settings.json`, Windsurf and VS Code;
+- for claude.ai account skills, only the manifest Claude Desktop syncs (name, description, enabled).
 
-## O que nunca é enviado
-Conteúdo dos seus projetos, ficheiros, histórico de conversas do Claude, credenciais para serviços que não as pediram.
+Authentication files (`auth.json`, cookies, tokens) are never opened. The GitHub CLI session is reused only when you click "Reuse this session", through the official `gh auth token` command.
 
-## Retenção e remoção
-- Registo de auditoria e operações: locais; exportáveis em Definições.
-- Remover uma ligação apaga a credencial do Porta-chaves (a chave continua válida no fornecedor até a revogar lá).
-- Apagar `~/Library/Application Support/CURI/` remove todos os dados do CURI; a integração Claude reverte-se em Claude Bridge → Transações.
+## What's never sent
+Your projects' contents, your files, your Claude conversation history, or credentials to any service that didn't ask for them.
 
-O consentimento para instalações automáticas (Automação) é separado do consentimento para gastos (pedidos a modelos), que é sempre pedido.
+## Retention and removal
+- Audit log and operations history: local; exportable from Settings.
+- Removing a connection deletes the credential from the system vault (the key stays valid at the provider until you revoke it there).
+- Deleting CURI's data folder removes all of CURI's data; the Claude integration can be rolled back from Settings › Claude integration.
+
+Consent for automatic installs (Autonomy) is separate from consent to spend money (model requests), which is always asked for.

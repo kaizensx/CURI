@@ -63,7 +63,7 @@ export async function claudeAuthStatus(bin) {
     // Only non-secret fields are surfaced.
     return { available: true, loggedIn: Boolean(j.loggedIn), authMethod: j.authMethod ?? null, apiProvider: j.apiProvider ?? null };
   } catch {
-    return { available: true, loggedIn: null, note: 'Formato de "claude auth status" não reconhecido nesta versão.' };
+    return { available: true, loggedIn: null, note: 'Unrecognised "claude auth status" format in this version.' };
   }
 }
 
@@ -136,7 +136,7 @@ export function inventory() {
     settings_keys: settings,
     claude_md: fs.existsSync(claudeMd) ? { exists: true, bytes: fs.statSync(claudeMd).size, sha256: sha256File(claudeMd) } : { exists: false },
     claude_json: claudeJsonError ? { error: claudeJsonError } : { path: claudeJsonPath(), sha256: sha256File(claudeJsonPath()) },
-    limits: ['Skills sincronizadas da conta claude.ai não são detetáveis por inspeção de ficheiros; use uma sessão Claude Code para as listar.'],
+    limits: ['claude.ai account skills can\'t be detected by reading files; use a Claude Code session to list them.'],
   };
 }
 

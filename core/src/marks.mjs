@@ -8,17 +8,17 @@ export const allMarks = db => getPref(db, 'user_marks', {});
 export const marksFor = (db, id) => allMarks(db)[id] || {};
 
 export function setMark(db, id, patch) {
-  if (!db.prepare('SELECT 1 FROM resources WHERE id=?').get(id)) throw new Error('Recurso inexistente.');
+  if (!db.prepare('SELECT 1 FROM resources WHERE id=?').get(id)) throw new Error('Unknown resource.');
   const all = allMarks(db);
   const cur = { ...(all[id] || {}) };
   if ('fav' in patch) cur.fav = Boolean(patch.fav);
   if ('hidden' in patch) cur.hidden = Boolean(patch.hidden);
   if ('notes' in patch) cur.notes = String(patch.notes || '').slice(0, 4000);
   if ('collections' in patch) cur.collections = [...new Set((patch.collections || []).map(c => String(c).trim().slice(0, 40)).filter(Boolean))].slice(0, 20);
-  if ('kind' in patch) { if (patch.kind && !KIND[patch.kind]) throw new Error('Tipo inválido.'); cur.kind = patch.kind || null; }
+  if ('kind' in patch) { if (patch.kind && !KIND[patch.kind]) throw new Error('Invalid kind.'); cur.kind = patch.kind || null; }
   if ('command' in patch) {
     const c = String(patch.command || '').trim();
-    if (c && !/^(npm (i|install|add)|pnpm add|yarn add|bun add|pip install|uv add|npx shadcn@latest add) [\w@./<>=\[\]"-]+( [\w@./<>=\[\]"-]+)*$/.test(c)) throw new Error('Comando não suportado: use npm/pnpm/yarn/bun add, pip install, uv add ou npx shadcn@latest add.');
+    if (c && !/^(npm (i|install|add)|pnpm add|yarn add|bun add|pip install|uv add|npx shadcn@latest add) [\w@./<>=\[\]"-]+( [\w@./<>=\[\]"-]+)*$/.test(c)) throw new Error('Unsupported command: use npm/pnpm/yarn/bun add, pip install, uv add or npx shadcn@latest add.');
     cur.command = c || null;
   }
   for (const k of Object.keys(cur)) if (cur[k] == null || cur[k] === false || cur[k] === '' || (Array.isArray(cur[k]) && !cur[k].length)) delete cur[k];
@@ -36,7 +36,7 @@ export function collections(db) {
 }
 export function addCollection(db, name) {
   const n = String(name || '').trim().slice(0, 40);
-  if (!n) throw new Error('Nome vazio.');
+  if (!n) throw new Error('Empty name.');
   setPref(db, 'collections', [...new Set([...getPref(db, 'collections', []), n])]);
   return collections(db);
 }

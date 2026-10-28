@@ -1,41 +1,34 @@
-# Alterações
+# Changelog
+
+## 3.3.0 — 2026-10-28
+
+- Everything is in English now: the app, the native menu, the engine's messages, the code and the docs.
+- Discover only shows what CURI can actually install. Each discovery is inspected (manifests, README, registry checks) and gets a one-click **Install**, which also installs a missing prerequisite first when that's all that stands in the way.
+- The Library only lists resources CURI can act on: install, connect, add to a project, or manage what's already there.
+- Libraries and frameworks can be added straight to one of your projects with its own package manager (npm, pnpm, yarn, bun or uv), and the result is checked in the manifest.
+- Your own layer on top of the catalogue: favourites, collections, notes, your own kind and project command, hiding things.
+- Redesigned Library (list or grid, sorting, more filters, bulk actions), Discover (install-first cards, saved searches that can run on their own), Capabilities (areas with progress rings and dense rows) and This device.
+- An ambient field on Home, adapted from a HorizonX shader.
+- Fixed: the sidebar sat under the macOS window buttons and never showed the native material.
 
 ## 3.2.0 — 2026-10-28
 
-A versão em que o CURI deixou de ser um catálogo e passou a fazer o trabalho.
-
-- Navegação nova: Início, Biblioteca, Descobrir, Capacidades, Este dispositivo e Ligações. Atividade e Definições passam a ter separadores. Os endereços antigos continuam a funcionar.
-- Visual novo, com a Geist incluída na app, estados de presença claros e o mapa do ambiente no Início.
-- Todas as sementes do catálogo inicial foram inspecionadas: ficheiros, manifestos, README e confirmação nos registos npm, PyPI, crates.io e Homebrew. Os dados vêm com a app e cada recurso pode ser atualizado à mão.
-- Cada recurso tem o seu tipo real e ações reais:
-  - instalar, atualizar e remover pelo gestor de pacotes;
-  - plugins do Claude Code;
-  - servidores MCP;
-  - adicionar bibliotecas a um projeto com o gestor desse projeto;
-  - catálogos de componentes através do MCP do shadcn.
-- Personalização: favoritos, coleções, notas, tipo e comando próprios, ocultar recursos.
-- Deteção em Claude Code, Claude Desktop, conta claude.ai, Codex, Cursor, Gemini CLI, Windsurf e VS Code.
-- Base para Windows e Linux (gestores de pacotes, aplicações, cofre de credenciais). Está implementada mas ainda não foi testada nesses sistemas.
-- Capacidades em linguagem simples, com o passo que falta para cada uma.
-- Comparação por diferenças concretas, sem pontuação total.
-- Descobrir por utilidade para agentes:
-  - filtros por interface, domínio e utilidade;
-  - pesquisas guardadas que podem correr sozinhas;
-  - revisão das estrelas do GitHub;
-  - reutilização da sessão do GitHub CLI.
-- Manutenção automática dentro do modo de autonomia escolhido.
-- Corrigido: a barra lateral ficava por baixo dos botões da janela no macOS.
+- New navigation: Home, Library, Discover, Capabilities, This device, Connections, Activity and Settings.
+- Every starter seed was inspected; each resource has its real kind and real install options per operating system.
+- Detection across Claude Code, Claude Desktop, your claude.ai account, Codex, Cursor, Gemini CLI, Windsurf and VS Code.
+- Real actions: package managers, Claude Code plugins, MCP servers.
+- Capabilities in plain language, decision-oriented comparisons, agent-relevance ranking for discoveries, GitHub stars.
+- Automatic maintenance within the autonomy mode you choose.
+- Groundwork for Windows and Linux (implemented, not yet tested on those systems).
 
 ## 3.1.0 — 2026-10-28
 
-- Ligação ao Claude Code sem terminal, com cancelamento e estados claros.
-- Ligações a GitHub, Anthropic, OpenAI e Google, com as chaves no Porta-chaves.
-- Modos de autonomia, com uma tabela do que cada um faz sem perguntar.
-- Fila de operações que sobrevive a reinícios e nunca duplica trabalho.
-- Janela de progresso para todas as operações.
-- Serviço de fundo opcional.
-- Identidade visual.
+- Claude Code sign-in without a terminal.
+- Connections to GitHub, Anthropic, OpenAI and Google, with keys in the system vault.
+- Autonomy modes with a visible permission matrix.
+- A persistent operations queue and a progress window for every operation.
+- Optional background service. Visual identity.
 
 ## 3.0.0 — 2026-10-28
 
-Primeira versão: registo local, pesquisa por intenção, radar do GitHub, integração com o Claude Code e app para macOS.
+First version: local registry, intent search, GitHub discovery, Claude Code integration and the macOS app.

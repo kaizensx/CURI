@@ -1,88 +1,88 @@
 <p align="center"><img src="brand/export/readme-hero.png" alt="CURI" width="100%"></p>
 
 <p align="center">
-  <b>As capacidades dos seus agentes de IA, num só sítio.</b><br>
-  Veja o que já tem, encontre o que falta e instale com um clique. Sem terminal.
+  <b>Everything your AI agents can do, in one place.</b><br>
+  See what you already have, find what's missing, and install it in one click. No terminal.
 </p>
 
 <p align="center">
-  <a href="#instalar">Instalar</a> ·
-  <a href="#o-que-faz">O que faz</a> ·
-  <a href="#desenvolvimento">Desenvolvimento</a> ·
-  <a href="docs/PRIVACY.md">Privacidade</a> ·
-  <a href="CHANGELOG.md">Alterações</a>
+  <a href="#install">Install</a> ·
+  <a href="#what-it-does">What it does</a> ·
+  <a href="#development">Development</a> ·
+  <a href="docs/PRIVACY.md">Privacy</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
 </p>
 
-<p align="center"><img src="docs/screenshots/home.png" alt="Início do CURI com o mapa do ambiente de agentes" width="100%"></p>
+<p align="center"><img src="docs/screenshots/home.png" alt="CURI home: a map of your agents and what they can do" width="100%"></p>
 
 ---
 
-Uso o Claude Code, o Codex e o Claude Desktop todos os dias, e cada um tinha as suas skills, os seus servidores MCP e os seus plugins espalhados por ficheiros diferentes. Nunca sabia ao certo o que estava instalado onde, nem se havia algo melhor para o que estava a fazer.
+I use Claude Code, Codex and Claude Desktop every day, and each one had its own skills, MCP servers and plugins spread across different files. I never knew what was installed where, or whether there was something better for the job in front of me.
 
-O CURI resolve isso. Lê o que já existe no computador e na conta claude.ai, junta tudo a uma biblioteca de mais de 220 recursos verificados (skills, plugins, servidores MCP, ferramentas, aplicações e bibliotecas), e trata da parte aborrecida: instalar, ativar, atualizar e reparar.
+CURI fixes that. It reads what's already on your computer and in your claude.ai account, lines it up against a library of 220+ checked resources (skills, plugins, MCP servers, tools, apps and libraries), and does the boring part for you: installing, connecting, updating and repairing.
 
-## O que faz
+## What it does
 
-**Reconhece o que já tem.** Claude Code, Claude Desktop, as skills da sua conta claude.ai, Codex, Cursor, Gemini CLI, Windsurf e VS Code, mais as aplicações e os pacotes do Homebrew, npm, uv e companhia. Não é preciso reinstalar nada só porque não foi o CURI a instalar.
+**Knows what you already have.** Claude Code, Claude Desktop, your claude.ai account skills, Codex, Cursor, Gemini CLI, Windsurf and VS Code, plus your apps and what Homebrew, npm, uv and friends have installed. You never reinstall something just because CURI didn't install it.
 
-**Uma biblioteca que faz coisas.** Cada recurso tem o seu tipo real e o botão certo:
-- uma ferramenta instala-se pelo gestor de pacotes;
-- um servidor MCP fica ativo no Claude Code;
-- um plugin instala-se, ativa-se ou desativa-se;
-- uma biblioteca entra num projeto seu com o gestor que esse projeto já usa (npm, pnpm, yarn, bun ou uv);
-- um catálogo de componentes fica disponível para o agente através do MCP do shadcn.
+**A library that does things.** Every resource has its real kind and the right button:
+- a tool installs through your package manager;
+- an MCP server gets enabled in Claude Code;
+- a plugin installs, enables or disables;
+- a library goes straight into one of your projects, with the package manager that project already uses (npm, pnpm, yarn, bun or uv);
+- a component catalogue becomes available to your agent through the shadcn MCP server.
 
-Favoritos, coleções, notas, tipo e comandos próprios: a biblioteca adapta-se a si.
+If CURI can't do anything with it, it doesn't show it. Favourites, collections, notes, your own kind and commands: the library bends to how you work.
 
-<p align="center"><img src="docs/screenshots/library.png" alt="Biblioteca com filtros, estado em cada agente e ações" width="100%"></p>
+<p align="center"><img src="docs/screenshots/library.png" alt="The library, with filters, where each resource lives and what you can do with it" width="100%"></p>
 
-**Capacidades, não só ferramentas.** "Controlar o Blender", "ler PDFs", "testar o site no browser". O CURI mostra o que os seus agentes já conseguem fazer, o que fica a um clique e o que ainda não existe.
+**Capabilities, not just tools.** "Control Blender", "read PDFs", "test my site in the browser". CURI shows what your agents can already do, what's one click away, and what doesn't exist yet.
 
-**Comparações para decidir.** O que só cada opção oferece, quanto custa pô-la a funcionar no seu computador, dependências, riscos, manutenção e licença. Sem pontuações inventadas.
+<p align="center"><img src="docs/screenshots/capabilities.png" alt="Capabilities grouped by area, with progress and one-click fixes" width="100%"></p>
 
-<p align="center"><img src="docs/screenshots/compare.png" alt="Comparação entre Playwright MCP, Chrome DevTools MCP e agent-browser" width="100%"></p>
+**Comparisons that help you decide.** What only one option offers, what it takes to get it running on your machine, dependencies, risks, upkeep and licence. No made-up scores.
 
-**Descobrir com critério.** Os projetos do GitHub são avaliados pelo que acrescentam a um agente: se ele os consegue usar (MCP, skill, linha de comando, API, aplicação programável) e em que área. Listas "awesome", tutoriais e ruído ficam de fora, com o motivo à vista. Também revê as suas estrelas do GitHub. As pesquisas podem ser guardadas e correr sozinhas.
+**Discover, with taste.** New GitHub projects are judged by what they'd add to an agent: whether it can actually use them (MCP, skill, command line, API, scriptable app) and in which field. CURI inspects every one and only shows what it can install here, with a single **Install** button. It can also go through your GitHub stars, and saved searches can run on their own.
 
-<p align="center"><img src="docs/screenshots/discover.png" alt="Descobrir com filtros por interface, domínio e utilidade" width="100%"></p>
+<p align="center"><img src="docs/screenshots/discover.png" alt="Discover: projects CURI has inspected and can install in one click" width="100%"></p>
 
-**Trabalha sozinho, dentro dos limites que escolher.** Há três modos de autonomia, com uma tabela clara do que cada um faz sem perguntar. A manutenção corre em fundo: deteção, verificação, atualizações e reparações. Remoções e ações de administrador perguntam sempre. Tudo o que acontece aparece numa janela de progresso e fica registado.
+**Works on its own, within limits you set.** Three autonomy modes, with a clear table of what each one does without asking. Maintenance runs in the background: detection, checks, updates and repairs. Removals and admin actions always ask. Everything shows up in a progress window and is logged.
 
-## Instalar
+## Install
 
-1. Descarregue o `.dmg` da página de [Releases](../../releases).
-2. Arraste o CURI para Aplicações e abra-o.
-3. Na primeira abertura, o CURI instala o que faltar (Node.js, Claude Code) na sua própria pasta, mostra o progresso e faz a primeira deteção.
+1. Download the `.dmg` from [Releases](../../releases).
+2. Drag CURI to Applications and open it.
+3. On first launch CURI installs anything missing (Node.js, Claude Code) into its own folder, shows the progress, and runs its first scan.
 
-> As builds ainda não estão assinadas com um certificado Apple Developer ID. Na primeira vez, o macOS pede confirmação em *Definições do Sistema › Privacidade e Segurança*.
+> Builds aren't signed with an Apple Developer ID yet. The first time, macOS asks you to confirm in *System Settings › Privacy & Security*.
 
-**Plataformas.** O macOS (Apple Silicon, 13 ou superior) é o sistema testado. O suporte a Windows e Linux já existe no motor (gestores de pacotes, aplicações e cofre de credenciais de cada sistema), mas ainda não foi testado em máquinas reais, e a app di-lo.
+**Platforms.** macOS (Apple Silicon, 13 or later) is the tested system. Windows and Linux support exists in the engine (each system's package managers, apps and credential vault) but hasn't been tested on real machines yet, and the app says so.
 
-## Privacidade
+## Privacy
 
-Tudo fica no computador. Não há conta CURI, servidor CURI nem telemetria. A interface só escuta em `127.0.0.1` e exige um token. As chaves ficam no cofre do sistema e nunca passam para ficheiros de configuração. O que é lido e quando sai alguma coisa da máquina está em [docs/PRIVACY.md](docs/PRIVACY.md).
+Everything stays on your computer. There's no CURI account, no CURI server and no telemetry. The interface only listens on `127.0.0.1` and needs a token. Keys live in your system's vault and never end up in config files. What gets read, and when anything leaves the machine, is in [docs/PRIVACY.md](docs/PRIVACY.md).
 
-## Desenvolvimento
+## Development
 
 ```bash
-cd core && npm test                       # motor, operações, deteção, servidor
-node core/bin/curi.mjs app                # interface no browser, sem compilar
-cd desktop && npm ci && npx tauri build   # app nativa (precisa de Rust)
-node core/scripts/seed-audit.mjs          # volta a inspecionar o catálogo inicial
+cd core && npm test                       # engine, operations, detection, server
+node core/bin/curi.mjs app                # the interface in your browser, no build
+cd desktop && npm ci && npx tauri build   # the native app (needs Rust)
+node core/scripts/seed-audit.mjs          # re-inspect the starter catalogue
 ```
 
 ```
-app/        interface (HTML, CSS e JS sem dependências)
-core/       motor em Node: registo SQLite, deteção, perfis, operações, política, CLI e servidor MCP
-desktop/    shell Tauri v2 em Rust
-bridge/     skill do Claude que liga o agente ao CURI
-brand/      identidade visual, gerada a partir de uma única geometria
+app/        interface (HTML, CSS and JS, no dependencies)
+core/       Node engine: SQLite registry, detection, profiles, operations, policy, CLI and MCP server
+desktop/    Tauri v2 shell in Rust
+bridge/     the Claude skill that connects your agent to CURI
+brand/      visual identity, generated from a single geometry
 ```
 
-O CLI (`node core/bin/curi.mjs help`) faz o mesmo que a app, para quem prefere o terminal.
+The CLI (`node core/bin/curi.mjs help`) does everything the app does, if you prefer the terminal.
 
-[Como contribuir](CONTRIBUTING.md) · [Segurança](SECURITY.md) · [Design](docs/DESIGN.md) · [Contratos internos](docs/CONTRACTS.md)
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Design](docs/DESIGN.md) · [Internal contracts](docs/CONTRACTS.md)
 
-## Licença
+## Licence
 
-[MIT](LICENSE). As licenças de terceiros estão em [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[MIT](LICENSE). Third-party licences are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

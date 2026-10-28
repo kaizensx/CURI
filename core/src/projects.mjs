@@ -36,7 +36,7 @@ export function listProjects(db) {
 
 export function addProject(db, dir) {
   const p = path.resolve(String(dir || '').replace(/^~(?=$|\/)/, os.homedir()));
-  if (!fs.existsSync(p) || !fs.statSync(p).isDirectory()) throw new Error('Essa pasta não existe.');
+  if (!fs.existsSync(p) || !fs.statSync(p).isDirectory()) throw new Error('That folder doesn\'t exist.');
   const list = getPref(db, 'projects', []);
   if (!list.includes(p)) setPref(db, 'projects', [p, ...list].slice(0, 50));
   setPref(db, 'projects_hidden', getPref(db, 'projects_hidden', []).filter(x => x !== p));
@@ -53,14 +53,14 @@ export function planProjectCommand(command, project, { component } = {}) {
   const parts = command.trim().split(/\s+/);
   const js = project.ecosystems.find(e => e.id === 'js'), py = project.ecosystems.find(e => e.id === 'py');
   if (parts[0] === 'npx' && parts.includes('shadcn@latest') && parts.includes('add')) {
-    if (!js) return { error: 'O projeto não é JavaScript (falta package.json).' };
+    if (!js) return { error: 'The project isn\'t JavaScript (no package.json).' };
     const target = parts.at(-1).replace('<componente>', component || '');
     if (!component && /<componente>/.test(parts.at(-1))) return { needs: 'component' };
     return { cmd: 'npx', args: ['--yes', 'shadcn@latest', 'add', target, '--yes'], verify: null, ecosystem: 'js' };
   }
-  if (parts[0] === 'npx' || parts[0] === 'npm' && parts[1] === 'init') return { error: 'Este comando cria um projeto novo; corra-o numa pasta vazia.' };
+  if (parts[0] === 'npx' || parts[0] === 'npm' && parts[1] === 'init') return { error: 'This command creates a new project; run it in an empty folder.' };
   if (parts[0] === 'npm' && /^(i|install|add)$/.test(parts[1])) {
-    if (!js) return { error: 'O projeto não é JavaScript (falta package.json).' };
+    if (!js) return { error: 'The project isn\'t JavaScript (no package.json).' };
     const dev = parts.includes('-D') || parts.includes('--save-dev');
     const pkgs = parts.slice(2).filter(x => !x.startsWith('-') && x !== '&&' && x !== 'npm' && x !== 'install');
     const pm = js.manager;
@@ -68,13 +68,13 @@ export function planProjectCommand(command, project, { component } = {}) {
     return { cmd: pm, args, verify: { js: pkgs.map(x => x.replace(/(.)@[^@/]*$/, '$1')) }, ecosystem: 'js' };
   }
   if (parts[0] === 'pip' && parts[1] === 'install') {
-    if (!py) return { error: 'O projeto não é Python (falta pyproject.toml ou requirements.txt).' };
+    if (!py) return { error: 'The project isn\'t Python (no pyproject.toml or requirements.txt).' };
     const pkgs = parts.slice(2).map(x => x.replace(/^"|"$/g, ''));
     if (py.manager === 'uv') return { cmd: 'uv', args: ['add', ...pkgs], verify: { py: pkgs.map(x => x.replace(/\[.*$/, '')) }, ecosystem: 'py' };
     if (fs.existsSync(path.join(project.path, '.venv'))) return { cmd: path.join(project.path, '.venv', os.platform() === 'win32' ? 'Scripts' : 'bin', 'pip'), args: ['install', ...pkgs], verify: { py: pkgs.map(x => x.replace(/\[.*$/, '')) }, ecosystem: 'py' };
-    return { error: 'O projeto não tem ambiente virtual (.venv) nem uv; crie um primeiro.' };
+    return { error: 'The project has no virtual environment (.venv) or uv; create one first.' };
   }
-  return { error: 'Este passo faz-se à mão (copie o comando).' };
+  return { error: 'This step is manual (copy the command).' };
 }
 
 export function verifyInProject(project, verify) {

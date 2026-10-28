@@ -34,20 +34,20 @@ export const linkBtn = (label, href, { kind = '', iconName } = {}) => h('a', { c
 
 // ---------- Status language ----------
 const STATUS = {
-  READY: ['good', 'check', 'Pronto'], PARTIAL_READY: ['warn', 'alert', 'Parcial'], FAILED: ['bad', 'x', 'Falhou'], BLOCKED: ['bad', 'lock', 'Bloqueado'],
-  UNINITIALIZED: ['', 'clock', 'Não configurado'], APPROVAL_REQUIRED: ['info', 'shield', 'Aguarda aprovação'], PROVISIONING: ['info', 'bolt', 'A aplicar'], VERIFYING: ['info', 'check', 'A verificar'],
-  PAUSED: ['warn', 'pause', 'Em pausa'], CANCELLED: ['', 'x', 'Cancelado'], ROLLING_BACK: ['warn', 'undo', 'A reverter'], RECOVERING: ['warn', 'refresh', 'A recuperar'],
-  ENVIRONMENT_AUDITED: ['info', 'check', 'Ambiente auditado'], PLAN_READY: ['info', 'wizard', 'Plano pronto'], PREFLIGHT: ['info', 'clock', 'Preflight'],
-  INSTALLED: ['good', 'check', 'Instalado'], CONFIGURED: ['good', 'check', 'Configurado'], CATALOGUED: ['', 'library', 'Catalogado'], ON_DEMAND: ['info', 'bolt', 'Sob demanda'],
-  NEEDS_VERIFICATION: ['warn', 'clock', 'Por verificar'], PENDING_REVIEW: ['warn', 'clock', 'Revisão pendente'], UNAVAILABLE: ['bad', 'x', 'Indisponível'], DEPRECATED: ['bad', 'alert', 'Obsoleto'],
-  REJECTED: ['bad', 'x', 'Rejeitado'], UNSUPPORTED: ['bad', 'x', 'Não suportado'], REQUIRES_AUTHENTICATION: ['warn', 'lock', 'Requer autenticação'], REQUIRES_APPROVAL: ['warn', 'shield', 'Requer aprovação'],
-  pass: ['good', 'check', 'Passou'], fail: ['bad', 'x', 'Falhou'], blocked: ['warn', 'lock', 'Bloqueado'],
-  'files-ok': ['good', 'check', 'Ficheiros OK'], configured: ['good', 'check', 'Configurado'], drift: ['bad', 'alert', 'Drift'], outdated: ['warn', 'refresh', 'Desatualizado'],
-  committed: ['good', 'check', 'Aplicada'], rolled_back: ['', 'undo', 'Revertida'], rollback_partial: ['warn', 'alert', 'Reversão parcial'], pending: ['info', 'clock', 'Pendente'], failed: ['bad', 'x', 'Falhou'],
-  completed: ['good', 'check', 'Concluída'], partial: ['warn', 'alert', 'Parcial'], running: ['info', 'clock', 'Em curso'],
-  candidate: ['info', 'sparkle', 'Candidato'], promoted: ['good', 'check', 'Catalogado'], rejected: ['bad', 'x', 'Rejeitado'],
-  approved: ['good', 'check', 'Aprovado'], missing: ['warn', 'alert', 'Em falta'], ok: ['good', 'check', 'OK'], rate_limited: ['warn', 'clock', 'Limite atingido'], unreachable: ['bad', 'x', 'Inacessível'], error: ['bad', 'x', 'Erro'],
-  strong: ['good', 'check', 'Cobertura forte'], weak: ['warn', 'alert', 'Cobertura fraca'], none: ['bad', 'x', 'Sem cobertura'],
+  READY: ['good', 'check', 'Ready'], PARTIAL_READY: ['warn', 'alert', 'Partial'], FAILED: ['bad', 'x', 'Failed'], BLOCKED: ['bad', 'lock', 'Blocked'],
+  UNINITIALIZED: ['', 'clock', 'Not set up'], APPROVAL_REQUIRED: ['info', 'shield', 'Awaiting approval'], PROVISIONING: ['info', 'bolt', 'A aplicar'], VERIFYING: ['info', 'check', 'Verifying'],
+  PAUSED: ['warn', 'pause', 'Paused'], CANCELLED: ['', 'x', 'Cancelled'], ROLLING_BACK: ['warn', 'undo', 'A reverter'], RECOVERING: ['warn', 'refresh', 'A recuperar'],
+  ENVIRONMENT_AUDITED: ['info', 'check', 'Environment audited'], PLAN_READY: ['info', 'wizard', 'Plan ready'], PREFLIGHT: ['info', 'clock', 'Preflight'],
+  INSTALLED: ['good', 'check', 'Installed'], CONFIGURED: ['good', 'check', 'Configured'], CATALOGUED: ['', 'library', 'Catalogued'], ON_DEMAND: ['info', 'bolt', 'On demand'],
+  NEEDS_VERIFICATION: ['warn', 'clock', 'Needs verification'], PENDING_REVIEW: ['warn', 'clock', 'Pending review'], UNAVAILABLE: ['bad', 'x', 'Unavailable'], DEPRECATED: ['bad', 'alert', 'Deprecated'],
+  REJECTED: ['bad', 'x', 'Rejected'], UNSUPPORTED: ['bad', 'x', 'Unsupported'], REQUIRES_AUTHENTICATION: ['warn', 'lock', 'Needs sign-in'], REQUIRES_APPROVAL: ['warn', 'shield', 'Needs approval'],
+  pass: ['good', 'check', 'Passed'], fail: ['bad', 'x', 'Failed'], blocked: ['warn', 'lock', 'Blocked'],
+  'files-ok': ['good', 'check', 'Files OK'], configured: ['good', 'check', 'Configured'], drift: ['bad', 'alert', 'Drift'], outdated: ['warn', 'refresh', 'Outdated'],
+  committed: ['good', 'check', 'Applied'], rolled_back: ['', 'undo', 'Rolled back'], rollback_partial: ['warn', 'alert', 'Partial rollback'], pending: ['info', 'clock', 'Pending'], failed: ['bad', 'x', 'Failed'],
+  completed: ['good', 'check', 'Done'], partial: ['warn', 'alert', 'Partial'], running: ['info', 'clock', 'Running'],
+  candidate: ['info', 'sparkle', 'Candidate'], promoted: ['good', 'check', 'Catalogued'], rejected: ['bad', 'x', 'Rejected'],
+  approved: ['good', 'check', 'Approved'], missing: ['warn', 'alert', 'Missing'], ok: ['good', 'check', 'OK'], rate_limited: ['warn', 'clock', 'Rate limited'], unreachable: ['bad', 'x', 'Unreachable'], error: ['bad', 'x', 'Error'],
+  strong: ['good', 'check', 'Strong coverage'], weak: ['warn', 'alert', 'Weak coverage'], none: ['bad', 'x', 'No coverage'],
 };
 export function status(key, labelOverride) {
   const [kind, ic, label] = STATUS[key] || ['', 'info', key];
@@ -80,7 +80,7 @@ export function skeleton(rows = 4, height = 18) {
   return h('div', { class: 'stack', 'aria-busy': 'true', 'aria-label': 'A carregar' }, Array.from({ length: rows }, (_, i) => h('div', { class: 'skel', style: { height: `${height}px`, width: `${90 - i * 9}%` } })));
 }
 
-export function table(cols, rows, { onRow, emptyText = 'Sem registos.', label } = {}) {
+export function table(cols, rows, { onRow, emptyText = 'Nothing yet.', label } = {}) {
   if (!rows.length) return empty('list', emptyText);
   return h('div', { class: 'table-wrap' }, h('table', { class: 't', 'aria-label': label || null },
     h('thead', null, h('tr', null, cols.map(c => h('th', { scope: 'col', class: c.num ? 'num' : null }, c.label)))),
@@ -148,14 +148,14 @@ export function overlay(node, { onClose } = {}) {
 }
 
 // Native-feeling sheets replacing window.confirm/prompt (which a desktop webview may not implement).
-export function confirmDialog({ title, body, confirm = 'Confirmar', danger = false }) {
+export function confirmDialog({ title, body, confirm = 'Confirm', danger = false }) {
   return new Promise(resolve => {
     let done = false;
     const finish = v => { if (!done) { done = true; resolve(v); close(); } };
     const ok = h('button', { type: 'button', class: `btn ${danger ? 'danger' : 'primary'}` }, confirm);
     const lines = Array.isArray(body) ? body : String(body || '').split('\n').filter(Boolean);
     const node = h('div', { class: 'dialog', role: 'alertdialog', 'aria-modal': 'true', 'aria-labelledby': 'dlg-t' }, h('h3', { id: 'dlg-t' }, title), lines.length ? h('div', { class: 'dlg-body' }, lines.map(l => h('p', null, l))) : null,
-      h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', onclick: () => finish(false) }, 'Cancelar'), ok));
+      h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', onclick: () => finish(false) }, 'Cancel'), ok));
     ok.addEventListener('click', () => finish(true));
     const close = overlay(node, { onClose: () => finish(false) });
     ok.focus();
@@ -168,7 +168,7 @@ export function promptDialog({ title, body, placeholder = '', confirm = 'OK', va
     const input = h('input', { type: 'text', placeholder, value, 'aria-label': title });
     const finish = v => { if (!done) { done = true; resolve(v); close(); } };
     const node = h('div', { class: 'dialog', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'dlg-t' }, h('h3', { id: 'dlg-t' }, title), body ? h('p', null, body) : null, h('div', { class: 'field' }, input),
-      h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', onclick: () => finish(null) }, 'Cancelar'), h('button', { type: 'button', class: 'btn primary', onclick: () => finish(input.value) }, confirm)));
+      h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', onclick: () => finish(null) }, 'Cancel'), h('button', { type: 'button', class: 'btn primary', onclick: () => finish(input.value) }, confirm)));
     input.addEventListener('keydown', e => e.key === 'Enter' && finish(input.value));
     const close = overlay(node, { onClose: () => finish(null) });
     input.focus();

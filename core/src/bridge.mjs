@@ -40,7 +40,7 @@ export function renderSkill() {
 function skillDir() { return path.join(claudeHome(), 'skills', SKILL_NAME); }
 
 function readClaudeJson() {
-  try { return JSON.parse(fs.readFileSync(claudeJsonPath(), 'utf8')); } catch (e) { if (e.code === 'ENOENT') return null; throw new Error(`~/.claude.json ilegível: ${e.message}`); }
+  try { return JSON.parse(fs.readFileSync(claudeJsonPath(), 'utf8')); } catch (e) { if (e.code === 'ENOENT') return null; throw new Error(`~/.claude.json is unreadable: ${e.message}`); }
 }
 
 function sameMcp(entry) {
@@ -64,7 +64,7 @@ export function planBridgeInstall() {
   if (fs.existsSync(skillFile)) {
     const managed = fs.existsSync(path.join(dir, '.curi-managed.json'));
     const cur = fs.readFileSync(skillFile, 'utf8');
-    if (!managed) conflicts.push({ action: 'skill.write', reason: `Já existe uma skill não gerida pelo CURI em ${dir}; não será sobrescrita.` });
+    if (!managed) conflicts.push({ action: 'skill.write', reason: `A skill not managed by CURI already exists in ${dir}; it won't be overwritten.` });
     else if (cur === content) actions.push({ id: 'skill.write', risk: 'LOCAL_FILE_WRITE', state: 'already-applied', path: skillFile });
     else actions.push({ id: 'skill.write', risk: 'LOCAL_FILE_WRITE', state: 'update', path: skillFile, before_sha: sha(cur), after_sha: sha(content), preview: content });
   } else actions.push({ id: 'skill.write', risk: 'LOCAL_FILE_WRITE', state: 'create', path: skillFile, after_sha: sha(content), bytes: content.length, preview: content });
@@ -73,11 +73,11 @@ export function planBridgeInstall() {
   const existing = cj?.mcpServers?.[MCP_NAME];
   const bin = findClaudeBinary();
   const spec = mcpSpec();
-  const via = bin ? `${q(bin)} mcp add --scope user ${MCP_NAME} -- ${q(spec.command)} ${spec.args.map(q).join(' ')}` : `edição atómica de ${claudeJsonPath()} (mcpServers.${MCP_NAME}) — CLI Claude não encontrada`;
+  const via = bin ? `${q(bin)} mcp add --scope user ${MCP_NAME} -- ${q(spec.command)} ${spec.args.map(q).join(' ')}` : `atomic edit of ${claudeJsonPath()} (mcpServers.${MCP_NAME}): Claude CLI not found`;
   if (existing && sameMcp(existing)) actions.push({ id: 'mcp.register', risk: 'LOCAL_FILE_WRITE', state: 'already-applied', target: claudeJsonPath() });
-  else if (olderCuriMcp(existing)) actions.push({ id: 'mcp.register', risk: 'LOCAL_FILE_WRITE', state: 'update', target: claudeJsonPath(), via, previous: { command: existing.command, args: existing.args }, entry: { type: 'stdio', ...spec }, exposes: 'atualiza o lançador Node da entrada CURI existente' });
-  else if (existing) conflicts.push({ action: 'mcp.register', reason: `Já existe um MCP "${MCP_NAME}" com configuração diferente (${existing.command}); não será alterado.` });
-  else actions.push({ id: 'mcp.register', risk: 'LOCAL_FILE_WRITE', state: 'create', target: claudeJsonPath(), via, entry: { type: 'stdio', ...spec }, exposes: 'ferramentas MCP só de leitura + record_discovery (PENDING_REVIEW) + request_install_plan (nunca executa)' });
+  else if (olderCuriMcp(existing)) actions.push({ id: 'mcp.register', risk: 'LOCAL_FILE_WRITE', state: 'update', target: claudeJsonPath(), via, previous: { command: existing.command, args: existing.args }, entry: { type: 'stdio', ...spec }, exposes: 'updates the Node launcher of the existing CURI entry' });
+  else if (existing) conflicts.push({ action: 'mcp.register', reason: `An MCP named "${MCP_NAME}" with a different configuration (${existing.command}) already exists; it won't be changed.` });
+  else actions.push({ id: 'mcp.register', risk: 'LOCAL_FILE_WRITE', state: 'create', target: claudeJsonPath(), via, entry: { type: 'stdio', ...spec }, exposes: 'read-only MCP tools + record_discovery (PENDING_REVIEW) + request_install_plan (never runs anything)' });
 
   return {
     policy_version: POLICY_VERSION,
@@ -85,7 +85,7 @@ export function planBridgeInstall() {
     claude_json: claudeJsonPath(),
     claude_binary: bin,
     actions, conflicts,
-    untouched: ['~/.claude/CLAUDE.md (não é modificado: a skill trata do encaminhamento)', 'settings.json', 'hooks', 'outras skills e MCP servers'],
+    untouched: ['~/.claude/CLAUDE.md (not modified: the skill handles routing)', 'settings.json', 'hooks', 'outras skills e MCP servers'],
   };
 }
 
@@ -127,7 +127,7 @@ async function unregisterMcp() {
   const bin = findClaudeBinary();
   if (bin) {
     try { await pexec(bin, ['mcp', 'remove', '--scope', 'user', MCP_NAME], { timeout: 60000 }); return { method: 'claude-cli' }; }
-    catch (e) { if (!/not found|No MCP server/i.test(String(e.stderr))) throw new Error(`claude mcp remove falhou: ${String(e.stderr || e.message).slice(0, 300)}`); return { method: 'claude-cli', note: 'já ausente' }; }
+    catch (e) { if (!/not found|No MCP server/i.test(String(e.stderr))) throw new Error(`claude mcp remove falhou: ${String(e.stderr || e.message).slice(0, 300)}`); return { method: 'claude-cli', note: 'already absent' }; }
   }
   const cj = readClaudeJson();
   if (cj?.mcpServers?.[MCP_NAME]) { delete cj.mcpServers[MCP_NAME]; writeAtomic(claudeJsonPath(), JSON.stringify(cj, null, 2), 0o600); }
@@ -177,7 +177,7 @@ export async function applyBridgeInstall(db, { approve = [], actor = 'user' } = 
         if (a.state === 'update') await unregisterMcp();
         const r = await registerMcp();
         const fpAfter = otherMcpFingerprint();
-        if (fpBefore !== fpAfter) throw new Error('Outras entradas MCP mudaram durante o registo — abortado.');
+        if (fpBefore !== fpAfter) throw new Error('Other MCP entries changed during registration; aborted.');
         ops.push({ id: a.id, method: r.method, others_fingerprint: fpBefore, previous: a.state === 'update' ? a.previous : null });
       }
     }
@@ -195,14 +195,14 @@ export async function applyBridgeInstall(db, { approve = [], actor = 'user' } = 
 
 export async function rollback(db, txId, { actor = 'user', partialOps = null } = {}) {
   const t = db.prepare('SELECT * FROM transactions WHERE id=?').get(txId);
-  if (!t) throw new Error(`Transação inexistente: ${txId}`);
+  if (!t) throw new Error(`Unknown transaction: ${txId}`);
   if (t.status === 'rolled_back') return { tx: txId, status: 'already_rolled_back' };
   const ops = partialOps || JSON.parse(t.manifest || '{}').ops || [];
   const results = [];
   for (const op of [...ops].reverse()) {
     if (op.id === 'skill.write') {
       const cur = sha256File(op.path);
-      if (cur && cur !== op.sha_after) { results.push({ id: op.id, ok: false, reason: 'drift: SKILL.md foi editada fora do CURI; não removida (backup disponível)' }); continue; }
+      if (cur && cur !== op.sha_after) { results.push({ id: op.id, ok: false, reason: 'drift: SKILL.md was edited outside CURI; not removed (backup available)' }); continue; }
       const snap = db.prepare('SELECT * FROM config_snapshots WHERE tx_id=? AND path=?').get(txId, op.path);
       if (snap?.existed && snap.backup_path) { fs.copyFileSync(snap.backup_path, op.path); results.push({ id: op.id, ok: true, action: 'restored previous version' }); }
       else { fs.rmSync(path.dirname(op.path), { recursive: true, force: true }); results.push({ id: op.id, ok: true, action: 'removed' }); }
@@ -210,7 +210,7 @@ export async function rollback(db, txId, { actor = 'user', partialOps = null } =
     if (op.id === 'mcp.register') {
       const cj = readClaudeJson();
       const entry = cj?.mcpServers?.[MCP_NAME];
-      if (entry && !sameMcp(entry) && !(op.previous && entry.command === op.previous.command)) { results.push({ id: op.id, ok: false, reason: 'drift: entrada MCP alterada fora do CURI; não removida' }); continue; }
+      if (entry && !sameMcp(entry) && !(op.previous && entry.command === op.previous.command)) { results.push({ id: op.id, ok: false, reason: 'drift: MCP entry changed outside CURI; not removed' }); continue; }
       const fpBefore = otherMcpFingerprint();
       const r = await unregisterMcp();
       if (op.previous) await registerMcp(op.previous);

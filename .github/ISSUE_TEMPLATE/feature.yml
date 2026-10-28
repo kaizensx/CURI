@@ -1,11 +1,11 @@
-name: Proposta
-description: Uma capacidade nova ou uma integração a suportar.
+name: Idea
+description: A new capability, or an integration to support.
 labels: [enhancement]
 body:
   - type: textarea
     id: need
-    attributes: { label: Que problema resolve }
+    attributes: { label: What problem does it solve }
     validations: { required: true }
   - type: textarea
     id: integration
-    attributes: { label: Integração (se aplicável), description: "Repositório oficial, licença, como se autentica, o que precisa de aceder." }
+    attributes: { label: Integration (if any), description: "Official repository, licence, how it authenticates, what it needs access to." }

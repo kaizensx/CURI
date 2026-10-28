@@ -36,11 +36,12 @@ import { capabilityMap, compareDecision, capLabel } from './capabilities.mjs';
 import { maintenancePass, maintenanceStatus } from './maintenance.mjs';
 import { agentRelevance } from './relevance.mjs';
 import { listProjects, addProject, hideProject } from './projects.mjs';
+import { adoptCandidate, installSummary } from './candidates.mjs';
 import { allMarks, setMark, collections, addCollection, removeCollection } from './marks.mjs';
 
-const S = (v, max = 500) => { if (typeof v !== 'string' || v.length > max) throw new Error('parâmetro de texto inválido'); return v; };
+const S = (v, max = 500) => { if (typeof v !== 'string' || v.length > max) throw new Error('invalid text parameter'); return v; };
 const optS = (v, max) => (v == null || v === '' ? undefined : S(v, max));
-const I = (v, d, min, max) => { if (v == null) return d; const n = Number(v); if (!Number.isInteger(n) || n < min || n > max) throw new Error('parâmetro numérico inválido'); return n; };
+const I = (v, d, min, max) => { if (v == null) return d; const n = Number(v); if (!Number.isInteger(n) || n < min || n > max) throw new Error('invalid numeric parameter'); return n; };
 const ids = v => { if (!Array.isArray(v) || v.length < 2 || v.length > 5) throw new Error('ids: 2 a 5'); return v.map(x => S(x, 300)); };
 
 const running = new Map();
@@ -66,7 +67,7 @@ export const ACTIONS = {
     const marks = allMarks(db);
     const caps = new Map();
     for (const c of db.prepare('SELECT resource_id, capability_id FROM resource_capabilities').all()) { const l = caps.get(c.resource_id) || []; l.push(c.capability_id); caps.set(c.resource_id, l); }
-    const WHERE = { app: 'Aplicação', bin: 'Executável', brew: 'Homebrew', cask: 'Homebrew', npm: 'npm', pip: 'Python', uv: 'uv', pipx: 'pipx', cargo: 'Cargo', winget: 'WinGet', flatpak: 'Flatpak', scoop: 'Scoop' };
+    const WHERE = { app: 'App', bin: 'Executable', brew: 'Homebrew', cask: 'Homebrew', npm: 'npm', pip: 'Python', uv: 'uv', pipx: 'pipx', cargo: 'Cargo', winget: 'WinGet', flatpak: 'Flatpak', scoop: 'Scoop' };
     return db.prepare("SELECT id, name, type, status, description, gh_full_name, canonical_url, license, last_verified, tier FROM resources WHERE status<>'REJECTED' ORDER BY name COLLATE NOCASE").all().map(r => {
       const p = profileFor(db, r.id, ctx);
       const pres = presenceOf(db, r.id);
@@ -86,12 +87,13 @@ export const ACTIONS = {
   savedSearches: db => getPref(db, 'saved_searches', []),
   savedSearchSet: (db, p) => {
     const intent = S(p.intent, 200).trim();
-    if (intent.length < 3) throw new Error('Pesquisa demasiado curta.');
+    if (intent.length < 3) throw new Error('Search too short.');
     const list = getPref(db, 'saved_searches', []).filter(x => x.intent !== intent);
     if (!p.remove) list.unshift({ intent, auto: Boolean(p.auto), created: now() });
     setPref(db, 'saved_searches', list.slice(0, 30));
     return list;
   },
+  candidateAdopt: (db, p) => adoptCandidate(db, I(p.id, 0, 1, 1e12)),
   promoteMany: (db, p) => (Array.isArray(p.ids) ? p.ids.slice(0, 50) : []).map(id => { try { return promoteCandidate(db, Number(id)); } catch (e) { return { error: e.message }; } }),
   projectAdd: (db, p) => addProject(db, S(p.path, 1000)),
   projectHide: (db, p) => (hideProject(db, S(p.path, 1000)), { ok: true }),
@@ -103,18 +105,18 @@ export const ACTIONS = {
   githubAdoptCli: async db => { const r = await conns.adoptGithubCli(db); clearGithubTokenCache(); return r; },
   revealAgentConfig: (db, p) => {
     const a = (lastScan(db)?.agents || []).find(x => x.id === S(p.agent, 40));
-    if (!a?.config) throw new Error('Este agente não tem um ficheiro de configuração conhecido.');
+    if (!a?.config) throw new Error('This agent has no known configuration file.');
     platformOpen(a.config, { reveal: true });
     return { revealed: a.config };
   },
   add: (db, p) => addUrl(db, S(p.url, 1000), { note: optS(p.note, 2000), source: 'desktop-app', actor: 'user' }),
-  setStatus: (db, p) => { if (!STATUSES.includes(p.status)) throw new Error('estado inválido'); setStatus(db, S(p.id, 300), p.status, { reason: optS(p.reason, 500) }); return getResource(db, p.id); },
+  setStatus: (db, p) => { if (!STATUSES.includes(p.status)) throw new Error('invalid status'); setStatus(db, S(p.id, 300), p.status, { reason: optS(p.reason, 500) }); return getResource(db, p.id); },
   compare: (db, p) => compare(db, ids(p.ids)),
   installPlan: (db, p) => installPlan(db, S(p.id, 300)),
   verifyResource: (db, p) => verifyResource(db, S(p.id, 300), { useApi: p.useApi !== false }),
   discover: (db, p) => {
     const mode = p.mode === 'frontier' ? 'frontier' : 'task';
-    if (running.has('discover')) throw new Error('Já existe uma descoberta em curso.');
+    if (running.has('discover')) throw new Error('A discovery is already running.');
     const promise = discover(db, { mode, intent: optS(p.intent, 500) || '', windows: Array.isArray(p.windows) ? p.windows.filter(w => ['24h', '7d', '30d', '90d'].includes(w)) : undefined, maxQueries: I(p.maxQueries, 6, 1, 20), actor: 'user' })
       .finally(() => running.delete('discover'));
     running.set('discover', promise);
@@ -123,9 +125,12 @@ export const ACTIONS = {
   },
   scans: db => db.prepare('SELECT id, mode, params, status, error, queries, started_at, finished_at, (SELECT COUNT(*) FROM scan_candidates c WHERE c.scan_id=s.id) n FROM scans s ORDER BY id DESC LIMIT 50').all().map(s => ({ ...s, params: JSON.parse(s.params || '{}'), queries: JSON.parse(s.queries || '[]') })),
   // All recent candidates across scans (dashboard + radar overview). Real rows only.
-  candidatesAll: (db, p) => db.prepare(`SELECT c.*, s.mode, s.started_at scan_started FROM scan_candidates c JOIN scans s ON s.id=c.scan_id ORDER BY c.id DESC LIMIT ?`).all(I(p.limit, 300, 1, 2000))
+  candidatesAll: (db, p, ctx = deviceContext(db)) => db.prepare(`SELECT c.*, s.mode, s.started_at scan_started, f.data facts_json FROM scan_candidates c JOIN scans s ON s.id=c.scan_id LEFT JOIN candidate_facts f ON f.full_name=c.full_name ORDER BY c.id DESC LIMIT ?`).all(I(p.limit, 300, 1, 2000))
     .map(c => {
-      const row = { ...c, topics: JSON.parse(c.topics || '[]'), score: JSON.parse(c.score || 'null') || {} };
+      const row = { ...c, topics: JSON.parse(c.topics || '[]'), score: JSON.parse(c.score || 'null') || {}, install: null };
+      // Install options are derived on read from the stored inspection, with the current rules.
+      if (c.facts_json) { const f = JSON.parse(c.facts_json); row.install = f.reachable ? installSummary(c.full_name, f, ctx) : { installable: false }; }
+      delete row.facts_json;
       // Judged on read with the current rules, so improvements apply to everything already found.
       row.score.agent = agentRelevance({ name: row.full_name.split('/')[1], description: row.description, topics: row.topics, stars: row.stars, created_at: row.gh_created_at, pushed_at: row.gh_pushed_at, license: row.license });
       if (['candidate', 'filtered'].includes(row.decision)) { row.decision = row.score.agent.noise ? 'filtered' : 'candidate'; row.reason = row.score.agent.noise || null; }
@@ -156,10 +161,10 @@ export const ACTIONS = {
   scanSkill: (db, p) => {
     const inv = inventory();
     const s = inv.skills.find(x => x.dir === S(p.dir, 1000));
-    if (!s) throw new Error('Skill não encontrada no inventário.');
+    if (!s) throw new Error('Skill not found in the inventory.');
     return scanText(fs.readFileSync(`${s.dir}/SKILL.md`, 'utf8'), { source: s.dir });
   },
-  scanText: (db, p) => scanText(S(p.text, 200000), { source: 'colado pelo utilizador' }),
+  scanText: (db, p) => scanText(S(p.text, 200000), { source: 'pasted by the user' }),
   exportData: db => exportRegistry(db),
   exportFile: db => {
     const data = exportRegistry(db);
@@ -171,7 +176,7 @@ export const ACTIONS = {
   // Opens a public http(s) URL in the user's default browser (the desktop webview has no tabs).
   openExternal: (db, p) => {
     const u = new URL(S(p.url, 2000));
-    if (!/^https?:$/.test(u.protocol) || ['localhost', '127.0.0.1', '[::1]', '0.0.0.0'].includes(u.hostname)) throw new Error('Só URLs públicos http(s).');
+    if (!/^https?:$/.test(u.protocol) || ['localhost', '127.0.0.1', '[::1]', '0.0.0.0'].includes(u.hostname)) throw new Error('Public http(s) URLs only.');
     platformOpen(u.toString());
     return { opened: u.toString() };
   },
@@ -179,12 +184,12 @@ export const ACTIONS = {
   prefsGet: db => ({ discovery_areas: getPref(db, 'discovery_areas', []), github_budget: getPref(db, 'github_budget', 40), install_policy: getPref(db, 'install_policy', 'minimal-global'), telemetry: false, scheduled_scans: getPref(db, 'scheduled_scans', false), model_analysis: getPref(db, 'model_analysis', false) }),
   prefsSet: (db, p) => {
     const allowed = { discovery_areas: v => Array.isArray(v) && v.every(x => typeof x === 'string'), github_budget: v => Number.isInteger(v) && v >= 0 && v <= 5000, install_policy: v => ['minimal-global', 'catalog-only'].includes(v), scheduled_scans: v => v === false, model_analysis: v => typeof v === 'boolean', auto_verify_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_scan_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_repair_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_package_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_discover_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_stars_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, pause_on_battery: v => typeof v === 'boolean', notify_mode: v => ['all', 'errors', 'none'].includes(v), update_repo: v => v === null || /^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/.test(v) };
-    for (const [k, v] of Object.entries(p)) { if (!allowed[k]?.(v)) throw new Error(`preferência inválida: ${k}`); setPref(db, k, v); }
+    for (const [k, v] of Object.entries(p)) { if (!allowed[k]?.(v)) throw new Error(`invalid preference: ${k}`); setPref(db, k, v); }
     return ACTIONS.prefsGet(db);
   },
   bootstrapState: db => boot.getState(db),
   bootstrapAdvance: (db, p) => {
-    if (running.has('bootstrap')) throw new Error('Bootstrap já em execução.');
+    if (running.has('bootstrap')) throw new Error('Setup is already running.');
     let decisions;
     if (p.decisions) decisions = { approve: (p.decisions.approve || []).filter(a => ['skill.write', 'mcp.register'].includes(a)), networkVerify: Boolean(p.decisions.networkVerify), networkVerifyLimit: I(p.decisions.networkVerifyLimit, 40, 0, 400), cleanSession: Boolean(p.decisions.cleanSession) };
     const promise = boot.advance(db, { decisions }).finally(() => running.delete('bootstrap'));
@@ -222,7 +227,7 @@ export const ACTIONS = {
   policy: db => ({ consent: policy.currentConsent(db), matrix: policy.MATRIX, modes: policy.MODES, trusted: policy.trustedPublishers(db), version: policy.POLICY_VERSION }),
   policyGrant: async (db, p) => { const c = policy.grantMode(db, S(p.mode, 20)); const changed = await ops.reevaluateQueued(db); return { consent: c, requeued_for_approval: changed }; },
   policyRevoke: async db => { const c = policy.revoke(db); const changed = await ops.reevaluateQueued(db); return { consent: c, requeued_for_approval: changed }; },
-  trustedSet: (db, p) => { if (!Array.isArray(p.publishers)) throw new Error('publishers tem de ser uma lista'); return policy.setTrustedPublishers(db, p.publishers); },
+  trustedSet: (db, p) => { if (!Array.isArray(p.publishers)) throw new Error('publishers must be a list'); return policy.setTrustedPublishers(db, p.publishers); },
 
   // ---- Operations queue ----
   ops: (db, p) => ops.listOps(db, { status: optS(p.status, 30), q: optS(p.q, 100), limit: I(p.limit, 200, 1, 1000) }),
@@ -252,8 +257,8 @@ export const ACTIONS = {
   mcpDefine: (db, p) => defineMcp(db, p),
   mcpUndefine: (db, p) => {
     const d = db.prepare('SELECT enabled FROM mcp_definitions WHERE name=?').get(S(p.name, 64));
-    if (!d) throw new Error('Definição inexistente.');
-    if (d.enabled) throw new Error('Desative o servidor antes de apagar a definição.');
+    if (!d) throw new Error('Unknown definition.');
+    if (d.enabled) throw new Error('Disable the server before deleting its definition.');
     db.prepare('DELETE FROM mcp_definitions WHERE name=?').run(p.name);
     return { removed: true };
   },
@@ -264,9 +269,9 @@ export const ACTIONS = {
   updateCheck: async db => {
     const repo = getPref(db, 'update_repo', null);
     const current = JSON.parse(fs.readFileSync(path.join(CORE_ROOT, 'package.json'), 'utf8')).version;
-    if (!repo) return { current, status: 'not_configured', detail: 'Ainda não existe um repositório público de releases configurado.' };
+    if (!repo) return { current, status: 'not_configured', detail: 'No public releases repository is configured yet.' };
     const r = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, { headers: { 'User-Agent': 'CURI', Accept: 'application/vnd.github+json' }, signal: AbortSignal.timeout(15000) }).catch(e => ({ ok: false, status: 0, e }));
-    if (!r.ok) return { current, status: r.status === 404 ? 'no_releases' : 'unreachable', detail: r.status === 404 ? 'O repositório ainda não tem releases publicadas.' : 'Não foi possível contactar o GitHub.' };
+    if (!r.ok) return { current, status: r.status === 404 ? 'no_releases' : 'unreachable', detail: r.status === 404 ? 'The repository has no published releases yet.' : 'Couldn\'t reach GitHub.' };
     const j = await r.json();
     const latest = String(j.tag_name || '').replace(/^v/, '');
     const cmp = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
@@ -291,25 +296,25 @@ const ENV_RX = /^[A-Z_][A-Z0-9_]{0,63}$/;
 const LAUNCHERS = ['npx', 'uvx', 'node', 'python3', 'docker', 'bunx', 'deno'];
 function defineMcp(db, p) {
   const name = S(p.name, 41);
-  if (!MCP_NAME_RX.test(name) || name === 'curi') throw new Error('Nome inválido (minúsculas, números e hífens; "curi" é reservado).');
+  if (!MCP_NAME_RX.test(name) || name === 'curi') throw new Error('Invalid name (lowercase letters, numbers and hyphens; "curi" is reserved).');
   const transport = ['stdio', 'http', 'sse'].includes(p.transport) ? p.transport : 'stdio';
   let command = null, args = [], url = null;
   if (transport === 'stdio') {
     command = S(p.command, 300);
-    if (!(LAUNCHERS.includes(command) || path.isAbsolute(command))) throw new Error(`Comando tem de ser um caminho absoluto ou um destes: ${LAUNCHERS.join(', ')}.`);
+    if (!(LAUNCHERS.includes(command) || path.isAbsolute(command))) throw new Error(`The command must be an absolute path or one of: ${LAUNCHERS.join(', ')}.`);
     args = Array.isArray(p.args) ? p.args.map(a => S(String(a), 500)) : [];
-    if (args.length > 40) throw new Error('Demasiados argumentos.');
+    if (args.length > 40) throw new Error('Too many arguments.');
   } else {
     url = S(p.url, 500);
     const u = new URL(url);
-    if (u.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(u.hostname)) throw new Error('Servidores remotos têm de usar https.');
+    if (u.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(u.hostname)) throw new Error('Remote servers must use https.');
   }
   const env = {}, secret_env = {};
-  for (const [k, v] of Object.entries(p.env || {})) { if (!ENV_RX.test(k)) throw new Error(`Variável inválida: ${k}`); if (/(key|token|secret|password)/i.test(k)) throw new Error(`"${k}" parece um segredo: use uma credencial do Porta-chaves.`); env[k] = S(String(v), 500); }
-  for (const [k, ref] of Object.entries(p.secret_env || {})) { if (!ENV_RX.test(k) || !/^(secret:[a-z0-9][a-z0-9._-]{0,48}|provider:(github|anthropic|openai|google))$/.test(ref)) throw new Error(`Referência de segredo inválida: ${k}`); secret_env[k] = ref; }
+  for (const [k, v] of Object.entries(p.env || {})) { if (!ENV_RX.test(k)) throw new Error(`Invalid variable: ${k}`); if (/(key|token|secret|password)/i.test(k)) throw new Error(`"${k}" looks like a secret: use a credential from the system vault.`); env[k] = S(String(v), 500); }
+  for (const [k, ref] of Object.entries(p.secret_env || {})) { if (!ENV_RX.test(k) || !/^(secret:[a-z0-9][a-z0-9._-]{0,48}|provider:(github|anthropic|openai|google))$/.test(ref)) throw new Error(`Invalid secret reference: ${k}`); secret_env[k] = ref; }
   const ts = now();
   const exists = db.prepare('SELECT enabled FROM mcp_definitions WHERE name=?').get(name);
-  if (exists?.enabled) throw new Error('Desative o servidor antes de editar a definição.');
+  if (exists?.enabled) throw new Error('Disable the server before editing its definition.');
   db.prepare(`INSERT INTO mcp_definitions(name,transport,command,args,url,env,secret_env,publisher,resource_id,enabled,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,0,?,?)
     ON CONFLICT(name) DO UPDATE SET transport=excluded.transport, command=excluded.command, args=excluded.args, url=excluded.url, env=excluded.env, secret_env=excluded.secret_env, publisher=excluded.publisher, resource_id=excluded.resource_id, updated_at=excluded.updated_at`)
     .run(name, transport, command, JSON.stringify(args), url, JSON.stringify(env), JSON.stringify(secret_env), optS(p.publisher, 40)?.toLowerCase() || null, optS(p.resource_id, 300) || null, ts, ts);
@@ -318,7 +323,7 @@ function defineMcp(db, p) {
 
 export async function dispatch(db, action, params = {}) {
   const fn = Object.hasOwn(ACTIONS, action) ? ACTIONS[action] : null;
-  if (!fn) throw Object.assign(new Error(`Ação desconhecida: ${action}`), { status: 404 });
-  if (params == null || typeof params !== 'object' || Array.isArray(params)) throw new Error('params inválidos');
+  if (!fn) throw Object.assign(new Error(`Unknown action: ${action}`), { status: 404 });
+  if (params == null || typeof params !== 'object' || Array.isArray(params)) throw new Error('invalid params');
   return await fn(db, params);
 }

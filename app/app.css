@@ -341,7 +341,7 @@ table.t td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .dropzone .glyph { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--signal-wash); color: var(--signal); margin: 0 auto 12px; }
 
 /* ---------- 6. Motion: page enter, stagger, view transitions ---------- */
-.reveal > * { animation: rise var(--d-slow) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 40ms); }
+.reveal > * { animation: rise calc(var(--d-slow) + var(--i, 0) * 40ms) var(--ease-out); }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
 ::view-transition-old(page) { animation: 120ms ease-out both fade-out; }
 ::view-transition-new(page) { animation: var(--d-base) var(--ease-out) both rise; }
