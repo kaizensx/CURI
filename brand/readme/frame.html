@@ -1,0 +1,45 @@
+<!doctype html>
+<!--
+  Puts an app screenshot in a macOS-style window on CURI's dark backdrop, for the README.
+  Usage: frame.html?src=<1440x900 screenshot>&glow=<left|right|center>
+  Render at 1720x1100 (2x) and save as PNG. See brand/readme/README.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CURI screenshot frame</title>
+<style>
+  @font-face { font-family: Geist; src: url(fonts/Geist-Variable.woff2) format('woff2'); font-weight: 100 900; }
+  html, body { margin: 0; width: 1720px; height: 1100px; overflow: hidden; background: #08090b; }
+  body {
+    display: grid; place-items: center;
+    background:
+      radial-gradient(900px 520px at var(--gx, 30%) 0%, rgba(110, 150, 255, .20), transparent 70%),
+      radial-gradient(700px 420px at 85% 110%, rgba(95, 211, 154, .10), transparent 70%),
+      linear-gradient(180deg, #0d0f13, #08090b);
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background-image: linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(1100px 700px at 50% 40%, #000 30%, transparent 80%);
+  }
+  .win {
+    position: relative; width: 1520px; height: 950px; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.10), 0 1px 0 rgba(255,255,255,.14) inset, 0 40px 90px rgba(0,0,0,.65), 0 12px 30px rgba(0,0,0,.45);
+  }
+  .win img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .lights { position: absolute; top: 19px; left: 20px; display: flex; gap: 8px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.25); }
+  .lights i:nth-child(1) { background: #ff5f57; } .lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
+</style>
+</head>
+<body>
+  <div class="win"><img id="shot" alt=""><div class="lights"><i></i><i></i><i></i></div></div>
+  <script>
+    const q = new URLSearchParams(location.search);
+    document.getElementById('shot').src = q.get('src');
+    document.body.style.setProperty('--gx', { left: '20%', right: '80%', center: '50%' }[q.get('glow')] || '30%');
+  </script>
+</body>
+</html>
