@@ -210,8 +210,8 @@ function writeBanners() {
     fs.writeFileSync(OUT(`export/${file}.svg`), svgDoc(w, h, body, defs));
     pngExact(OUT(`export/${file}.svg`), OUT(`export/${file}.png`), w, h);
   };
-  banner(1280, 640, 'github-social-preview', 'O registo local que mostra ao Claude a ferramenta certa.');
-  banner(1600, 520, 'readme-hero', 'O registo local que mostra ao Claude a ferramenta certa.');
+  banner(1280, 640, 'github-social-preview', 'Everything your AI agents can do, in one place.');
+  banner(1600, 520, 'readme-hero', 'Everything your AI agents can do, in one place.');
   // DMG window background (660x400 @1x and @2x): app on the left, Applications on the right.
   const dmg = scale => {
     const w = 660 * scale, h = 400 * scale;
@@ -219,13 +219,13 @@ function writeBanners() {
     const ay = 190 * scale;
     const body = `<rect width="${w}" height="${h}" fill="url(#bg)"/>
   <path d="M${270 * scale} ${ay} H${390 * scale} M${372 * scale} ${ay - 14 * scale} L${392 * scale} ${ay} L${372 * scale} ${ay + 14 * scale}" fill="none" stroke="#5a606c" stroke-width="${3 * scale}" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="${w / 2}" y="${330 * scale}" text-anchor="middle" fill="#a6aab3" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="${14 * scale}">Arraste o CURI para a pasta Aplicações</text>
-  <text x="${w / 2}" y="${352 * scale}" text-anchor="middle" fill="#6c717c" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="${11.5 * scale}">Na primeira abertura, o CURI prepara o que falta e explica cada passo.</text>`;
+  <text x="${w / 2}" y="${330 * scale}" text-anchor="middle" fill="#a6aab3" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="${14 * scale}">Drag CURI to the Applications folder</text>
+  <text x="${w / 2}" y="${352 * scale}" text-anchor="middle" fill="#6c717c" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="${11.5 * scale}">On first launch, CURI sets up anything missing and shows every step.</text>`;
     fs.writeFileSync(OUT(`export/dmg-background${scale > 1 ? '@2x' : ''}.svg`), svgDoc(w, h, body, defs));
     pngExact(OUT(`export/dmg-background${scale > 1 ? '@2x' : ''}.svg`), OUT(`export/dmg-background${scale > 1 ? '@2x' : ''}.png`), w, h);
   };
   dmg(1); dmg(2);
-  banner(1400, 440, 'release-banner', 'Skills, MCP e ferramentas — verificados, nunca instalados às escondidas.');
+  banner(1400, 440, 'release-banner', 'Skills, plugins, MCP servers and tools, installed in one click.');
 }
 
 // Three initial concepts, kept for the record (the selected one is "Aperture").

@@ -1,15 +1,15 @@
-# Segurança
+# Security
 
-## Reportar
-Use *Security advisories* privados no GitHub (não abra issues públicas). Resposta inicial em 7 dias.
+## Reporting
+Use GitHub's private security advisories (please don't open a public issue). You'll get a first reply within 7 days.
 
-## Modelo de ameaças (resumo)
-- **Conteúdo externo é dados.** READMEs, descrições de MCP e skills nunca alteram a política. Análise estática antes de instalar; achados graves bloqueiam.
-- **Sem execução arbitrária.** O servidor MCP do CURI não tem ferramentas de shell, ficheiros, instalação nem aprovação. A interface só chama ações de uma lista fechada, com validação de tipos.
-- **Interface local.** `127.0.0.1` apenas, token aleatório, verificação de `Host` e `Origin`, CSP estrita, sem CORS.
-- **Credenciais.** No Porta-chaves do macOS, escritas por stdin (nunca em argv). Nunca na base de dados, registos, exportações ou respostas da API. Testes automáticos verificam isto.
-- **Privilégios.** O CURI corre como utilizador. A única ação de administrador (ligar `curi` em `/usr/local/bin`) usa o diálogo nativo do macOS e nunca é coberta por autonomia.
-- **Fornecimento.** Skills fixadas a um commit; MCP fixados a uma versão npm; Node verificado por SHA-256 oficial.
+## Threat model (short version)
+- **External content is data.** READMEs, MCP descriptions and skills never change the policy. Static analysis runs before installing; serious findings block it.
+- **No arbitrary execution.** CURI's MCP server has no shell, file, install or approval tools. The interface can only call actions from a closed list, with type validation.
+- **Local interface.** `127.0.0.1` only, a random token, `Host` and `Origin` checks, a strict CSP and no CORS.
+- **Credentials.** Stored in the operating system's vault (Keychain on macOS, DPAPI on Windows, Secret Service on Linux) and written over stdin, never argv. Never in the database, logs, exports or API responses. Automated tests check this.
+- **Privileges.** CURI runs as your user. The only admin action (linking `curi` into `/usr/local/bin`) uses the system's own dialog and is never covered by autonomy.
+- **Supply chain.** Skills are pinned to a commit, MCP servers to a package version, and Node is checked against the official SHA-256.
 
-## Estado da distribuição
-As builds atuais não estão assinadas com Developer ID nem notarizadas. O pipeline de release assina e notariza automaticamente quando os segredos Apple estiverem configurados e indica o estado real em cada release.
+## Distribution status
+Current builds aren't signed with a Developer ID or notarised. The release pipeline signs and notarises automatically once the Apple secrets are configured, and each release states its real status.

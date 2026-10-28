@@ -26,15 +26,15 @@ export const TOOLS = [
 
 function validate(tool, args) {
   const schema = TOOLS.find(t => t.name === tool)?.inputSchema;
-  if (!schema) throw rpcError(-32602, `Ferramenta desconhecida: ${tool}`);
-  if (args == null || typeof args !== 'object' || Array.isArray(args)) throw rpcError(-32602, 'arguments tem de ser um objeto');
-  for (const k of Object.keys(args)) if (!schema.properties[k]) throw rpcError(-32602, `Argumento não permitido: ${k}`);
-  for (const k of schema.required || []) if (args[k] == null) throw rpcError(-32602, `Argumento obrigatório em falta: ${k}`);
+  if (!schema) throw rpcError(-32602, `Unknown tool: ${tool}`);
+  if (args == null || typeof args !== 'object' || Array.isArray(args)) throw rpcError(-32602, 'arguments must be an object');
+  for (const k of Object.keys(args)) if (!schema.properties[k]) throw rpcError(-32602, `Argument not allowed: ${k}`);
+  for (const k of schema.required || []) if (args[k] == null) throw rpcError(-32602, `Missing required argument: ${k}`);
   for (const [k, v] of Object.entries(args)) {
     const p = schema.properties[k];
-    if (p.type === 'string' && (typeof v !== 'string' || v.length > p.maxLength)) throw rpcError(-32602, `${k}: string inválida`);
-    if (p.type === 'integer' && (!Number.isInteger(v) || v < p.minimum || v > p.maximum)) throw rpcError(-32602, `${k}: inteiro fora do intervalo`);
-    if (p.type === 'array' && (!Array.isArray(v) || v.length < p.minItems || v.length > p.maxItems || v.some(x => typeof x !== 'string' || x.length > 300))) throw rpcError(-32602, `${k}: lista inválida`);
+    if (p.type === 'string' && (typeof v !== 'string' || v.length > p.maxLength)) throw rpcError(-32602, `${k}: invalid string`);
+    if (p.type === 'integer' && (!Number.isInteger(v) || v < p.minimum || v > p.maximum)) throw rpcError(-32602, `${k}: integer out of range`);
+    if (p.type === 'array' && (!Array.isArray(v) || v.length < p.minItems || v.length > p.maxItems || v.some(x => typeof x !== 'string' || x.length > 300))) throw rpcError(-32602, `${k}: invalid list`);
   }
 }
 
@@ -46,17 +46,17 @@ export function createHandler(db) {
     validate(name, args);
     switch (name) {
       case 'search_resources': return search(db, args.query, { limit: args.limit ?? 8, type: args.type, status: args.status, capability: args.capability });
-      case 'get_resource': { const r = getResource(db, args.id); if (!r) throw rpcError(-32602, `Recurso inexistente: ${args.id}`); return r; }
+      case 'get_resource': { const r = getResource(db, args.id); if (!r) throw rpcError(-32602, `Unknown resource: ${args.id}`); return r; }
       case 'compare_resources': return compare(db, args.ids);
       case 'suggest_capabilities': return { capabilities: detectCapabilities(args.task).map(c => ({ id: c.id, label: c.label, domain: c.domain, matched: c.matched })) };
       case 'get_status': return statusSummary(db);
       case 'get_verified_integration': return { receipts: db.prepare("SELECT ts, action, target, details FROM audit_log WHERE action LIKE 'verify.%' ORDER BY id DESC LIMIT 5").all().map(r => ({ ...r, details: JSON.parse(r.details || 'null') })), installed: db.prepare('SELECT kind, scope, name, health, observed_at FROM installed_instances WHERE managed_by_curi=1').all() };
       case 'record_discovery': {
-        if (++recorded > MAX_RECORDS_PER_SESSION) throw rpcError(-32000, 'Limite de registos por sessão atingido.');
-        let u; try { u = new URL(args.url); } catch { throw rpcError(-32602, 'URL inválido'); }
-        if (!/^https?:$/.test(u.protocol) || ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname)) throw rpcError(-32602, 'Apenas URLs públicos http(s).');
+        if (++recorded > MAX_RECORDS_PER_SESSION) throw rpcError(-32000, 'Per-session record limit reached.');
+        let u; try { u = new URL(args.url); } catch { throw rpcError(-32602, 'Invalid URL'); }
+        if (!/^https?:$/.test(u.protocol) || ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname)) throw rpcError(-32602, 'Public http(s) URLs only.');
         const r = addUrl(db, args.url, { source: 'claude-mcp', actor: 'claude', pending: true, note: args.note });
-        return { id: r.id, status: r.status, duplicate: r.duplicate, note: 'Registado para revisão na app. Nada foi instalado.' };
+        return { id: r.id, status: r.status, duplicate: r.duplicate, note: 'Recorded for review in the app. Nothing was installed.' };
       }
       case 'request_install_plan': return installPlan(db, args.id);
     }
@@ -65,7 +65,7 @@ export function createHandler(db) {
     const { id, method, params } = msg;
     const reply = result => (id === undefined ? null : { jsonrpc: '2.0', id, result });
     try {
-      if (msg.jsonrpc !== '2.0' || typeof method !== 'string') throw rpcError(-32600, 'Pedido inválido');
+      if (msg.jsonrpc !== '2.0' || typeof method !== 'string') throw rpcError(-32600, 'Invalid request');
       switch (method) {
         case 'initialize': {
           const requested = params?.protocolVersion;
@@ -79,11 +79,11 @@ export function createHandler(db) {
         }
         default:
           if (method.startsWith('notifications/')) return null;
-          throw rpcError(-32601, `Método não suportado: ${method}`);
+          throw rpcError(-32601, `Unsupported method: ${method}`);
       }
     } catch (e) {
       if (id === undefined) return null;
-      if (method === 'tools/call' && !e.rpcCode) return { jsonrpc: '2.0', id, result: { content: [{ type: 'text', text: `Erro: ${e.message}` }], isError: true } };
+      if (method === 'tools/call' && !e.rpcCode) return { jsonrpc: '2.0', id, result: { content: [{ type: 'text', text: `Error: ${e.message}` }], isError: true } };
       return { jsonrpc: '2.0', id, error: { code: e.rpcCode || -32603, message: e.message } };
     }
   };

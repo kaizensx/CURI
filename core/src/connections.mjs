@@ -7,48 +7,48 @@ import * as vault from './vault.mjs';
 export const PROVIDERS = {
   github: {
     name: 'GitHub', method: 'token', docs: 'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens',
-    hint: 'Token pessoal fine-grained só com acesso de leitura a repositórios públicos.',
-    capabilities: ['Quota da API 5000 pedidos/h (em vez de 60)', 'Pesquisa 30/min (em vez de 10)', 'Metadados completos (licença, tópicos, releases)'],
+    hint: 'Fine-grained personal token with read access to public repositories only.',
+    capabilities: ['API quota of 5000 requests/h (instead of 60)', '30 searches/min (instead of 10)', 'Full metadata (licence, topics, releases)'],
     async test(key) {
       const r = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${key}`, 'User-Agent': 'CURI', Accept: 'application/vnd.github+json' }, signal: AbortSignal.timeout(15000) });
-      if (r.status === 401) return { ok: false, status: 'invalid', detail: 'O GitHub rejeitou o token (401). Pode ter expirado ou sido revogado.' };
-      if (!r.ok) return { ok: false, status: 'error', detail: `GitHub respondeu HTTP ${r.status}.` };
+      if (r.status === 401) return { ok: false, status: 'invalid', detail: 'GitHub rejected the token (401). It may have expired or been revoked.' };
+      if (!r.ok) return { ok: false, status: 'error', detail: `GitHub answered HTTP ${r.status}.` };
       const j = await r.json();
-      return { ok: true, account: j.login, detail: `Ligado como ${j.login}`, quota: { limit: +r.headers.get('x-ratelimit-limit'), remaining: +r.headers.get('x-ratelimit-remaining') } };
+      return { ok: true, account: j.login, detail: `Connected as ${j.login}`, quota: { limit: +r.headers.get('x-ratelimit-limit'), remaining: +r.headers.get('x-ratelimit-remaining') } };
     },
   },
   anthropic: {
     name: 'Anthropic API', method: 'api_key', docs: 'https://docs.claude.com/en/api/overview',
-    hint: 'Chave da Anthropic Console. É faturada à parte da subscrição Claude.',
-    capabilities: ['Análise por modelo de candidatos (opcional, com custos)'],
+    hint: 'Anthropic Console key. Billed separately from a Claude subscription.',
+    capabilities: ['Model-assisted candidate analysis (optional, costs money)'],
     async test(key) {
       const r = await fetch('https://api.anthropic.com/v1/models?limit=1', { headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' }, signal: AbortSignal.timeout(15000) });
-      if (r.status === 401) return { ok: false, status: 'invalid', detail: 'A Anthropic rejeitou a chave (401).' };
-      if (r.status === 403) return { ok: false, status: 'forbidden', detail: 'Chave válida mas sem permissão para listar modelos (403).' };
-      if (!r.ok) return { ok: false, status: 'error', detail: `Anthropic respondeu HTTP ${r.status}.` };
-      return { ok: true, detail: 'Chave aceite pela API.' };
+      if (r.status === 401) return { ok: false, status: 'invalid', detail: 'Anthropic rejected the key (401).' };
+      if (r.status === 403) return { ok: false, status: 'forbidden', detail: 'Valid key, but not allowed to list models (403).' };
+      if (!r.ok) return { ok: false, status: 'error', detail: `Anthropic answered HTTP ${r.status}.` };
+      return { ok: true, detail: 'Key accepted by the API.' };
     },
   },
   openai: {
     name: 'OpenAI', method: 'api_key', docs: 'https://platform.openai.com/docs/api-reference/authentication',
-    hint: 'Chave de projeto da plataforma OpenAI.',
-    capabilities: ['Disponível para integrações MCP que a exijam'],
+    hint: 'OpenAI platform project key.',
+    capabilities: ['Available to MCP integrations that need it'],
     async test(key) {
       const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(15000) });
-      if (r.status === 401) return { ok: false, status: 'invalid', detail: 'A OpenAI rejeitou a chave (401).' };
-      if (!r.ok) return { ok: false, status: 'error', detail: `OpenAI respondeu HTTP ${r.status}.` };
-      return { ok: true, detail: 'Chave aceite pela API.' };
+      if (r.status === 401) return { ok: false, status: 'invalid', detail: 'OpenAI rejected the key (401).' };
+      if (!r.ok) return { ok: false, status: 'error', detail: `OpenAI answered HTTP ${r.status}.` };
+      return { ok: true, detail: 'Key accepted by the API.' };
     },
   },
   google: {
     name: 'Google AI (Gemini)', method: 'api_key', docs: 'https://ai.google.dev/gemini-api/docs/api-key',
-    hint: 'Chave do Google AI Studio.',
-    capabilities: ['Disponível para integrações MCP que a exijam'],
+    hint: 'Google AI Studio key.',
+    capabilities: ['Available to MCP integrations that need it'],
     async test(key) {
       const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1', { headers: { 'x-goog-api-key': key }, signal: AbortSignal.timeout(15000) });
-      if (r.status === 400 || r.status === 401 || r.status === 403) return { ok: false, status: 'invalid', detail: `A Google rejeitou a chave (HTTP ${r.status}).` };
-      if (!r.ok) return { ok: false, status: 'error', detail: `Google respondeu HTTP ${r.status}.` };
-      return { ok: true, detail: 'Chave aceite pela API.' };
+      if (r.status === 400 || r.status === 401 || r.status === 403) return { ok: false, status: 'invalid', detail: `Google rejected the key (HTTP ${r.status}).` };
+      if (!r.ok) return { ok: false, status: 'error', detail: `Google answered HTTP ${r.status}.` };
+      return { ok: true, detail: 'Key accepted by the API.' };
     },
   },
 };
@@ -73,13 +73,13 @@ export function listConnections(db) {
 
 async function runTest(provider, key) {
   try { return await PROVIDERS[provider].test(key); }
-  catch (e) { return { ok: false, status: 'unreachable', detail: `Sem ligação ao fornecedor: ${e.name === 'TimeoutError' ? 'tempo esgotado' : e.message}` }; }
+  catch (e) { return { ok: false, status: 'unreachable', detail: `Couldn't reach the provider: ${e.name === 'TimeoutError' ? 'timed out' : e.message}` }; }
 }
 
 // Saves only after a successful test, so an invalid key never replaces a working one.
 export async function saveCredential(db, provider, secret, { actor = 'user', skipTest = false } = {}) {
-  if (!PROVIDERS[provider]) throw new Error('Fornecedor não suportado.');
-  const t = skipTest ? { ok: true, detail: 'Guardado sem teste.' } : await runTest(provider, secret);
+  if (!PROVIDERS[provider]) throw new Error('Unsupported provider.');
+  const t = skipTest ? { ok: true, detail: 'Saved without testing.' } : await runTest(provider, secret);
   if (!t.ok) {
     audit(db, actor, 'connection.rejected', provider, { status: t.status });
     return { saved: false, ...t };
@@ -91,9 +91,9 @@ export async function saveCredential(db, provider, secret, { actor = 'user', ski
 }
 
 export async function testConnection(db, provider, { actor = 'user' } = {}) {
-  if (!PROVIDERS[provider]) throw new Error('Fornecedor não suportado.');
+  if (!PROVIDERS[provider]) throw new Error('Unsupported provider.');
   const key = await vault.getSecret(account(provider));
-  if (!key) { upsert(db, provider, { has_secret: 0, status: 'not_configured', detail: 'Sem credencial guardada.' }); return { ok: false, status: 'not_configured' }; }
+  if (!key) { upsert(db, provider, { has_secret: 0, status: 'not_configured', detail: 'No credential saved.' }); return { ok: false, status: 'not_configured' }; }
   const t = await runTest(provider, key);
   upsert(db, provider, { has_secret: 1, status: t.ok ? 'connected' : t.status, account: t.account ?? undefined, detail: t.detail, last_tested: now(), ...(t.ok ? { last_ok: now() } : {}) });
   audit(db, actor, 'connection.test', provider, { ok: t.ok, status: t.status || 'connected' });
@@ -101,9 +101,9 @@ export async function testConnection(db, provider, { actor = 'user' } = {}) {
 }
 
 export async function removeCredential(db, provider, { actor = 'user' } = {}) {
-  if (!PROVIDERS[provider]) throw new Error('Fornecedor não suportado.');
+  if (!PROVIDERS[provider]) throw new Error('Unsupported provider.');
   const removed = await vault.deleteSecret(account(provider));
-  upsert(db, provider, { has_secret: 0, status: 'not_configured', account: null, detail: 'Acesso local removido. A credencial continua válida no fornecedor até a revogar lá.' });
+  upsert(db, provider, { has_secret: 0, status: 'not_configured', account: null, detail: 'Local access removed. The credential stays valid at the provider until you revoke it there.' });
   audit(db, actor, 'connection.removed', provider, { keychain_item_removed: removed });
   return { removed };
 }
@@ -118,13 +118,13 @@ export async function credentialFor(ref) {
 
 const SECRET_RX = /^secret:[a-z0-9][a-z0-9._-]{0,48}$/;
 export async function saveNamedSecret(db, ref, value, { actor = 'user' } = {}) {
-  if (!SECRET_RX.test(ref)) throw new Error('Nome de segredo inválido (use letras minúsculas, números, . _ -).');
+  if (!SECRET_RX.test(ref)) throw new Error('Invalid secret name (use lowercase letters, numbers, . _ -).');
   await vault.setSecret(ref, value);
   audit(db, actor, 'secret.saved', ref, null);
   return { saved: true, ref };
 }
 export async function deleteNamedSecret(db, ref, { actor = 'user' } = {}) {
-  if (!SECRET_RX.test(ref)) throw new Error('Nome de segredo inválido.');
+  if (!SECRET_RX.test(ref)) throw new Error('Invalid secret name.');
   const removed = await vault.deleteSecret(ref);
   audit(db, actor, 'secret.removed', ref, { removed });
   return { removed };
@@ -137,15 +137,15 @@ export async function githubExisting() {
   const { which, run } = await import('./platform.mjs');
   const gh = which('gh');
   let ghUser = null;
-  if (gh) { const t = await run(gh, ['auth', 'status', '--hostname', 'github.com'], 10000); ghUser = t?.match(/account\s+(\S+)|as\s+(\S+)/)?.slice(1).find(Boolean) || (t && /Logged in/i.test(t) ? 'sessão ativa' : null); }
+  if (gh) { const t = await run(gh, ['auth', 'status', '--hostname', 'github.com'], 10000); ghUser = t?.match(/account\s+(\S+)|as\s+(\S+)/)?.slice(1).find(Boolean) || (t && /Logged in/i.test(t) ? 'signed in' : null); }
   return { gh_cli: Boolean(gh), gh_logged_in: Boolean(ghUser), gh_user: ghUser, env_token: Boolean(process.env.GITHUB_TOKEN) };
 }
 export async function adoptGithubCli(db, { actor = 'user' } = {}) {
   const { which } = await import('./platform.mjs');
   const gh = which('gh');
-  if (!gh) throw new Error('O GitHub CLI (gh) não está instalado.');
+  if (!gh) throw new Error('The GitHub CLI (gh) isn\'t installed.');
   const { execFile } = await import('node:child_process');
-  const token = await new Promise((res, rej) => execFile(gh, ['auth', 'token', '--hostname', 'github.com'], { timeout: 10000 }, (e, out) => (e ? rej(new Error('O GitHub CLI não tem sessão iniciada.')) : res(String(out).trim()))));
-  if (!token) throw new Error('O GitHub CLI não devolveu um token.');
+  const token = await new Promise((res, rej) => execFile(gh, ['auth', 'token', '--hostname', 'github.com'], { timeout: 10000 }, (e, out) => (e ? rej(new Error('The GitHub CLI isn\'t signed in.')) : res(String(out).trim()))));
+  if (!token) throw new Error('The GitHub CLI didn\'t return a token.');
   return saveCredential(db, 'github', token, { actor });
 }

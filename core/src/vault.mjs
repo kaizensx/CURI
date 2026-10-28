@@ -34,21 +34,21 @@ const PS_UNPROTECT = "Add-Type -AssemblyName System.Security; $s=[Console]::In.R
 
 
 function checkAccount(account) {
-  if (!ACCOUNT_RX.test(account)) throw new Error('Identificador de credencial inválido.');
+  if (!ACCOUNT_RX.test(account)) throw new Error('Invalid credential identifier.');
 }
 
 export function setSecret(account, secret) {
   checkAccount(account);
-  if (!available()) return Promise.reject(new Error('Não há um cofre de credenciais disponível neste sistema (no Linux instale o libsecret: secret-tool).'));
-  if (typeof secret !== 'string' || !secret.length || secret.length > 8192 || /[\r\n\0]/.test(secret)) return Promise.reject(new Error('Credencial vazia ou com caracteres inválidos.'));
-  if (BACKEND === 'secret-service') return feed('secret-tool', ['store', '--label', `CURI — ${account}`, 'service', SERVICE, 'account', account], secret).then(() => true, () => { throw new Error('O Secret Service recusou guardar a credencial.'); });
+  if (!available()) return Promise.reject(new Error('No credential vault available on this system (on Linux, install libsecret: secret-tool).'));
+  if (typeof secret !== 'string' || !secret.length || secret.length > 8192 || /[\r\n\0]/.test(secret)) return Promise.reject(new Error('Empty credential or invalid characters.'));
+  if (BACKEND === 'secret-service') return feed('secret-tool', ['store', '--label', `CURI — ${account}`, 'service', SERVICE, 'account', account], secret).then(() => true, () => { throw new Error('The Secret Service refused to store the credential.'); });
   if (BACKEND === 'dpapi') return feed('powershell.exe', [...PS, PS_PROTECT], secret, { capture: true }).then(b64 => { fs.writeFileSync(dpapiFile(account), b64.trim(), { mode: 0o600 }); return true; });
   const esc = secret.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   return new Promise((resolve, reject) => {
     const p = spawn('/usr/bin/security', ['-i'], { stdio: ['pipe', 'ignore', 'pipe'] });
     let err = '';
     p.stderr.on('data', d => { err += d; });
-    p.on('close', code => (code === 0 && !/error|could not/i.test(err) ? resolve(true) : reject(new Error('O Porta-chaves recusou guardar a credencial.'))));
+    p.on('close', code => (code === 0 && !/error|could not/i.test(err) ? resolve(true) : reject(new Error('The Keychain refused to store the credential.'))));
     p.stdin.end(`add-generic-password -U -s "${SERVICE}" -a "${account}" -l "CURI — ${account}" -w "${esc}"\n`);
   });
 }

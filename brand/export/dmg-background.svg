@@ -3,6 +3,6 @@
   <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="400" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1d1f25"/><stop offset="1" stop-color="#0e0f12"/></linearGradient></defs>
   <rect width="660" height="400" fill="url(#bg)"/>
   <path d="M270 190 H390 M372 176 L392 190 L372 204" fill="none" stroke="#5a606c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="330" y="330" text-anchor="middle" fill="#a6aab3" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="14">Arraste o CURI para a pasta Aplicações</text>
-  <text x="330" y="352" text-anchor="middle" fill="#6c717c" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="11.5">Na primeira abertura, o CURI prepara o que falta e explica cada passo.</text>
+  <text x="330" y="330" text-anchor="middle" fill="#a6aab3" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="14">Drag CURI to the Applications folder</text>
+  <text x="330" y="352" text-anchor="middle" fill="#6c717c" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="11.5">On first launch, CURI sets up anything missing and shows every step.</text>
 </svg>

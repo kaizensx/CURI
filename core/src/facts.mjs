@@ -36,7 +36,7 @@ export function seedFacts(db) {
 
 export async function inspectResource(db, id) {
   const r = db.prepare('SELECT id, canonical_url, gh_full_name FROM resources WHERE id=?').get(id);
-  if (!r) throw new Error('Recurso inexistente.');
+  if (!r) throw new Error('Unknown resource.');
   const f = r.gh_full_name ? await inspectGithub(db, r.gh_full_name) : await inspectWeb(r.canonical_url);
   setFacts(db, id, f, 'live');
   return f;

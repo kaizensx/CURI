@@ -16,12 +16,12 @@ export const STATES = ['UNINITIALIZED', 'PREFLIGHT', 'ENVIRONMENT_AUDITED', 'PLA
 const JOB = 'bootstrap';
 
 export const WORK_PACKAGES = [
-  { id: 'WP1-preflight', from: ['UNINITIALIZED', 'PREFLIGHT'], to: 'ENVIRONMENT_AUDITED', risk: 'READ_ONLY', title: 'Preflight do dispositivo e inventário Claude (só leitura)' },
-  { id: 'WP2-snapshot', from: ['ENVIRONMENT_AUDITED'], to: 'ENVIRONMENT_AUDITED', risk: 'LOCAL_FILE_WRITE', title: 'Snapshot com checksums das configurações Claude (cópias em dados CURI; nada é alterado em ~/.claude)' },
-  { id: 'WP3-import', from: ['ENVIRONMENT_AUDITED'], to: 'PLAN_READY', risk: 'READ_ONLY', title: 'Importar o catálogo inicial para o registo (idempotente)' },
-  { id: 'WP4-plan', from: ['PLAN_READY'], to: 'APPROVAL_REQUIRED', risk: 'READ_ONLY', title: 'Gerar plano de integração e classes de risco' },
-  { id: 'WP5-provision', from: ['APPROVAL_REQUIRED', 'PROVISIONING', 'RECOVERING'], to: 'VERIFYING', risk: 'LOCAL_FILE_WRITE', title: 'Aplicar ações aprovadas (skill + MCP) e verificação opcional de fontes' },
-  { id: 'WP6-verify', from: ['VERIFYING'], to: null, risk: 'READ_ONLY', title: 'Verificação independente e veredicto' },
+  { id: 'WP1-preflight', from: ['UNINITIALIZED', 'PREFLIGHT'], to: 'ENVIRONMENT_AUDITED', risk: 'READ_ONLY', title: 'Device preflight and Claude inventory (read-only)' },
+  { id: 'WP2-snapshot', from: ['ENVIRONMENT_AUDITED'], to: 'ENVIRONMENT_AUDITED', risk: 'LOCAL_FILE_WRITE', title: 'Checksummed snapshot of your Claude configuration (copies in CURI\'s data; nothing changes in ~/.claude)' },
+  { id: 'WP3-import', from: ['ENVIRONMENT_AUDITED'], to: 'PLAN_READY', risk: 'READ_ONLY', title: 'Import the starter catalogue into the registry (idempotent)' },
+  { id: 'WP4-plan', from: ['PLAN_READY'], to: 'APPROVAL_REQUIRED', risk: 'READ_ONLY', title: 'Build the integration plan and risk classes' },
+  { id: 'WP5-provision', from: ['APPROVAL_REQUIRED', 'PROVISIONING', 'RECOVERING'], to: 'VERIFYING', risk: 'LOCAL_FILE_WRITE', title: 'Apply approved actions (skill + MCP) and optional source verification' },
+  { id: 'WP6-verify', from: ['VERIFYING'], to: null, risk: 'READ_ONLY', title: 'Independent verification and verdict' },
 ];
 
 export function getState(db) {
@@ -31,7 +31,7 @@ export function getState(db) {
 }
 
 function setState(db, state, step, data, { actor = 'system', evidence = null } = {}) {
-  if (!STATES.includes(state)) throw new Error(`Estado inválido ${state}`);
+  if (!STATES.includes(state)) throw new Error(`Invalid state ${state}`);
   const prev = getState(db).state;
   tx(db, () => {
     db.prepare('INSERT INTO bootstrap(id,state,step,data,updated_at) VALUES (1,?,?,?,?) ON CONFLICT(id) DO UPDATE SET state=excluded.state, step=excluded.step, data=excluded.data, updated_at=excluded.updated_at').run(state, step, JSON.stringify(data), now());
@@ -149,7 +149,7 @@ export async function advance(db, { decisions, onEvent = () => {} } = {}) {
     if (st.state === 'PLAN_READY') {
       const plan = planBridgeInstall();
       st.data.plan = { actions: plan.actions.map(({ preview, ...a }) => a), conflicts: plan.conflicts, untouched: plan.untouched, claude_binary: plan.claude_binary,
-        optional: [{ id: 'network.verify', risk: 'NETWORK_DISCOVERY', title: 'Verificar fontes online (git ls-remote + GitHub API sem token, limitado)' }, { id: 'claude.clean_session', risk: 'COST_BEARING', title: 'Teste de sessão Claude limpa (usa a sua conta Claude Code; consome uso)' }] };
+        optional: [{ id: 'network.verify', risk: 'NETWORK_DISCOVERY', title: 'Verify sources online (git ls-remote + GitHub API without a token, limited)' }, { id: 'claude.clean_session', risk: 'COST_BEARING', title: 'Clean Claude session test (uses your Claude Code account; uses quota)' }] };
       checkpoint(db, st, 'WP4-plan', { actions: plan.actions.length, conflicts: plan.conflicts.length });
       setState(db, 'APPROVAL_REQUIRED', 'WP4-plan', st.data);
       onEvent('WP4-plan');
@@ -162,7 +162,7 @@ export async function advance(db, { decisions, onEvent = () => {} } = {}) {
         const r = await applyBridgeInstall(db, { approve: d.approve, actor: 'user' });
         ev.bridge = { applied: r.applied, reason: r.reason, tx: r.tx || st.data.completed?.['WP5-provision']?.evidence?.bridge?.tx || null, error: r.error, conflicts: r.conflicts };
         if (r.reason === 'failed') { st = getState(db); checkpoint(db, st, 'WP5-provision', ev); setState(db, 'FAILED', 'WP5-provision', st.data, { evidence: ev }); return getState(db); }
-      } else ev.bridge = { skipped: true, reason: 'utilizador não aprovou integração Claude' };
+      } else ev.bridge = { skipped: true, reason: 'user didn\'t approve the Claude integration' };
       if (d.networkVerify) {
         const ids = db.prepare('SELECT id FROM resources WHERE last_verified IS NULL ORDER BY (gh_full_name IS NULL), id LIMIT ?').all(d.networkVerifyLimit ?? 40).map(r => r.id);
         let ok = 0, fail = 0;
@@ -184,7 +184,7 @@ export async function advance(db, { decisions, onEvent = () => {} } = {}) {
       st = getState(db);
       let verdict = v.verdict;
       if (verdict === 'READY' && !requireBridge) verdict = 'PARTIAL_READY';
-      checkpoint(db, st, 'WP6-verify', { verdict, receipt_file: v.receipt_file, passed: v.passed, total: v.total, mandatory_failed: v.mandatory_failed, optional_unavailable: v.optional_unavailable, missing: requireBridge ? [] : ['integração Claude não aprovada'] });
+      checkpoint(db, st, 'WP6-verify', { verdict, receipt_file: v.receipt_file, passed: v.passed, total: v.total, mandatory_failed: v.mandatory_failed, optional_unavailable: v.optional_unavailable, missing: requireBridge ? [] : ['Claude integration not approved'] });
       setState(db, verdict, 'WP6-verify', st.data, { evidence: { verdict } });
       onEvent('WP6-verify');
       return getState(db);

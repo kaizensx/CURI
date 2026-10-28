@@ -4,7 +4,7 @@ const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 
 const ORDER = [['node', 'Runtime Node.js'], ['git', 'Git'], ['claude', 'Claude Code CLI'], ['core', 'CURI Core']];
-const LABEL = { pending: 'pendente', running: 'em curso', done: 'concluído', skipped: 'ignorado', warning: 'atenção', failed: 'falhou' };
+const LABEL = { pending: 'pending', running: 'running', done: 'done', skipped: 'skipped', warning: 'attention', failed: 'failed' };
 const items = new Map();
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }

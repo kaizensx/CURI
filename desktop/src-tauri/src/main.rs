@@ -43,7 +43,7 @@ fn repo_root(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     if dev.join("core/bin/curi.mjs").exists() {
         return Ok(dev);
     }
-    Err("Recursos do CURI Core não encontrados no pacote da aplicação.".into())
+    Err("CURI Core resources not found in the app bundle.".into())
 }
 
 fn boot(app: tauri::AppHandle) -> Result<(), String> {
@@ -56,7 +56,7 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
     let root = repo_root(&app)?;
     let r = deps::ensure(&home_dir, &home.join("runtime"), &emit)?;
 
-    emit(deps::Progress { step: "core", label: "CURI Core".into(), state: "running", pct: None, detail: "A iniciar servidor local (127.0.0.1)…".into() });
+    emit(deps::Progress { step: "core", label: "CURI Core".into(), state: "running", pct: None, detail: "Starting the local server (127.0.0.1)…".into() });
     let mut cmd = Command::new(&r.node);
     cmd.arg(root.join("core/bin/curi.mjs"))
         .args(["app", "--port", "0", "--no-open", "--print-url", "--exit-on-stdin-close"])
@@ -67,7 +67,7 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(c) = &r.claude {
         cmd.env("CURI_CLAUDE_BIN", c);
     }
-    let mut child = cmd.spawn().map_err(|e| format!("Falha ao lançar o Core: {e}"))?;
+    let mut child = cmd.spawn().map_err(|e| format!("Couldn't start the Core: {e}"))?;
     let stdout = child.stdout.take().ok_or("stdout")?;
     let stderr = child.stderr.take().ok_or("stderr")?;
     let errbuf = Arc::new(Mutex::new(String::new()));
@@ -95,14 +95,14 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
         Ok(u) => u,
         Err(_) => {
             let _ = child.kill();
-            let msg = format!("O Core não arrancou em 45 s.\n{}", errbuf.lock().unwrap());
+            let msg = format!("The Core didn't start within 45 s.\n{}", errbuf.lock().unwrap());
             emit(deps::Progress { step: "core", label: "CURI Core".into(), state: "failed", pct: None, detail: msg.clone() });
             return Err(msg);
         }
     };
     *app.state::<CoreProc>().0.lock().unwrap() = Some(child);
-    emit(deps::Progress { step: "core", label: "CURI Core".into(), state: "done", pct: Some(100.0), detail: "Servidor local pronto.".into() });
-    let w = app.get_webview_window("main").ok_or("janela principal inexistente")?;
+    emit(deps::Progress { step: "core", label: "CURI Core".into(), state: "done", pct: Some(100.0), detail: "Local server ready.".into() });
+    let w = app.get_webview_window("main").ok_or("main window missing")?;
     // Tell the UI it runs inside the native shell (transparent sidebar, title-bar drag region).
     let url = url.replacen("/#", "/?native=1#", 1);
     w.navigate(Url::parse(&url).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
@@ -112,7 +112,7 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
 #[tauri::command]
 async fn start(app: tauri::AppHandle) -> Result<(), String> {
     if app.state::<CoreProc>().0.lock().unwrap().is_some() {
-        return Err("O Core já está em execução.".into());
+        return Err("The Core is already running.".into());
     }
     tauri::async_runtime::spawn_blocking(move || boot(app)).await.map_err(|e| e.to_string())?
 }
@@ -123,56 +123,56 @@ fn build_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let sep = || PredefinedMenuItem::separator(app);
     let about = AboutMetadata { name: Some("CURI".into()), version: Some(env!("CARGO_PKG_VERSION").into()), comments: Some("Claude Universal Resource Intelligence".into()), ..Default::default() };
     let app_menu = Submenu::with_items(app, "CURI", true, &[
-        &PredefinedMenuItem::about(app, Some("Sobre o CURI"), Some(about))?,
+        &PredefinedMenuItem::about(app, Some("About CURI"), Some(about))?,
         &sep()?,
-        &item("route:settings", "Definições…", Some("CmdOrCtrl+,"))?,
+        &item("route:settings", "Settings…", Some("CmdOrCtrl+,"))?,
         &sep()?,
-        &PredefinedMenuItem::hide(app, Some("Ocultar CURI"))?,
-        &PredefinedMenuItem::hide_others(app, Some("Ocultar outros"))?,
-        &PredefinedMenuItem::show_all(app, Some("Mostrar tudo"))?,
+        &PredefinedMenuItem::hide(app, Some("Hide CURI"))?,
+        &PredefinedMenuItem::hide_others(app, Some("Hide Others"))?,
+        &PredefinedMenuItem::show_all(app, Some("Show All"))?,
         &sep()?,
-        &PredefinedMenuItem::quit(app, Some("Sair do CURI"))?,
+        &PredefinedMenuItem::quit(app, Some("Quit CURI"))?,
     ])?;
-    let file = Submenu::with_items(app, "Ficheiro", true, &[
-        &item("add-url", "Adicionar URL…", Some("CmdOrCtrl+N"))?,
-        &item("route:radar", "Nova descoberta", Some("CmdOrCtrl+Shift+N"))?,
+    let file = Submenu::with_items(app, "File", true, &[
+        &item("add-url", "Add URL…", Some("CmdOrCtrl+N"))?,
+        &item("route:radar", "New Discovery", Some("CmdOrCtrl+Shift+N"))?,
         &sep()?,
-        &PredefinedMenuItem::close_window(app, Some("Fechar janela"))?,
+        &PredefinedMenuItem::close_window(app, Some("Close Window"))?,
     ])?;
-    let edit = Submenu::with_items(app, "Editar", true, &[
-        &PredefinedMenuItem::undo(app, Some("Desfazer"))?,
-        &PredefinedMenuItem::redo(app, Some("Refazer"))?,
+    let edit = Submenu::with_items(app, "Edit", true, &[
+        &PredefinedMenuItem::undo(app, Some("Undo"))?,
+        &PredefinedMenuItem::redo(app, Some("Redo"))?,
         &sep()?,
-        &PredefinedMenuItem::cut(app, Some("Cortar"))?,
-        &PredefinedMenuItem::copy(app, Some("Copiar"))?,
-        &PredefinedMenuItem::paste(app, Some("Colar"))?,
-        &PredefinedMenuItem::select_all(app, Some("Selecionar tudo"))?,
+        &PredefinedMenuItem::cut(app, Some("Cut"))?,
+        &PredefinedMenuItem::copy(app, Some("Copy"))?,
+        &PredefinedMenuItem::paste(app, Some("Paste"))?,
+        &PredefinedMenuItem::select_all(app, Some("Select All"))?,
     ])?;
-    let view = Submenu::with_items(app, "Ver", true, &[
-        &item("palette", "Paleta de comandos", Some("CmdOrCtrl+K"))?,
+    let view = Submenu::with_items(app, "View", true, &[
+        &item("palette", "Command Palette", Some("CmdOrCtrl+K"))?,
         &sep()?,
-        &item("route:dashboard", "Painel", Some("CmdOrCtrl+1"))?,
-        &item("route:library", "Biblioteca", Some("CmdOrCtrl+2"))?,
-        &item("route:radar", "Radar", Some("CmdOrCtrl+3"))?,
-        &item("route:map", "Capacidades", Some("CmdOrCtrl+4"))?,
-        &item("route:compare", "Comparar", Some("CmdOrCtrl+5"))?,
-        &item("route:connections", "Ligações", Some("CmdOrCtrl+6"))?,
-        &item("route:integrations", "Catálogo de integrações", Some("CmdOrCtrl+7"))?,
-        &item("route:automation", "Automação e permissões", Some("CmdOrCtrl+8"))?,
-        &item("route:operations", "Operações", Some("CmdOrCtrl+9"))?,
+        &item("route:home", "Home", Some("CmdOrCtrl+1"))?,
+        &item("route:library", "Library", Some("CmdOrCtrl+2"))?,
+        &item("route:discover", "Discover", Some("CmdOrCtrl+3"))?,
+        &item("route:capabilities", "Capabilities", Some("CmdOrCtrl+4"))?,
+        &item("route:device", "This Device", Some("CmdOrCtrl+5"))?,
+        &item("route:connections", "Connections", Some("CmdOrCtrl+6"))?,
+        &item("route:operations", "Activity", Some("CmdOrCtrl+7"))?,
+        &item("route:settings", "Settings", Some("CmdOrCtrl+8"))?,
+        &item("route:automation", "Autonomy", Some("CmdOrCtrl+9"))?,
         &sep()?,
-        &item("reload", "Atualizar dados", Some("CmdOrCtrl+R"))?,
-        &PredefinedMenuItem::fullscreen(app, Some("Ecrã completo"))?,
+        &item("reload", "Reload", Some("CmdOrCtrl+R"))?,
+        &PredefinedMenuItem::fullscreen(app, Some("Enter Full Screen"))?,
     ])?;
-    let window = Submenu::with_items(app, "Janela", true, &[
-        &PredefinedMenuItem::minimize(app, Some("Minimizar"))?,
+    let window = Submenu::with_items(app, "Window", true, &[
+        &PredefinedMenuItem::minimize(app, Some("Minimize"))?,
         &PredefinedMenuItem::maximize(app, Some("Zoom"))?,
         &sep()?,
-        &item("route:jobs", "Pesquisa e quotas", None)?,
-        &item("route:security", "Segurança", None)?,
-        &item("route:audit", "Auditoria", None)?,
+        &item("route:jobs", "Searches and Quotas", None)?,
+        &item("route:security", "Security", None)?,
+        &item("route:audit", "Audit Log", None)?,
     ])?;
-    let help = Submenu::with_items(app, "Ajuda", true, &[&item("route:about", "Ajuda do CURI", None)?])?;
+    let help = Submenu::with_items(app, "Help", true, &[&item("route:about", "CURI Help", None)?])?;
     Menu::with_items(app, &[&app_menu, &file, &edit, &view, &window, &help])
 }
 
@@ -193,7 +193,7 @@ fn main() {
         .manage(CoreProc::default())
         .invoke_handler(tauri::generate_handler![start])
         .build(tauri::generate_context!())
-        .expect("erro ao iniciar a aplicação CURI")
+        .expect("error while starting CURI")
         .run(|app, ev| {
             if let RunEvent::Exit = ev {
                 if let Some(mut c) = app.state::<CoreProc>().0.lock().unwrap().take() {

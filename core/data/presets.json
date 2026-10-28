@@ -1,19 +1,109 @@
 {
-  "note": "One-click integrations with pinned versions. Verified to exist on npm / GitHub on 2026-10-28. Publisher trust is decided by policy, not by this file.",
-  "mcp": [
-    { "name": "context7", "title": "Context7", "publisher": "upstash", "resource_id": "gh:upstash/context7", "transport": "stdio", "command": "npx", "args": ["-y", "@upstash/context7-mcp@4.4.4"], "env": {}, "secret_env": {}, "purpose": "Documentação atualizada e por versão de bibliotecas." },
-    { "name": "playwright", "title": "Playwright MCP", "publisher": "microsoft", "resource_id": "gh:microsoft/playwright-mcp", "transport": "stdio", "command": "npx", "args": ["-y", "@playwright/mcp@0.0.83"], "env": {}, "secret_env": {}, "purpose": "Automação de browser por snapshots de acessibilidade." },
-    { "name": "chrome-devtools", "title": "Chrome DevTools MCP", "publisher": "chromedevtools", "resource_id": "gh:chromedevtools/chrome-devtools-mcp", "transport": "stdio", "command": "npx", "args": ["-y", "chrome-devtools-mcp@1.12.0"], "env": {}, "secret_env": {}, "purpose": "Depuração e desempenho com o Chrome DevTools." },
-    { "name": "firecrawl", "title": "Firecrawl", "publisher": "firecrawl", "resource_id": "gh:firecrawl/firecrawl-mcp-server", "transport": "stdio", "command": "npx", "args": ["-y", "firecrawl-mcp@3.36.0"], "env": {}, "secret_env": { "FIRECRAWL_API_KEY": "secret:firecrawl" }, "purpose": "Extração de páginas web para LLMs. Requer chave da Firecrawl (serviço pago)." }
-  ],
-  "skills": [
-    { "repo": "anthropics/skills", "path": "skills/skill-creator", "purpose": "Criar e melhorar skills." },
-    { "repo": "anthropics/skills", "path": "skills/pdf", "purpose": "Ler, extrair e preencher PDFs." },
-    { "repo": "anthropics/skills", "path": "skills/docx", "purpose": "Documentos Word." },
-    { "repo": "anthropics/skills", "path": "skills/xlsx", "purpose": "Folhas de cálculo." },
-    { "repo": "anthropics/skills", "path": "skills/pptx", "purpose": "Apresentações." },
-    { "repo": "anthropics/skills", "path": "skills/mcp-builder", "purpose": "Construir servidores MCP." },
-    { "repo": "anthropics/skills", "path": "skills/webapp-testing", "purpose": "Testar aplicações web com Playwright." },
-    { "repo": "anthropics/skills", "path": "skills/frontend-design", "purpose": "Design de interfaces frontend." }
-  ]
+ "note": "One-click integrations with pinned versions. Verified to exist on npm / GitHub on 2026-10-28. Publisher trust is decided by policy, not by this file.",
+ "mcp": [
+  {
+   "name": "context7",
+   "title": "Context7",
+   "publisher": "upstash",
+   "resource_id": "gh:upstash/context7",
+   "transport": "stdio",
+   "command": "npx",
+   "args": [
+    "-y",
+    "@upstash/context7-mcp@4.4.4"
+   ],
+   "env": {},
+   "secret_env": {},
+   "purpose": "Current, version-specific library documentation."
+  },
+  {
+   "name": "playwright",
+   "title": "Playwright MCP",
+   "publisher": "microsoft",
+   "resource_id": "gh:microsoft/playwright-mcp",
+   "transport": "stdio",
+   "command": "npx",
+   "args": [
+    "-y",
+    "@playwright/mcp@0.0.83"
+   ],
+   "env": {},
+   "secret_env": {},
+   "purpose": "Browser automation through accessibility snapshots."
+  },
+  {
+   "name": "chrome-devtools",
+   "title": "Chrome DevTools MCP",
+   "publisher": "chromedevtools",
+   "resource_id": "gh:chromedevtools/chrome-devtools-mcp",
+   "transport": "stdio",
+   "command": "npx",
+   "args": [
+    "-y",
+    "chrome-devtools-mcp@1.12.0"
+   ],
+   "env": {},
+   "secret_env": {},
+   "purpose": "Debugging and performance with Chrome DevTools."
+  },
+  {
+   "name": "firecrawl",
+   "title": "Firecrawl",
+   "publisher": "firecrawl",
+   "resource_id": "gh:firecrawl/firecrawl-mcp-server",
+   "transport": "stdio",
+   "command": "npx",
+   "args": [
+    "-y",
+    "firecrawl-mcp@3.36.0"
+   ],
+   "env": {},
+   "secret_env": {
+    "FIRECRAWL_API_KEY": "secret:firecrawl"
+   },
+   "purpose": "Web page extraction for LLMs. Needs a Firecrawl key (paid service)."
+  }
+ ],
+ "skills": [
+  {
+   "repo": "anthropics/skills",
+   "path": "skills/skill-creator",
+   "purpose": "Create and improve skills."
+  },
+  {
+   "repo": "anthropics/skills",
+   "path": "skills/pdf",
+   "purpose": "Read, extract and fill in PDFs."
+  },
+  {
+   "repo": "anthropics/skills",
+   "path": "skills/docx",
+   "purpose": "Word documents."
+  },
+  {
+   "repo": "anthropics/skills",
+   "path": "skills/xlsx",
+   "purpose": "Spreadsheets."
+  },
+  {
+   "repo": "anthropics/skills",
+   "path": "skills/pptx",
+   "purpose": "Presentations."
+  },
+  {
+   "repo": "anthropics/skills",
+   "path": "skills/mcp-builder",
+   "purpose": "Build MCP servers."
+  },
+  {
+   "repo": "anthropics/skills",
+   "path": "skills/webapp-testing",
+   "purpose": "Test web apps with Playwright."
+  },
+  {
+   "repo": "anthropics/skills",
+   "path": "skills/frontend-design",
+   "purpose": "Frontend interface design."
+  }
+ ]
 }

@@ -82,7 +82,7 @@ fn find_node(path_env: &str, runtime: &Path, force_install: bool) -> Option<(Pat
 fn curl_text(url: &str) -> Result<String, String> {
     let out = Command::new("curl").args(["-fsSL", "--max-time", "60", url]).output().map_err(|e| format!("curl: {e}"))?;
     if !out.status.success() {
-        return Err(format!("download falhou ({url}): {}", String::from_utf8_lossy(&out.stderr).trim()));
+        return Err(format!("download failed ({url}): {}", String::from_utf8_lossy(&out.stderr).trim()));
     }
     Ok(String::from_utf8_lossy(&out.stdout).to_string())
 }
@@ -101,12 +101,12 @@ fn platform() -> Result<(&'static str, &'static str, &'static str), String> {
     let os = match std::env::consts::OS {
         "macos" => "darwin",
         "linux" => "linux",
-        o => return Err(format!("SO não suportado para instalação automática do Node: {o}")),
+        o => return Err(format!("OS not supported for automatic Node install: {o}")),
     };
     let arch = match std::env::consts::ARCH {
         "aarch64" => "arm64",
         "x86_64" => "x64",
-        a => return Err(format!("arquitetura não suportada: {a}")),
+        a => return Err(format!("unsupported architecture: {a}")),
     };
     let key = match (os, arch) {
         ("darwin", "arm64") => "osx-arm64-tar",
@@ -121,11 +121,11 @@ fn install_node(runtime: &Path, emit: &dyn Fn(Progress)) -> Result<(PathBuf, Str
     const S: &str = "node";
     const L: &str = "Runtime Node.js";
     let (os, arch, key) = platform()?;
-    emit(p(S, L, "running", None, "A consultar versões LTS em nodejs.org…"));
-    let index: serde_json::Value = serde_json::from_str(&curl_text(&format!("{NODE_DIST}/index.json"))?).map_err(|e| format!("index.json inválido: {e}"))?;
+    emit(p(S, L, "running", None, "Checking LTS versions on nodejs.org…"));
+    let index: serde_json::Value = serde_json::from_str(&curl_text(&format!("{NODE_DIST}/index.json"))?).map_err(|e| format!("invalid index.json: {e}"))?;
     let version = index
         .as_array()
-        .ok_or("index.json inesperado")?
+        .ok_or("unexpected index.json")?
         .iter()
         .find(|r| {
             let lts = r["lts"].is_string();
@@ -136,7 +136,7 @@ fn install_node(runtime: &Path, emit: &dyn Fn(Progress)) -> Result<(PathBuf, Str
             lts && has && ok
         })
         .and_then(|r| r["version"].as_str())
-        .ok_or("nenhuma versão LTS compatível encontrada")?
+        .ok_or("no compatible LTS version found")?
         .to_string();
     let name = format!("node-{version}-{os}-{arch}.tar.gz");
     let url = format!("{NODE_DIST}/{version}/{name}");
@@ -145,7 +145,7 @@ fn install_node(runtime: &Path, emit: &dyn Fn(Progress)) -> Result<(PathBuf, Str
         .lines()
         .find(|l| l.ends_with(&format!("  {name}")))
         .and_then(|l| l.split_whitespace().next())
-        .ok_or("SHA-256 oficial não encontrado")?
+        .ok_or("official SHA-256 not found")?
         .to_string();
 
     fs::create_dir_all(runtime).map_err(|e| e.to_string())?;
@@ -163,31 +163,31 @@ fn install_node(runtime: &Path, emit: &dyn Fn(Progress)) -> Result<(PathBuf, Str
     loop {
         if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
             if !status.success() {
-                return Err(format!("download do Node falhou ({url})"));
+                return Err(format!("Node download failed ({url})"));
             }
             break;
         }
         let got = fs::metadata(&tmp).map(|m| m.len()).unwrap_or(0);
         let pct = total.map(|t| (got as f64 / t as f64 * 100.0).min(99.0));
-        emit(p(S, L, "running", pct, format!("A transferir {version} — {:.1} MB{} · {}s", got as f64 / 1e6, total.map(|t| format!(" de {:.1} MB", t as f64 / 1e6)).unwrap_or_default(), started.elapsed().as_secs())));
+        emit(p(S, L, "running", pct, format!("Downloading {version}: {:.1} MB{} · {}s", got as f64 / 1e6, total.map(|t| format!(" of {:.1} MB", t as f64 / 1e6)).unwrap_or_default(), started.elapsed().as_secs())));
         thread::sleep(Duration::from_millis(250));
     }
 
-    emit(p(S, L, "running", Some(99.0), "A verificar SHA-256…"));
+    emit(p(S, L, "running", Some(99.0), "Verifying SHA-256…"));
     let out = Command::new("shasum").args(["-a", "256"]).arg(&tmp).output().map_err(|e| e.to_string())?;
     let actual = String::from_utf8_lossy(&out.stdout).split_whitespace().next().unwrap_or("").to_string();
     if actual != expected {
         let _ = fs::remove_file(&tmp);
-        return Err(format!("SHA-256 não corresponde (esperado {expected}, obtido {actual}); ficheiro descartado"));
+        return Err(format!("SHA-256 mismatch (expected {expected}, got {actual}); file discarded"));
     }
 
-    emit(p(S, L, "running", Some(99.5), "A extrair…"));
+    emit(p(S, L, "running", Some(99.5), "Extracting…"));
     let staging = runtime.join(".staging");
     let _ = fs::remove_dir_all(&staging);
     fs::create_dir_all(&staging).map_err(|e| e.to_string())?;
     let st = Command::new("tar").arg("-xzf").arg(&tmp).arg("-C").arg(&staging).status().map_err(|e| e.to_string())?;
     if !st.success() {
-        return Err("extração falhou".into());
+        return Err("extraction failed".into());
     }
     let extracted = staging.join(format!("node-{version}-{os}-{arch}"));
     let dest = runtime.join("node");
@@ -196,7 +196,7 @@ fn install_node(runtime: &Path, emit: &dyn Fn(Progress)) -> Result<(PathBuf, Str
     let _ = fs::remove_dir_all(&staging);
     let _ = fs::remove_file(&tmp);
     let node = dest.join("bin/node");
-    let v = node_version_ok(&node).ok_or("Node instalado mas não arranca")?;
+    let v = node_version_ok(&node).ok_or("Node installed but doesn't start")?;
     Ok((node, v))
 }
 
@@ -222,7 +222,7 @@ fn find_claude(path_env: &str, home: &Path) -> Option<PathBuf> {
 fn install_claude(node: &Path, runtime: &Path, path_env: &str, emit: &dyn Fn(Progress)) -> Result<PathBuf, String> {
     const S: &str = "claude";
     const L: &str = "Claude Code CLI";
-    let npm = node.parent().ok_or("npm não encontrado")?.join("npm");
+    let npm = node.parent().ok_or("npm not found")?.join("npm");
     let prefix = runtime.join("claude");
     fs::create_dir_all(&prefix).map_err(|e| e.to_string())?;
     let mut child = Command::new(&npm)
@@ -238,15 +238,15 @@ fn install_claude(node: &Path, runtime: &Path, path_env: &str, emit: &dyn Fn(Pro
     loop {
         if let Some(st) = child.try_wait().map_err(|e| e.to_string())? {
             if !st.success() {
-                return Err("npm install @anthropic-ai/claude-code falhou".into());
+                return Err("npm install @anthropic-ai/claude-code failed".into());
             }
             break;
         }
-        emit(p(S, L, "running", None, format!("A instalar @anthropic-ai/claude-code via npm · {}s", started.elapsed().as_secs())));
+        emit(p(S, L, "running", None, format!("Installing @anthropic-ai/claude-code via npm · {}s", started.elapsed().as_secs())));
         thread::sleep(Duration::from_millis(500));
     }
     let bin = prefix.join("node_modules/.bin/claude");
-    bin.exists().then_some(bin).ok_or("binário claude não encontrado após instalação".into())
+    bin.exists().then_some(bin).ok_or("claude binary not found after install".into())
 }
 
 pub fn ensure(home: &Path, runtime: &Path, emit: &dyn Fn(Progress)) -> Result<Resolved, String> {
@@ -254,7 +254,7 @@ pub fn ensure(home: &Path, runtime: &Path, emit: &dyn Fn(Progress)) -> Result<Re
     let path_env = search_path(home, runtime);
 
     // 1. Node.js (required)
-    emit(p("node", "Runtime Node.js", "running", None, "A procurar Node ≥ 22.13 com SQLite…"));
+    emit(p("node", "Runtime Node.js", "running", None, "Looking for Node ≥ 22.13 with SQLite…"));
     let (node, ver, how) = match find_node(&path_env, runtime, force) {
         Some((n, v)) => (n, v, "encontrado"),
         None => {
@@ -262,36 +262,36 @@ pub fn ensure(home: &Path, runtime: &Path, emit: &dyn Fn(Progress)) -> Result<Re
                 emit(p("node", "Runtime Node.js", "failed", None, e.clone()));
                 e
             })?;
-            (n, v, "instalado no runtime CURI")
+            (n, v, "installed in the CURI runtime")
         }
     };
     emit(p("node", "Runtime Node.js", "done", Some(100.0), format!("v{ver} {how} · {}", node.display())));
 
     // 2. git (used for source verification; optional)
-    emit(p("git", "Git", "running", None, "A verificar…"));
+    emit(p("git", "Git", "running", None, "Checking…"));
     match Command::new("git").arg("--version").env("PATH", &path_env).stderr(Stdio::null()).output() {
         Ok(o) if o.status.success() => emit(p("git", "Git", "done", Some(100.0), String::from_utf8_lossy(&o.stdout).trim().to_string())),
         _ => {
             #[cfg(target_os = "macos")]
             let _ = Command::new("xcode-select").arg("--install").spawn();
-            emit(p("git", "Git", "warning", None, "Git ausente: foi aberto o instalador das Command Line Tools da Apple. A verificação de fontes fica limitada até concluir."));
+            emit(p("git", "Git", "warning", None, "Git missing: Apple's Command Line Tools installer was opened. Source checks are limited until it finishes."));
         }
     }
 
     // 3. Claude Code CLI (optional: catalogue works without it)
-    emit(p("claude", "Claude Code CLI", "running", None, "A procurar…"));
+    emit(p("claude", "Claude Code CLI", "running", None, "Looking…"));
     let claude = match find_claude(&path_env, home) {
         Some(c) if !force => {
-            emit(p("claude", "Claude Code CLI", "done", Some(100.0), format!("encontrado · {}", c.display())));
+            emit(p("claude", "Claude Code CLI", "done", Some(100.0), format!("found · {}", c.display())));
             Some(c)
         }
         _ => match install_claude(&node, runtime, &path_env, emit) {
             Ok(c) => {
-                emit(p("claude", "Claude Code CLI", "done", Some(100.0), format!("instalado no runtime CURI · {}", c.display())));
+                emit(p("claude", "Claude Code CLI", "done", Some(100.0), format!("installed in the CURI runtime · {}", c.display())));
                 Some(c)
             }
             Err(e) => {
-                emit(p("claude", "Claude Code CLI", "warning", None, format!("{e} — o CURI funciona em modo catálogo sem integração Claude.")));
+                emit(p("claude", "Claude Code CLI", "warning", None, format!("{e}. CURI works in catalogue mode without the Claude integration.")));
                 None
             }
         },

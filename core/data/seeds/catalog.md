@@ -1,6 +1,6 @@
-# Catálogo inicial
+# Starter catalogue
 
-## Design, UI e componentes visuais
+## Design, UI and visual components
 https://horizonx.so/collections
 https://www.getlayers.ai/
 https://reactbits.dev/
@@ -37,7 +37,7 @@ https://github.com/pmndrs/react-spring
 https://rive.app/
 https://lottiefiles.com/
 
-## Skills para agentes e engenharia
+## Agent skills and engineering
 https://github.com/diegosouzapw/OmniRoute
 https://github.com/WorldFlowAI/everything-claude-code
 https://github.com/obra/superpowers
@@ -67,13 +67,13 @@ https://github.com/anthropics/claude-code
 https://github.com/anthropics/claude-code-action
 https://github.com/anthropics/claude-code-security-review
 
-## Desenvolvimento por especificação e orquestração
+## Spec-driven development and orchestration
 https://github.com/Fission-AI/OpenSpec
 https://github.com/github/spec-kit
 https://github.com/bmad-code-org/BMAD-METHOD
 https://github.com/open-gsd/gsd-core
 
-## Registos de skills, plugins e MCP
+## Skill, plugin and MCP registries
 https://skills.sh/
 https://skills.sh/vercel-labs/skills/find-skills
 https://skillsmd.dev/
@@ -87,7 +87,7 @@ https://github.com/ComposioHQ/awesome-claude-skills
 https://github.com/subinium/awesome-claude-code
 https://github.com/upstash/context7
 
-## Browser, pesquisa web e automação
+## Browser, web research and automation
 https://github.com/microsoft/playwright-mcp
 https://github.com/ChromeDevTools/chrome-devtools-mcp
 https://github.com/vercel-labs/agent-browser
@@ -97,7 +97,7 @@ https://github.com/firecrawl/firecrawl
 https://github.com/unclecode/crawl4ai
 https://github.com/GoogleChrome/lighthouse
 
-## Testes, qualidade, segurança e observabilidade
+## Testing, quality, security and observability
 https://github.com/vitest-dev/vitest
 https://github.com/mswjs/msw
 https://github.com/storybookjs/storybook
@@ -125,7 +125,7 @@ https://github.com/fastapi/fastapi
 https://github.com/tiangolo/full-stack-fastapi-template
 https://github.com/n8n-io/n8n
 
-## Mobile, nativo e multiplataforma
+## Mobile, native and cross-platform
 https://github.com/expo/skills
 https://github.com/expo/expo
 https://github.com/facebook/react-native
@@ -135,7 +135,7 @@ https://developer.apple.com/design/human-interface-guidelines/
 https://developer.apple.com/documentation/swiftui/
 https://developer.android.com/develop/ui/compose
 
-## Outras fontes de recursos
+## More resource sources
 https://github.com/topics/claude-code
 https://github.com/topics/agent-skills
 https://github.com/topics/mcp-server
@@ -147,10 +147,10 @@ https://github.com/topics/threejs
 https://github.com/topics/ai-agents
 https://github.com/topics/developer-tools
 
-## Registos de recursos
+## Resource registries
 https://reactbits.dev/
 
-## Produção e edição de vídeo
+## Video production and editing
 https://github.com/FFmpeg/FFmpeg
 https://github.com/remotion-dev/remotion
 https://www.remotion.dev/
@@ -168,7 +168,7 @@ https://github.com/mrdoob/three.js
 https://github.com/pmndrs/react-three-fiber
 https://github.com/pmndrs/drei
 
-## Engenharia reversa, firmware e binários
+## Reverse engineering, firmware and binaries
 https://github.com/NationalSecurityAgency/ghidra
 https://github.com/rizinorg/rizin
 https://github.com/rizinorg/cutter
@@ -178,7 +178,7 @@ https://github.com/angr/angr
 https://github.com/volatilityfoundation/volatility3
 https://github.com/morluto/rea
 
-## Cibersegurança e testes de intrusão
+## Cybersecurity and penetration testing
 https://github.com/OWASP/CheatSheetSeries
 https://github.com/OWASP/wstg
 https://github.com/zaproxy/zaproxy

@@ -1,9 +1,9 @@
 {
- "note": "Perfis revistos à mão. Cada opção de instalação foi confirmada no respetivo registo (npm, PyPI, Homebrew, WinGet/Flathub ids publicados pelos projetos) em 2026-10-28. Completam ou corrigem o que a inspeção automática (seed-facts.json) deriva.",
+ "note": "Hand-reviewed profiles. Every install option was confirmed in its registry (npm, PyPI, Homebrew, WinGet/Flathub ids published by the projects) on 2026-10-28. They complete or correct what automatic inspection (seed-facts.json) derives.",
  "resources": {
   "web:projects.blender.org/blender/blender": {
    "kind": "app",
-   "agent_use": "O agente controla o Blender (cenas, objetos, materiais, render) através do servidor MCP para Blender.",
+   "agent_use": "The agent drives Blender (scenes, objects, materials, rendering) through the Blender MCP server.",
    "related": [
     "gh:ahujasid/mcp-for-blender"
    ],
@@ -35,13 +35,13 @@
     {
      "method": "download",
      "url": "https://www.blender.org/download/",
-     "label": "Transferir do site oficial"
+     "label": "Download from the official site"
     }
    ]
   },
   "gh:ahujasid/mcp-for-blender": {
    "kind": "mcp",
-   "agent_use": "Dá ao agente ferramentas para criar e alterar cenas no Blender em tempo real.",
+   "agent_use": "Gives the agent tools to create and change Blender scenes live.",
    "related": [
     "web:projects.blender.org/blender/blender"
    ],
@@ -58,26 +58,26 @@
      ],
      "label": "uvx mcp-for-blender",
      "setup": [
-      "No Blender: Edit › Preferences › Add-ons › Install from Disk… e escolha o addon.py do repositório.",
-      "Ative o addon e, no painel lateral (N) › BlenderMCP, carregue em Connect."
+      "In Blender: Edit › Preferences › Add-ons › Install from Disk… and pick addon.py from the repository.",
+      "Enable the add-on and, in the side panel (N) › BlenderMCP, click Connect."
      ]
     }
    ]
   },
   "gh:comfy-org/comfyui": {
    "kind": "app",
-   "agent_use": "Geração de imagem e vídeo por grafos de nós; o agente usa a API local do ComfyUI (porta 8188) ou o comfy-cli.",
+   "agent_use": "Image and video generation with node graphs; the agent uses ComfyUI's local API (port 8188) or comfy-cli.",
    "install": [
     {
      "method": "download",
      "url": "https://www.comfy.org/download",
-     "label": "ComfyUI Desktop (site oficial)"
+     "label": "ComfyUI Desktop (official site)"
     },
     {
      "method": "package",
      "manager": "uv",
      "name": "comfy-cli",
-     "label": "comfy-cli (instalar e gerir o ComfyUI)"
+     "label": "comfy-cli (install and manage ComfyUI)"
     }
    ]
   },
@@ -112,7 +112,7 @@
   },
   "gh:zaproxy/zaproxy": {
    "kind": "app",
-   "agent_use": "Tem API REST e modo sem interface: o agente pode lançar e ler varrimentos de segurança.",
+   "agent_use": "Has a REST API and a headless mode: the agent can start and read security scans.",
    "install": [
     {
      "method": "package",
@@ -142,7 +142,7 @@
   },
   "gh:openscad/openscad": {
    "kind": "app",
-   "agent_use": "CAD por código: o agente escreve ficheiros .scad e exporta STL pela linha de comando.",
+   "agent_use": "CAD as code: the agent writes .scad files and exports STL from the command line.",
    "install": [
     {
      "method": "package",
@@ -172,7 +172,7 @@
   },
   "gh:kicad/kicad-source-mirror": {
    "kind": "app",
-   "agent_use": "Eletrónica (esquemas e PCB); scriptável em Python, o agente pode gerar e verificar placas.",
+   "agent_use": "Electronics (schematics and PCB); scriptable in Python, so the agent can generate and check boards.",
    "install": [
     {
      "method": "package",
@@ -202,7 +202,7 @@
   },
   "gh:freecad/freecad": {
    "kind": "app",
-   "agent_use": "CAD paramétrico scriptável em Python; o agente pode gerar peças por script.",
+   "agent_use": "Parametric CAD scriptable in Python; the agent can generate parts by script.",
    "install": [
     {
      "method": "package",
@@ -286,7 +286,7 @@
   },
   "gh:prusa3d/prusaslicer": {
    "kind": "app",
-   "agent_use": "Fatiador para impressão 3D; tem linha de comando para o agente gerar G-code.",
+   "agent_use": "3D printing slicer; has a command line for the agent to generate G-code.",
    "install": [
     {
      "method": "package",
@@ -345,7 +345,7 @@
   },
   "web:rive.app": {
    "kind": "app",
-   "agent_use": "Editor de animações interativas; o agente integra o runtime Rive nos seus projetos.",
+   "agent_use": "Interactive animation editor; the agent integrates the Rive runtime into your projects.",
    "install": [
     {
      "method": "package",
@@ -358,17 +358,17 @@
     {
      "method": "download",
      "url": "https://rive.app/downloads",
-     "label": "Transferir do site oficial"
+     "label": "Download from the official site"
     }
    ]
   },
   "web:lottiefiles.com": {
    "kind": "reference",
-   "agent_use": "Serviço web de animações Lottie; o agente usa os ficheiros exportados (lottie-web, dotLottie) nos projetos."
+   "agent_use": "Web service for Lottie animations; the agent uses the exported files (lottie-web, dotLottie) in projects."
   },
   "gh:nationalsecurityagency/ghidra": {
    "kind": "app",
-   "agent_use": "Engenharia reversa; o agente usa-o através do REA ou em modo headless (analyzeHeadless).",
+   "agent_use": "Reverse engineering; the agent uses it through REA or headless (analyzeHeadless).",
    "related": [
     "gh:morluto/rea"
    ],
@@ -385,13 +385,13 @@
     {
      "method": "download",
      "url": "https://github.com/NationalSecurityAgency/ghidra/releases/latest",
-     "label": "Transferir a última versão"
+     "label": "Download the latest release"
     }
    ]
   },
   "gh:ffmpeg/ffmpeg": {
    "kind": "cli",
-   "agent_use": "O agente converte, corta e analisa vídeo e áudio pela linha de comando.",
+   "agent_use": "The agent converts, cuts and analyses video and audio from the command line.",
    "install": [
     {
      "method": "package",
@@ -414,7 +414,7 @@
   },
   "gh:frida/frida": {
    "kind": "cli",
-   "agent_use": "Instrumentação dinâmica de processos; o agente usa frida/frida-trace ou o REA.",
+   "agent_use": "Dynamic process instrumentation; the agent uses frida/frida-trace or REA.",
    "related": [
     "gh:morluto/rea"
    ],
@@ -464,12 +464,12 @@
   },
   "gh:anthropics/claude-code-action": {
    "kind": "reference",
-   "agent_use": "Corre o Claude Code em GitHub Actions (revisões, respostas a issues). Instala-se num repositório, não no dispositivo.",
-   "notes": "Configurar com /install-github-app no Claude Code ou com o workflow do repositório."
+   "agent_use": "Runs Claude Code in GitHub Actions (reviews, issue replies). Installs into a repository, not on the device.",
+   "notes": "Set it up with /install-github-app in Claude Code or with the repository workflow."
   },
   "gh:anthropics/claude-code-security-review": {
    "kind": "reference",
-   "agent_use": "Revisão de segurança de pull requests em GitHub Actions. Instala-se num repositório, não no dispositivo."
+   "agent_use": "Security review of pull requests in GitHub Actions. Installs into a repository, not on the device."
   },
   "gh:orval-labs/orval": {
    "kind": "library",
@@ -518,7 +518,7 @@
   },
   "gh:platformio/platformio-core": {
    "kind": "cli",
-   "agent_use": "O agente compila e carrega firmware para placas (Arduino, ESP32…) pela linha de comando.",
+   "agent_use": "The agent builds and flashes firmware to boards (Arduino, ESP32…) from the command line.",
    "install": [
     {
      "method": "package",
@@ -534,7 +534,7 @@
   },
   "gh:semgrep/semgrep": {
    "kind": "cli",
-   "agent_use": "Análise estática; o agente corre semgrep com --json e lê os achados.",
+   "agent_use": "Static analysis; the agent runs semgrep with --json and reads the findings.",
    "install": [
     {
      "method": "package",
@@ -719,13 +719,13 @@
   },
   "gh:microsoft/markitdown": {
    "kind": "cli",
-   "agent_use": "Converte PDF, Word, Excel, PowerPoint e imagens em Markdown que o agente lê.",
+   "agent_use": "Converts PDF, Word, Excel, PowerPoint and images into Markdown the agent can read.",
    "install": [
     {
      "method": "package",
      "manager": "uv",
      "name": "markitdown",
-     "label": "uv tool markitdown (linha de comando)"
+     "label": "uv tool markitdown (command line)"
     },
     {
      "method": "mcp",
@@ -737,7 +737,7 @@
      "requires": [
       "uv"
      ],
-     "label": "Servidor MCP markitdown-mcp"
+     "label": "markitdown-mcp MCP server"
     }
    ]
   },
@@ -788,7 +788,7 @@
   },
   "gh:vllm-project/vllm": {
    "kind": "library",
-   "notes": "Requer GPU (CUDA/ROCm) em Linux para desempenho real.",
+   "notes": "Needs a GPU (CUDA/ROCm) on Linux for real performance.",
    "project": [
     {
      "manager": "pip",
@@ -807,7 +807,7 @@
   },
   "gh:remotion-dev/remotion": {
    "kind": "framework",
-   "agent_use": "Vídeo em React: o agente escreve composições e renderiza MP4 pela linha de comando.",
+   "agent_use": "Video in React: the agent writes compositions and renders MP4 from the command line.",
    "project": [
     {
      "manager": "npm",
@@ -901,14 +901,14 @@
   },
   "gh:supabase/supabase": {
    "kind": "framework",
-   "agent_use": "O agente gere bases de dados, migrações e funções Supabase através do servidor MCP oficial.",
+   "agent_use": "The agent manages Supabase databases, migrations and functions through the official MCP server.",
    "install": [
     {
      "method": "mcp",
      "transport": "http",
      "url": "https://mcp.supabase.com/mcp",
      "auth": "oauth",
-     "label": "Servidor MCP oficial (remoto)"
+     "label": "Official MCP server (remote)"
     },
     {
      "method": "package",
@@ -924,27 +924,27 @@
   },
   "gh:getsentry/sentry": {
    "kind": "app",
-   "agent_use": "O agente consulta erros e problemas do Sentry através do servidor MCP oficial.",
+   "agent_use": "The agent looks up Sentry errors and issues through the official MCP server.",
    "install": [
     {
      "method": "mcp",
      "transport": "http",
      "url": "https://mcp.sentry.dev/mcp",
      "auth": "oauth",
-     "label": "Servidor MCP oficial (remoto)"
+     "label": "Official MCP server (remote)"
     }
    ]
   },
   "gh:posthog/posthog": {
    "kind": "app",
-   "agent_use": "O agente consulta eventos, funis e feature flags através do servidor MCP oficial.",
+   "agent_use": "The agent looks up events, funnels and feature flags through the official MCP server.",
    "install": [
     {
      "method": "mcp",
      "transport": "http",
      "url": "https://mcp.posthog.com/mcp",
      "auth": "oauth",
-     "label": "Servidor MCP oficial (remoto)"
+     "label": "Official MCP server (remote)"
     }
    ]
   },
@@ -964,7 +964,7 @@
      "requires": [
       "node"
      ],
-     "label": "Servidor MCP do Convex"
+     "label": "Convex MCP server"
     }
    ],
    "project": [
@@ -986,7 +986,7 @@
   },
   "gh:anomalyco/opencode": {
    "kind": "cli",
-   "agent_use": "Outro agente de programação no terminal; útil para comparar ou combinar com o Claude Code.",
+   "agent_use": "Another coding agent in the terminal; useful to compare with or combine with Claude Code.",
    "install": [
     {
      "method": "package",
@@ -1006,7 +1006,7 @@
   },
   "gh:usestrix/strix": {
    "kind": "cli",
-   "agent_use": "Agentes de pentest autónomos; correm contra uma app que controla, com prova de cada vulnerabilidade.",
+   "agent_use": "Autonomous pentest agents; they run against an app you control, with proof for every vulnerability.",
    "install": [
     {
      "method": "package",
@@ -1053,7 +1053,7 @@
   },
   "gh:vercel-labs/skills": {
    "kind": "cli",
-   "agent_use": "CLI aberto para procurar e instalar skills de agentes (npx skills).",
+   "agent_use": "Open CLI to find and install agent skills (npx skills).",
    "install": [
     {
      "method": "package",
@@ -1064,7 +1064,7 @@
   },
   "gh:tiangolo/full-stack-fastapi-template": {
    "kind": "reference",
-   "agent_use": "Modelo de projeto completo (FastAPI + React); o agente parte dele para novos projetos."
+   "agent_use": "A complete project template (FastAPI + React); the agent starts new projects from it."
   },
   "gh:debpalash/voicestudio": {
    "kind": "app",
@@ -1072,13 +1072,13 @@
     {
      "method": "download",
      "url": "https://github.com/debpalash/voicestudio/releases/latest",
-     "label": "Transferir a última versão"
+     "label": "Download the latest release"
     }
    ]
   },
   "gh:manimcommunity/manim": {
    "kind": "cli",
-   "agent_use": "Animações matemáticas por código; o agente escreve cenas em Python e renderiza vídeo.",
+   "agent_use": "Math animations as code; the agent writes scenes in Python and renders video.",
    "install": [
     {
      "method": "package",
@@ -1124,7 +1124,7 @@
   },
   "gh:ggml-org/whisper.cpp": {
    "kind": "cli",
-   "agent_use": "Transcrição de áudio local e rápida; o agente transcreve ficheiros pela linha de comando.",
+   "agent_use": "Fast local audio transcription; the agent transcribes files from the command line.",
    "install": [
     {
      "method": "package",
@@ -1139,7 +1139,7 @@
   },
   "gh:modelcontextprotocol/servers": {
    "kind": "mcp",
-   "agent_use": "Servidores MCP de referência: buscar páginas web, Git, hora, memória persistente e pensamento sequencial.",
+   "agent_use": "Reference MCP servers: fetch web pages, Git, time, persistent memory and sequential thinking.",
    "install": [
     {
      "method": "mcp",
@@ -1152,7 +1152,7 @@
      "requires": [
       "uv"
      ],
-     "label": "fetch — ler páginas web"
+     "label": "fetch: read web pages"
     },
     {
      "method": "mcp",
@@ -1165,7 +1165,7 @@
      "requires": [
       "uv"
      ],
-     "label": "git — repositórios locais"
+     "label": "git: local repositories"
     },
     {
      "method": "mcp",
@@ -1178,7 +1178,7 @@
      "requires": [
       "uv"
      ],
-     "label": "time — datas e fusos horários"
+     "label": "time: dates and time zones"
     },
     {
      "method": "mcp",
@@ -1192,7 +1192,7 @@
      "requires": [
       "node"
      ],
-     "label": "memory — memória persistente"
+     "label": "memory: persistent memory"
     },
     {
      "method": "mcp",
@@ -1247,13 +1247,13 @@
      "requires": [
       "node"
      ],
-     "label": "npx firecrawl-mcp (requer chave paga)"
+     "label": "npx firecrawl-mcp (needs a paid key)"
     }
    ]
   },
   "gh:upstash/context7": {
    "kind": "mcp",
-   "agent_use": "Dá ao agente documentação atual e por versão de milhares de bibliotecas.",
+   "agent_use": "Gives the agent current, version-specific docs for thousands of libraries.",
    "install": [
     {
      "method": "mcp",
@@ -1292,13 +1292,13 @@
   },
   "gh:morluto/rea": {
    "kind": "mcp",
-   "agent_use": "Engenharia reversa para agentes: binários nativos, apps, firmware, browser e runtimes, com evidência em cada resultado.",
+   "agent_use": "Reverse engineering for agents: native binaries, apps, firmware, browsers and runtimes, with evidence in every result.",
    "install": [
     {
      "method": "package",
      "manager": "npm",
      "name": "rea-agents",
-     "label": "npm rea-agents (CLI rea)"
+     "label": "npm rea-agents (rea CLI)"
     },
     {
      "method": "mcp",
@@ -1311,13 +1311,13 @@
      "requires": [
       "rea"
      ],
-     "label": "Registar rea mcp no Claude Code"
+     "label": "Register rea mcp in Claude Code"
     }
    ]
   },
   "gh:yamadashy/repomix": {
    "kind": "cli",
-   "agent_use": "Empacota um repositório num único ficheiro para o agente ler; também tem modo MCP.",
+   "agent_use": "Packs a repository into a single file for the agent to read; also has an MCP mode.",
    "install": [
     {
      "method": "package",
@@ -1337,7 +1337,7 @@
      "requires": [
       "node"
      ],
-     "label": "Servidor MCP repomix"
+     "label": "repomix MCP server"
     }
    ]
   },
@@ -1353,7 +1353,7 @@
   },
   "web:ui.shadcn.com": {
    "kind": "components",
-   "agent_use": "Com o servidor MCP do shadcn o agente procura e instala componentes de qualquer registo: Aceternity, Magic UI, React Bits, Animate UI, Motion Primitives, Kokonut, Cult UI, Shadcnblocks e UI Layouts.",
+   "agent_use": "With the shadcn MCP server the agent searches and installs components from any registry: Aceternity, Magic UI, React Bits, Animate UI, Motion Primitives, Kokonut, Cult UI, Shadcnblocks and UI Layouts.",
    "install": [
     {
      "method": "mcp",
@@ -1367,7 +1367,7 @@
      "requires": [
       "node"
      ],
-     "label": "Servidor MCP do shadcn"
+     "label": "shadcn MCP server"
     }
    ],
    "project": [
@@ -1395,7 +1395,7 @@
      "requires": [
       "node"
      ],
-     "label": "Servidor MCP da Magic UI"
+     "label": "Magic UI MCP server"
     },
     {
      "method": "mcp",
@@ -1409,11 +1409,11 @@
      "requires": [
       "node"
      ],
-     "label": "Dar acesso ao agente (MCP do shadcn)"
+     "label": "Give the agent access (shadcn MCP)"
     }
    ],
    "registry": "@magicui",
-   "agent_use": "Registo oficial do shadcn (@magicui). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "agent_use": "Official shadcn registry (@magicui). With the shadcn MCP server enabled, the agent finds and installs these components straight into your project.",
    "project": [
     {
      "manager": "shadcn",
@@ -1423,7 +1423,7 @@
   },
   "web:21st.dev": {
    "kind": "components",
-   "agent_use": "O Magic MCP do 21st.dev gera componentes de UI a partir de uma descrição.",
+   "agent_use": "21st.dev's Magic MCP generates UI components from a description.",
    "install": [
     {
      "method": "mcp",
@@ -1440,13 +1440,13 @@
      "requires": [
       "node"
      ],
-     "label": "Magic MCP (requer chave do 21st.dev)"
+     "label": "Magic MCP (needs a 21st.dev key)"
     }
    ]
   },
   "web:horizonx.so/collections": {
    "kind": "components",
-   "agent_use": "O servidor MCP da HorizonX dá ao agente componentes animados, texturas, mockups e shaders exportados como código.",
+   "agent_use": "The HorizonX MCP server gives the agent animated components, textures, mockups and shaders exported as code.",
    "install": [
     {
      "method": "mcp",
@@ -1454,7 +1454,7 @@
      "name": "horizonx",
      "url": "https://horizonx.so/api/mcp",
      "auth": "oauth",
-     "label": "Servidor MCP da HorizonX (remoto)"
+     "label": "HorizonX MCP server (remote)"
     }
    ]
   },
@@ -1463,7 +1463,7 @@
    "related": [
     "web:ui.shadcn.com"
    ],
-   "agent_use": "Registo oficial do shadcn (@react-bits). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "agent_use": "Official shadcn registry (@react-bits). With the shadcn MCP server enabled, the agent finds and installs these components straight into your project.",
    "registry": "@react-bits",
    "project": [
     {
@@ -1484,7 +1484,7 @@
      "requires": [
       "node"
      ],
-     "label": "Dar acesso ao agente (MCP do shadcn)"
+     "label": "Give the agent access (shadcn MCP)"
     }
    ]
   },
@@ -1494,7 +1494,7 @@
     "web:ui.shadcn.com"
    ],
    "registry": "@aceternity",
-   "agent_use": "Registo oficial do shadcn (@aceternity). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "agent_use": "Official shadcn registry (@aceternity). With the shadcn MCP server enabled, the agent finds and installs these components straight into your project.",
    "project": [
     {
      "manager": "shadcn",
@@ -1514,7 +1514,7 @@
      "requires": [
       "node"
      ],
-     "label": "Dar acesso ao agente (MCP do shadcn)"
+     "label": "Give the agent access (shadcn MCP)"
     }
    ]
   },
@@ -1524,7 +1524,7 @@
     "web:ui.shadcn.com"
    ],
    "registry": "@motion-primitives",
-   "agent_use": "Registo oficial do shadcn (@motion-primitives). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "agent_use": "Official shadcn registry (@motion-primitives). With the shadcn MCP server enabled, the agent finds and installs these components straight into your project.",
    "project": [
     {
      "manager": "shadcn",
@@ -1544,7 +1544,7 @@
      "requires": [
       "node"
      ],
-     "label": "Dar acesso ao agente (MCP do shadcn)"
+     "label": "Give the agent access (shadcn MCP)"
     }
    ]
   },
@@ -1554,7 +1554,7 @@
     "web:ui.shadcn.com"
    ],
    "registry": "@animate-ui",
-   "agent_use": "Registo oficial do shadcn (@animate-ui). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "agent_use": "Official shadcn registry (@animate-ui). With the shadcn MCP server enabled, the agent finds and installs these components straight into your project.",
    "project": [
     {
      "manager": "shadcn",
@@ -1574,7 +1574,7 @@
      "requires": [
       "node"
      ],
-     "label": "Dar acesso ao agente (MCP do shadcn)"
+     "label": "Give the agent access (shadcn MCP)"
     }
    ]
   },
@@ -1584,7 +1584,7 @@
     "web:ui.shadcn.com"
    ],
    "registry": "@cult-ui",
-   "agent_use": "Registo oficial do shadcn (@cult-ui). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "agent_use": "Official shadcn registry (@cult-ui). With the shadcn MCP server enabled, the agent finds and installs these components straight into your project.",
    "project": [
     {
      "manager": "shadcn",
@@ -1604,7 +1604,7 @@
      "requires": [
       "node"
      ],
-     "label": "Dar acesso ao agente (MCP do shadcn)"
+     "label": "Give the agent access (shadcn MCP)"
     }
    ]
   },
@@ -1614,7 +1614,7 @@
     "web:ui.shadcn.com"
    ],
    "registry": "@kokonutui",
-   "agent_use": "Registo oficial do shadcn (@kokonutui). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "agent_use": "Official shadcn registry (@kokonutui). With the shadcn MCP server enabled, the agent finds and installs these components straight into your project.",
    "project": [
     {
      "manager": "shadcn",
@@ -1634,7 +1634,7 @@
      "requires": [
       "node"
      ],
-     "label": "Dar acesso ao agente (MCP do shadcn)"
+     "label": "Give the agent access (shadcn MCP)"
     }
    ]
   },
@@ -1644,7 +1644,7 @@
     "web:ui.shadcn.com"
    ],
    "registry": "@shadcnblocks",
-   "agent_use": "Registo oficial do shadcn (@shadcnblocks). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "agent_use": "Official shadcn registry (@shadcnblocks). With the shadcn MCP server enabled, the agent finds and installs these components straight into your project.",
    "project": [
     {
      "manager": "shadcn",
@@ -1664,7 +1664,7 @@
      "requires": [
       "node"
      ],
-     "label": "Dar acesso ao agente (MCP do shadcn)"
+     "label": "Give the agent access (shadcn MCP)"
     }
    ]
   },
@@ -1681,11 +1681,11 @@
   },
   "gh:msitarzewski/agency-agents": {
    "kind": "reference",
-   "agent_use": "Coleção de subagentes especializados (ficheiros .md) para copiar para ~/.claude/agents."
+   "agent_use": "A collection of specialised subagents (.md files) to copy into ~/.claude/agents."
   },
   "gh:anthropics/claude-code": {
    "kind": "cli",
-   "agent_use": "O próprio agente de programação no terminal; o repositório também publica plugins oficiais (marketplace).",
+   "agent_use": "The coding agent itself, in the terminal; the repository also publishes official plugins (marketplace).",
    "install": [
     {
      "method": "package",
@@ -1701,7 +1701,7 @@
    "related": [
     "web:ui.shadcn.com"
    ],
-   "agent_use": "Registo oficial do shadcn (@ui-layouts). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "agent_use": "Official shadcn registry (@ui-layouts). With the shadcn MCP server enabled, the agent finds and installs these components straight into your project.",
    "project": [
     {
      "manager": "shadcn",
@@ -1721,17 +1721,17 @@
      "requires": [
       "node"
      ],
-     "label": "Dar acesso ao agente (MCP do shadcn)"
+     "label": "Give the agent access (shadcn MCP)"
     }
    ]
   },
   "web:hover.dev": {
    "kind": "components",
-   "agent_use": "Catálogo de componentes para copiar do site para o projeto; não tem registo shadcn nem MCP, por isso o agente usa-o a partir do código que lhe indicar."
+   "agent_use": "A component catalogue to copy from the site into your project; it has no shadcn registry or MCP, so the agent works from code you point it to."
   },
   "web:lightswind.com": {
    "kind": "components",
-   "agent_use": "Catálogo de componentes para copiar do site para o projeto; não tem registo shadcn nem MCP, por isso o agente usa-o a partir do código que lhe indicar."
+   "agent_use": "A component catalogue to copy from the site into your project; it has no shadcn registry or MCP, so the agent works from code you point it to."
   }
  }
 }

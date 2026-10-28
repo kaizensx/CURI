@@ -101,7 +101,7 @@ test('agent relevance keeps tools agents can reach and filters noise with a reas
   const mcp = agentRelevance({ name: 'kicad-mcp', description: 'MCP server for KiCad PCB design', topics: ['mcp'], stars: 400, created_at: '2026-08-01', pushed_at: '2026-10-20', license: 'MIT' }, { ref });
   assert.equal(mcp.interface, 'mcp');
   assert.ok(mcp.score > 0.8 && !mcp.noise);
-  assert.ok(mcp.domains.includes('CAD e fabrico'));
+  assert.ok(mcp.domains.includes('CAD and fabrication'));
   for (const [name, description] of [['awesome-agents', 'A curated list of awesome AI agents'], ['llm-course', 'Course and roadmap to learn LLMs'], ['dotfiles', 'my dotfiles and setup'], ['x', '']]) {
     const r = agentRelevance({ name, description, topics: [], stars: 9000, created_at: '2024-01-01', pushed_at: '2026-10-01', license: 'MIT' }, { ref });
     assert.equal(r.score, 0);
@@ -178,7 +178,7 @@ test('capability map and decision comparison are grounded in the registry and th
   assert.ok(m.summary.agent_total > 30);
   const blender = m.capabilities.find(c => c.id === 'blender-control');
   assert.equal(blender.status, 'ready', 'configured in Codex counts as available to an agent');
-  const c = compareDecision(db, ['gh:microsoft/playwright-mcp', 'gh:chromedevtools/chrome-devtools-mcp'], { useCase: 'testar o site no browser' });
+  const c = compareDecision(db, ['gh:microsoft/playwright-mcp', 'gh:chromedevtools/chrome-devtools-mcp'], { useCase: 'test the site in the browser' });
   assert.equal(c.items.length, 2);
   for (const it of c.items) { assert.ok(it.install.text); assert.ok(Array.isArray(it.security)); assert.ok(it.license); }
   assert.ok(c.items.some(i => i.unique.length), 'states what only one of them offers');
@@ -209,12 +209,12 @@ test('projects: the documented command becomes the right one for the project, an
 
 test('personal layer: favourites, collections, notes, own kind and command change what the app offers', async () => {
   const { setMark, collections } = await import('../src/marks.mjs');
-  setMark(db, 'gh:greensock/gsap', { fav: true, collections: ['Animação'], notes: 'usar no site', command: 'pnpm add gsap' });
-  assert.deepEqual(collections(db).find(c => c.name === 'Animação'), { name: 'Animação', n: 1 });
+  setMark(db, 'gh:greensock/gsap', { fav: true, collections: ['Animation'], notes: 'use on the site', command: 'pnpm add gsap' });
+  assert.deepEqual(collections(db).find(c => c.name === 'Animation'), { name: 'Animation', n: 1 });
   const pf = profileFor(db, 'gh:greensock/gsap');
   assert.equal(pf.project_use[0].command, 'pnpm add gsap');
   setMark(db, 'gh:greensock/gsap', { kind: 'reference' });
   assert.equal(profileFor(db, 'gh:greensock/gsap').kind, 'reference');
-  assert.throws(() => setMark(db, 'gh:greensock/gsap', { command: 'rm -rf /' }), /não suportado/);
+  assert.throws(() => setMark(db, 'gh:greensock/gsap', { command: 'rm -rf /' }), /Unsupported command/);
   setMark(db, 'gh:greensock/gsap', { kind: null, fav: false, collections: [], notes: '', command: '' });
 });

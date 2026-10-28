@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { paths } from './paths.mjs';
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 const MIGRATIONS = [
   {
@@ -211,6 +211,18 @@ CREATE TABLE resource_facts (
 );
 `,
   },
+  {
+    version: 5,
+    name: 'candidate inspection',
+    sql: `
+CREATE TABLE candidate_facts (
+  full_name TEXT PRIMARY KEY,
+  data TEXT NOT NULL,
+  install TEXT NOT NULL,
+  inspected_at TEXT NOT NULL
+);
+`,
+  },
 ];
 
 export function now() { return new Date().toISOString(); }
@@ -222,7 +234,7 @@ export function openDb(file = paths.db, { targetVersion = SCHEMA_VERSION, backup
   const current = currentVersion(db);
   if (current > SCHEMA_VERSION) {
     db.close();
-    throw new Error(`Base de dados com schema v${current} é mais recente que este cliente (v${SCHEMA_VERSION}). Atualize o CURI; recusado para evitar corrupção.`);
+    throw new Error(`The database uses schema v${current}, newer than this client (v${SCHEMA_VERSION}). Update CURI; refused to avoid corruption.`);
   }
   const pending = MIGRATIONS.filter(m => m.version > current && m.version <= targetVersion);
   if (pending.length && current > 0 && backupBeforeMigrate && file !== ':memory:') {

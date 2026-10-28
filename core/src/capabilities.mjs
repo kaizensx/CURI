@@ -22,7 +22,7 @@ function providerState(db, id, ctx) {
   const prof = profileFor(db, id, ctx);
   const pres = presenceOf(db, id);
   const f = getFacts(db, id);
-  return { id, kind: prof.kind, kind_label: prof.kind_label, state: pres.state, where: [...new Set(pres.found.map(x => x.agent_label || (x.type === 'app' ? 'Aplicação' : x.type)))],
+  return { id, kind: prof.kind, kind_label: prof.kind_label, state: pres.state, where: [...new Set(pres.found.map(x => x.agent_label || (x.type === 'app' ? 'App' : x.type)))],
     ready: prof.options.some(o => o.ready), installable: prof.installable, stars: f?.stars ?? null, pushed_at: f?.pushed_at ?? null, archived: Boolean(f?.archived) };
 }
 
@@ -76,24 +76,24 @@ export function compareDecision(db, ids, { useCase = '' } = {}) {
     const caps = db.prepare('SELECT capability_id FROM resource_capabilities WHERE resource_id=?').all(id).map(x => x.capability_id);
     const best = prof.options.find(o => o.supported_here) || null;
     const steps = [];
-    if (best?.missing?.length) steps.push(`Instalar primeiro: ${best.missing.join(', ')}`);
-    if (best?.secrets?.length) steps.push(`Guardar chave: ${best.secrets.join(', ')}`);
-    if (best?.auth === 'oauth') steps.push('Autenticar no Claude Code (/mcp)');
+    if (best?.missing?.length) steps.push(`Install first: ${best.missing.join(', ')}`);
+    if (best?.secrets?.length) steps.push(`Save key: ${best.secrets.join(', ')}`);
+    if (best?.auth === 'oauth') steps.push('Sign in from Claude Code (/mcp)');
     for (const s of best?.setup || []) steps.push(s);
-    const install = pres.state ? { level: 'present', text: 'Já está neste dispositivo' }
-      : !prof.installable ? { level: ['library', 'framework', 'components'].includes(prof.kind) ? 'project' : 'none', text: ['library', 'framework', 'components'].includes(prof.kind) ? 'Instala-se em cada projeto' : 'Não se instala (referência)' }
-      : !best ? { level: 'unsupported', text: 'Sem método de instalação para este sistema' }
-      : steps.length ? { level: 'steps', text: `Um clique + ${steps.length} passo(s)` } : { level: 'one-click', text: 'Um clique' };
+    const install = pres.state ? { level: 'present', text: 'Already on this device' }
+      : !prof.installable ? { level: ['library', 'framework', 'components'].includes(prof.kind) ? 'project' : 'none', text: ['library', 'framework', 'components'].includes(prof.kind) ? 'Installs in each project' : 'Nothing to install (reference)' }
+      : !best ? { level: 'unsupported', text: 'No install method for this system' }
+      : steps.length ? { level: 'steps', text: `One click + ${steps.length} step(s)` } : { level: 'one-click', text: 'One click' };
     const deps = [...new Set([...(best?.requires || []), ...(facts?.engines?.node ? [`Node ${facts.engines.node}`] : []), ...(facts?.requires_python ? [`Python ${facts.requires_python}`] : [])])];
     const owner = r.gh_full_name?.split('/')[0];
     const security = [];
-    if (best?.method === 'mcp' && best.transport !== 'stdio') security.push('Servidor remoto: os pedidos saem do dispositivo');
-    if (best?.method === 'mcp' && best.transport === 'stdio') security.push('Corre localmente com as permissões do utilizador');
-    if (best?.method === 'package') security.push(`Instala-se pelo ${best.manager === 'cask' ? 'Homebrew Cask' : best.manager}; corre com as permissões do utilizador`);
-    if (best?.method === 'skill' && best.has_scripts) security.push('A skill inclui scripts (revisão antes de instalar)');
-    if (prof.kind === 'plugin') security.push('Plugins podem incluir hooks e servidores MCP');
-    if (r.paid_auth) security.push(`Conta/pagamento: ${r.paid_auth}`);
-    if (prof.secrets.length) security.push(`Precisa de chave: ${prof.secrets.join(', ')}`);
+    if (best?.method === 'mcp' && best.transport !== 'stdio') security.push('Remote server: requests leave the device');
+    if (best?.method === 'mcp' && best.transport === 'stdio') security.push('Runs locally with your user\'s permissions');
+    if (best?.method === 'package') security.push(`Installs through ${best.manager === 'cask' ? 'Homebrew Cask' : best.manager}; runs with your user's permissions`);
+    if (best?.method === 'skill' && best.has_scripts) security.push('The skill includes scripts (reviewed before installing)');
+    if (prof.kind === 'plugin') security.push('Plugins can include hooks and MCP servers');
+    if (r.paid_auth) security.push(`Account/payment: ${r.paid_auth}`);
+    if (prof.secrets.length) security.push(`Needs a key: ${prof.secrets.join(', ')}`);
     if (r.risk_notes) security.push(r.risk_notes);
     const pushedDays = days(facts?.pushed_at);
     return {
@@ -103,7 +103,7 @@ export function compareDecision(db, ids, { useCase = '' } = {}) {
       presence: { state: pres.state, where: [...new Set(pres.found.map(f => f.agent_label || f.type))] },
       install, install_method: best ? best.label || best.method : null, steps, deps,
       security, publisher: owner ? { name: owner, trusted: trusted.has(owner.toLowerCase()) } : null,
-      maintenance: facts ? { stars: facts.stars, pushed_days: pushedDays, archived: facts.archived, release: facts.latest_release?.tag || null, state: facts.archived ? 'Arquivado' : pushedDays == null ? '—' : pushedDays < 30 ? 'Ativo' : pushedDays < 180 ? 'Regular' : pushedDays < 365 ? 'Lento' : 'Parado' } : null,
+      maintenance: facts ? { stars: facts.stars, pushed_days: pushedDays, archived: facts.archived, release: facts.latest_release?.tag || null, state: facts.archived ? 'Archived' : pushedDays == null ? '—' : pushedDays < 30 ? 'Active' : pushedDays < 180 ? 'Steady' : pushedDays < 365 ? 'Slow' : 'Stalled' } : null,
       license: facts?.license || r.license || 'desconhecida', platforms: [...new Set(prof.options.flatMap(o => o.os || ['macos', 'windows', 'linux']))],
       use_when: r.use_when || null, avoid_when: r.avoid_when || null,
     };
@@ -115,21 +115,21 @@ export function compareDecision(db, ids, { useCase = '' } = {}) {
   // Guidance is a set of situational statements, never a total score.
   const guidance = [];
   const present = items.filter(i => i.presence.state);
-  if (present.length && present.length < items.length) guidance.push({ text: `${present.map(i => i.name).join(' e ')} já ${present.length > 1 ? 'estão' : 'está'} neste dispositivo — não precisa de instalar nada para começar.`, ids: present.map(i => i.id) });
+  if (present.length && present.length < items.length) guidance.push({ text: `${present.map(i => i.name).join(' and ')} ${present.length > 1 ? 'are' : 'is'} already on this device: nothing to install to get started.`, ids: present.map(i => i.id) });
   const direct = items.filter(i => ['mcp', 'plugin', 'skill', 'skill-pack'].includes(i.kind));
-  if (direct.length && direct.length < items.length) guidance.push({ text: `Para o agente usar diretamente, ${direct.map(i => i.name).join(' / ')} ${direct.length > 1 ? 'integram-se' : 'integra-se'} no Claude Code sem código.`, ids: direct.map(i => i.id) });
+  if (direct.length && direct.length < items.length) guidance.push({ text: `For the agent to use directly, ${direct.map(i => i.name).join(' / ')} ${direct.length > 1 ? 'plug' : 'plugs'} into Claude Code with no code.`, ids: direct.map(i => i.id) });
   const easy = items.filter(i => i.install.level === 'one-click');
-  if (easy.length && easy.length < items.length) guidance.push({ text: `Instalação mais simples: ${easy.map(i => i.name).join(', ')} (um clique, sem passos manuais).`, ids: easy.map(i => i.id) });
-  const stale = items.filter(i => ['Parado', 'Arquivado'].includes(i.maintenance?.state));
-  if (stale.length) guidance.push({ text: `${stale.map(i => i.name).join(', ')}: sem atividade recente — prefira ${stale.length > 1 ? 'estes' : 'este'} só se precisar de algo específico.`, ids: stale.map(i => i.id), tone: 'warn' });
+  if (easy.length && easy.length < items.length) guidance.push({ text: `Simplest install: ${easy.map(i => i.name).join(', ')} (one click, no manual steps).`, ids: easy.map(i => i.id) });
+  const stale = items.filter(i => ['Stalled', 'Archived'].includes(i.maintenance?.state));
+  if (stale.length) guidance.push({ text: `${stale.map(i => i.name).join(', ')}: no recent activity. Prefer ${stale.length > 1 ? 'these' : 'it'} only if you need something specific.`, ids: stale.map(i => i.id), tone: 'warn' });
   if (want?.size) {
     const covering = items.filter(i => i.matches_use_case?.length);
     const same = covering.length === items.length && covering.every(i => i.matches_use_case.join() === covering[0].matches_use_case.join());
-    if (same) guidance.push({ text: `Para "${useCase.slice(0, 80)}" todos servem (${covering[0].matches_use_case.join(', ')}); decida pelas diferenças abaixo.`, ids: covering.map(i => i.id) });
-    else for (const it of covering) guidance.push({ text: `Para "${useCase.slice(0, 80)}": ${it.name} cobre ${it.matches_use_case.join(', ')}.`, ids: [it.id] });
+    if (same) guidance.push({ text: `For "${useCase.slice(0, 80)}" any of them works (${covering[0].matches_use_case.join(', ')}); decide by the differences below.`, ids: covering.map(i => i.id) });
+    else for (const it of covering) guidance.push({ text: `For "${useCase.slice(0, 80)}": ${it.name} covers ${it.matches_use_case.join(', ')}.`, ids: [it.id] });
     const none = items.filter(i => !i.matches_use_case?.length);
-    if (none.length && none.length < items.length) guidance.push({ text: `${none.map(i => i.name).join(', ')} não ${none.length > 1 ? 'cobrem' : 'cobre'} diretamente esse caso.`, ids: none.map(i => i.id), tone: 'warn' });
+    if (none.length && none.length < items.length) guidance.push({ text: `${none.map(i => i.name).join(', ')} ${none.length > 1 ? 'do not' : 'does not'} cover that case directly.`, ids: none.map(i => i.id), tone: 'warn' });
   }
-  for (const it of items) if (it.unique.length) guidance.push({ text: `Só ${it.name}: ${it.unique.slice(0, 4).join(', ')}.`, ids: [it.id] });
+  for (const it of items) if (it.unique.length) guidance.push({ text: `Only ${it.name}: ${it.unique.slice(0, 4).join(', ')}.`, ids: [it.id] });
   return { items, guidance, use_case: useCase || null };
 }

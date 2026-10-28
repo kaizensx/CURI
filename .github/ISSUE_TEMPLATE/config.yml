@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Vulnerabilidade de segurança
-    url: https://github.com/OWNER/curi/security/advisories/new
-    about: Reporte em privado. Ver SECURITY.md.
+  - name: Security vulnerability
+    url: https://github.com/kaizensx/curi/security/advisories/new
+    about: Report it privately. See SECURITY.md.

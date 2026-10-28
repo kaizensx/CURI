@@ -5,9 +5,9 @@ import { findClaudeBinary, claudeAuthStatus } from './env.mjs';
 
 export async function runClaudeJob({ prompt, allowedTools = [], timeoutMs = 180000, maxTurns = 4, cwd } = {}) {
   const bin = findClaudeBinary();
-  if (!bin) return { status: 'BLOCKED', reason: 'Claude Code CLI não encontrada.' };
+  if (!bin) return { status: 'BLOCKED', reason: 'Claude Code CLI not found.' };
   const auth = await claudeAuthStatus(bin);
-  if (auth.loggedIn === false) return { status: 'BLOCKED', reason: 'Claude Code CLI não autenticada (claude auth login). Nenhum job foi executado.', auth };
+  if (auth.loggedIn === false) return { status: 'BLOCKED', reason: 'Claude Code CLI isn\'t signed in (claude auth login). No job was run.', auth };
   const args = ['-p', prompt, '--output-format', 'json', '--max-turns', String(maxTurns)];
   if (allowedTools.length) args.push('--allowedTools', allowedTools.join(','));
   return new Promise(resolve => {

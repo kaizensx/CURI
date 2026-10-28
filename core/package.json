@@ -1,6 +1,6 @@
 {
   "name": "curi-core",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "CURI — Claude Universal Resource Intelligence: local-first registry, discovery engine, CLI, MCP bridge and desktop UI server",
   "type": "module",
   "private": true,

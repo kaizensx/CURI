@@ -1,12 +1,12 @@
 # Avisos de terceiros
 
-O CURI é distribuído com as seguintes dependências. Todas foram verificadas como tendo licenças que permitem redistribuição em binário.
+CURI ships with the following dependencies. All of them were checked to have licences that allow binary redistribution.
 
-## Incluídas no binário da app (Rust, resolvidas via `cargo metadata --locked`)
+## Included in the app binary (Rust, resolved with `cargo metadata --locked`)
 
-407 crates. Os textos completos das licenças são gerados no pipeline de release (`cargo about`) e incluídos no DMG.
+407 crates. The full licence texts are generated in the release pipeline (`cargo about`) and included in the DMG.
 
-| Crate | Versão | Licença |
+| Crate | Version | Licence |
 |---|---|---|
 | adler2 | 2.0.1 | 0BSD OR MIT OR Apache-2.0 |
 | aho-corasick | 1.1.5 | Unlicense OR MIT |
@@ -416,21 +416,24 @@ O CURI é distribuído com as seguintes dependências. Todas foram verificadas c
 | zlib-rs | 0.6.8 | Zlib |
 | zmij | 1.0.23 | MIT |
 
-## Não redistribuídas (instaladas na máquina do utilizador, a pedido)
+## Not redistributed (installed on the user's machine, on request)
 
-| Componente | Origem | Licença | Notas |
+| Component | Source | Licence | Notes |
 |---|---|---|---|
-| Node.js LTS | nodejs.org (SHA-256 verificado) | MIT e outras (ver distribuição) | Só se não existir Node ≥ 22.13. |
-| Claude Code CLI | npm `@anthropic-ai/claude-code` | Termos comerciais da Anthropic | Instalado pelo utilizador através do CURI; não incluído no pacote. |
-| Skills e servidores MCP do catálogo | Repositórios/npm de cada editor | Licença de cada projeto | Só com aprovação ou política; versão fixada. |
+| Node.js LTS | nodejs.org (SHA-256 verified) | MIT and others (see the distribution) | Only if Node ≥ 22.13 isn't present. |
+| Claude Code CLI | npm `@anthropic-ai/claude-code` | Anthropic commercial terms | Installed by the user through CURI; not bundled. |
+| Catalogue skills, plugins, MCP servers and tools | Each publisher's repository or registry | Each project's licence | Only with approval or policy; pinned where possible. |
 
-## Ferramentas de desenvolvimento (não distribuídas)
+## Development tools (not distributed)
 
 `@tauri-apps/cli` (MIT OR Apache-2.0).
 
-## Tipos de letra (incluídos na interface)
-- **Geist** e **Geist Mono** (Vercel), SIL Open Font License 1.1 — `app/fonts/`, licença em `app/fonts/OFL-Geist.txt`.
+## Typefaces (included in the interface)
+- **Geist** and **Geist Mono** (Vercel), SIL Open Font License 1.1: `app/fonts/`, licence in `app/fonts/OFL-Geist.txt`.
 
-## Marca
+## Visual effects
+- The ambient field on Home is adapted from the "Phosphor Flow" shader exported from HorizonX (horizonx.so) under the maintainer's membership.
 
-O símbolo, o logótipo e as letras "CURI" são originais deste projeto (geometria em `brand/build.mjs`). Não usam fontes de terceiros. As imagens de banner usam a fonte do sistema apenas no momento da renderização; o texto fica rasterizado no PNG.
+## Brand
+
+The symbol, logo and "CURI" lettering are original to this project (geometry in `brand/build.mjs`). They use no third-party typefaces. Banner images use the system font only at render time; the text is rasterised into the PNG.

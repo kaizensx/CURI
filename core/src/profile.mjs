@@ -9,16 +9,16 @@ import { CORE_ROOT } from './paths.mjs';
 import { OS } from './platform.mjs';
 
 export const KIND = {
-  plugin: { label: 'Plugin do Claude Code', icon: 'skills', agent: 'Junta skills, comandos, subagentes ou servidores MCP ao Claude Code numa só instalação.' },
-  'skill-pack': { label: 'Pacote de skills', icon: 'skills', agent: 'O agente carrega cada skill quando a tarefa corresponde à sua descrição.' },
-  skill: { label: 'Skill', icon: 'skills', agent: 'O agente carrega estas instruções quando a tarefa corresponde à descrição.' },
-  mcp: { label: 'Servidor MCP', icon: 'mcp', agent: 'O agente chama diretamente as ferramentas deste servidor (Model Context Protocol).' },
-  cli: { label: 'Ferramenta de linha de comando', icon: 'terminal', agent: 'O agente executa-a no terminal e lê o resultado.' },
-  app: { label: 'Aplicação', icon: 'grid', agent: 'Aplicação para si; o agente controla-a quando existe uma integração (MCP, script ou API).' },
-  library: { label: 'Biblioteca para projetos', icon: 'library', agent: 'O agente usa-a no código dos seus projetos; instala-se por projeto, não no sistema.' },
-  components: { label: 'Componentes de UI', icon: 'grid', agent: 'O agente copia componentes prontos para o seu projeto (registo shadcn ou código-fonte).' },
-  framework: { label: 'Framework', icon: 'library', agent: 'Base para construir projetos; o agente usa-a ao criar ou alterar código.' },
-  reference: { label: 'Referência', icon: 'info', agent: 'Fonte de consulta e inspiração para si e para o agente; não se instala.' },
+  plugin: { label: 'Claude Code plugin', icon: 'skills', agent: 'Adds skills, commands, subagents or MCP servers to Claude Code in a single install.' },
+  'skill-pack': { label: 'Skill pack', icon: 'skills', agent: 'The agent loads each skill when the task matches its description.' },
+  skill: { label: 'Skill', icon: 'skills', agent: 'The agent loads these instructions when the task matches the description.' },
+  mcp: { label: 'MCP server', icon: 'mcp', agent: 'The agent calls this server\'s tools directly (Model Context Protocol).' },
+  cli: { label: 'Command-line tool', icon: 'terminal', agent: 'The agent runs it in the terminal and reads the output.' },
+  app: { label: 'App', icon: 'grid', agent: 'An app for you; the agent drives it when there\'s an integration (MCP, script or API).' },
+  library: { label: 'Project library', icon: 'library', agent: 'The agent uses it in your projects\' code; it installs per project, not system-wide.' },
+  components: { label: 'UI components', icon: 'grid', agent: 'The agent copies ready-made components into your project (shadcn registry or source).' },
+  framework: { label: 'Framework', icon: 'library', agent: 'A foundation for building projects; the agent uses it when creating or changing code.' },
+  reference: { label: 'Reference', icon: 'info', agent: 'Reference and inspiration for you and the agent; nothing to install.' },
 };
 
 let OVERRIDES = null;
@@ -40,6 +40,19 @@ function mcpOptionsFrom(facts) {
     else if (reg === 'pypi' && p.identifier) out.push({ method: 'mcp', transport: 'stdio', command: 'uvx', args: [p.version ? `${p.identifier}==${p.version}` : p.identifier], secrets, optional_env: optional, requires: ['uv'], evidence: 'manifest', label: `uvx ${p.identifier}` });
     else if (reg === 'oci' && p.identifier) out.push({ method: 'mcp', transport: 'stdio', command: 'docker', args: ['run', '-i', '--rm', p.identifier], secrets, optional_env: optional, requires: ['docker'], evidence: 'manifest', label: `docker ${p.identifier}` });
   }
+  // Documented `claude mcp add … -- npx|uvx <pkg>` lines, accepted only when that package is confirmed in its registry.
+  const npmOk = new Set((facts?.packages?.npm || []).map(x => x.name)), pyOk = new Set((facts?.packages?.pypi || []).map(x => x.name.toLowerCase()));
+  for (const line of facts?.readme_commands?.claude_mcp || []) {
+    const t = line.split(/\s+/), dash = t.indexOf('--');
+    if (dash < 0) continue;
+    const [cmd, ...rest] = t.slice(dash + 1);
+    const pkg = rest.find(a => !a.startsWith('-'));
+    const base = pkg?.replace(/(.)@[^@/]*$/, '$1');
+    if (cmd === 'npx' && npmOk.has(base)) out.push({ method: 'mcp', transport: 'stdio', command: 'npx', args: ['-y', pkg], secrets: [], requires: ['node'], evidence: 'documented', label: `npx ${base}` });
+    if (cmd === 'uvx' && base && pyOk.has(base.toLowerCase())) out.push({ method: 'mcp', transport: 'stdio', command: 'uvx', args: [pkg], secrets: [], requires: ['uv'], evidence: 'documented', label: `uvx ${base}` });
+  }
+  // An MCP server published on npm with an executable runs through npx.
+  if (!out.length) for (const x of facts?.packages?.npm || []) if (x.bin?.length && /mcp/i.test(x.name)) out.push({ method: 'mcp', transport: 'stdio', command: 'npx', args: ['-y', `${x.name}@${x.version}`], secrets: [], requires: ['node'], evidence: 'registry', label: `npx ${x.name}` });
   for (const r of facts?.mcp_registry?.remotes || []) if (r.url) out.push({ method: 'mcp', transport: /sse/i.test(r.type) ? 'sse' : 'http', url: r.url, secrets: [], requires: [], evidence: 'manifest', label: `remoto ${new URL(r.url).host}` });
   return out;
 }
@@ -91,16 +104,16 @@ export function profile(r, facts, { managers = {}, runtimes = {}, user = {} } = 
   if (kind === 'plugin' && full) {
     const mk = facts?.marketplace;
     const plugins = mk?.plugins?.length ? mk.plugins : facts?.plugin ? [facts.plugin] : [];
-    for (const p of plugins.slice(0, 12)) options.push({ method: 'plugin', marketplace: full, marketplace_name: mk?.name || null, plugin: p.name, description: p.description || null, requires: ['claude'], evidence: 'manifest', label: plugins.length > 1 ? `Plugin ${p.name}` : 'Plugin do Claude Code' });
+    for (const p of plugins.slice(0, 12)) options.push({ method: 'plugin', marketplace: full, marketplace_name: mk?.name || null, plugin: p.name, description: p.description || null, requires: ['claude'], evidence: 'manifest', label: plugins.length > 1 ? `Plugin ${p.name}` : 'Claude Code plugin' });
   }
   if ((kind === 'skill' || kind === 'skill-pack' || kind === 'plugin') && full && facts?.skills?.length) {
     for (const s of facts.skills.filter(x => !x.internal || r.type === 'Skill').slice(0, 40)) {
       if (/^[a-z0-9][a-z0-9-]{0,63}$/.test(s.name)) options.push({ method: 'skill', repo: full, path: s.path, name: s.name, description: s.description, has_scripts: s.has_scripts, requires: [], evidence: 'manifest', label: `Skill ${s.name}` });
     }
   }
-  if (kind === 'mcp' || facts?.mcp_registry) options.push(...mcpOptionsFrom(facts));
+  if (kind === 'mcp' || facts?.mcp_registry || facts?.readme_commands?.claude_mcp || (facts?.packages?.npm || []).some(x => /mcp/i.test(x.name))) options.push(...mcpOptionsFrom(facts));
   // Libraries: the agent writes better code with current docs; one shared server serves all of them.
-  if (['library', 'framework'].includes(kind)) options.push({ method: 'mcp', transport: 'stdio', name: 'context7', command: 'npx', args: ['-y', '@upstash/context7-mcp@4.4.4'], requires: ['node'], label: 'Dar ao agente a documentação atual (Context7)', evidence: 'curated', shared: true });
+  if (['library', 'framework'].includes(kind)) options.push({ method: 'mcp', transport: 'stdio', name: 'context7', command: 'npx', args: ['-y', '@upstash/context7-mcp@4.4.4'], requires: ['node'], label: 'Give the agent up-to-date docs (Context7)', evidence: 'curated', shared: true });
   if (['cli', 'app', 'mcp', 'plugin', 'framework'].includes(kind)) options.push(...packageOptions(facts));
   for (const o of ov.install || []) options.push({ ...o, evidence: 'curated', requires: o.requires || (o.manager ? [o.manager === 'cask' ? 'brew' : o.manager] : []) });
   // One option per target: curated entries win over derived duplicates.
@@ -128,7 +141,7 @@ export function profile(r, facts, { managers = {}, runtimes = {}, user = {} } = 
   if (!ov.project) for (const c of facts?.readme_commands?.shadcn || []) project.push({ manager: 'shadcn', command: `npx shadcn@latest add ${c}` });
   for (const c of ov.project || []) project.push(c);
   if (user.command) project.unshift({ manager: 'custom', command: user.command, mine: true });
-  const agentUse = ov.agent_use || (kind === 'cli' && facts?.mentions?.json_output ? `${k.agent} Tem saída JSON, o que facilita ao agente ler resultados.` : k.agent);
+  const agentUse = ov.agent_use || (kind === 'cli' && facts?.mentions?.json_output ? `${k.agent} It has JSON output, which makes results easy for the agent to read.` : k.agent);
   return {
     kind, kind_label: k.label, icon: k.icon, agent_use: agentUse,
     installable: options.length > 0, options: rank(options, kind), project_use: dedupeBy(project, 'command').slice(0, 6),

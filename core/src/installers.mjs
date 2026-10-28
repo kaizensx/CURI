@@ -22,7 +22,7 @@ const SUBPATH_RX = /^[A-Za-z0-9._/-]{1,200}$/;
 
 function readJson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } }
 function frontmatterName(text) { return text.match(/^---\n[\s\S]*?\nname:\s*["']?([^"'\n]+)["']?/)?.[1]?.trim(); }
-function walk(dir, out = []) { for (const e of fs.readdirSync(dir, { withFileTypes: true })) { const p = path.join(dir, e.name); if (e.isSymbolicLink()) throw permanent(`O pacote contém uma ligação simbólica (${e.name}); recusado.`); if (e.isDirectory()) walk(p, out); else out.push(p); } return out; }
+function walk(dir, out = []) { for (const e of fs.readdirSync(dir, { withFileTypes: true })) { const p = path.join(dir, e.name); if (e.isSymbolicLink()) throw permanent(`The package contains a symbolic link (${e.name}); refused.`); if (e.isDirectory()) walk(p, out); else out.push(p); } return out; }
 function hashTree(dir) { return Object.fromEntries(walk(dir).map(f => [path.relative(dir, f), sha(fs.readFileSync(f))])); }
 
 // ---------- CURI's own integration ----------
@@ -31,14 +31,14 @@ registerHandler('curi.integration', {
   async run(db, params, ctx) {
     ctx.stage('A planear', 0.1);
     const plan = planBridgeInstall();
-    if (plan.conflicts.length) throw permanent(`Conflito: ${plan.conflicts.map(c => c.reason).join(' ')}`, { action: 'Resolver o conflito no Claude Bridge' });
+    if (plan.conflicts.length) throw permanent(`Conflict: ${plan.conflicts.map(c => c.reason).join(' ')}`, { action: 'Resolve the conflict in Settings › Claude integration' });
     const todo = plan.actions.filter(a => a.state !== 'already-applied').map(a => a.id);
-    if (!todo.length) { ctx.log('Já aplicada; nada a fazer.'); return { verified: true, verification: { already_applied: true } }; }
+    if (!todo.length) { ctx.log('Already applied; nothing to do.'); return { verified: true, verification: { already_applied: true } }; }
     if (ctx.cancelled()) return { cancelled: true };
     ctx.stage(`A aplicar ${todo.join(', ')}`, 0.5);
     const r = await applyBridgeInstall(db, { approve: todo, actor: 'operations' });
-    if (!r.applied) throw permanent(`Não aplicado: ${r.reason}${r.error ? ` — ${r.error}` : ''}`, { tx: r.tx });
-    ctx.stage('A verificar', 0.9);
+    if (!r.applied) throw permanent(`Not applied: ${r.reason}${r.error ? ` (${r.error})` : ''}`, { tx: r.tx });
+    ctx.stage('Verifying', 0.9);
     const after = planBridgeInstall();
     const ok = after.actions.every(a => a.state === 'already-applied');
     return { verified: ok, verification: { tx: r.tx, idempotent_plan: ok }, recovery: { rollback_tx: r.tx } };
@@ -50,9 +50,9 @@ export function skillTarget(name) { return path.join(claudeHome(), 'skills', nam
 
 registerHandler('skill.install', {
   async plan(db, p) {
-    if (!REPO_RX.test(p.repo || '') || !SUBPATH_RX.test(p.path || '') || p.path.includes('..')) throw new Error('Repositório ou caminho inválido.');
+    if (!REPO_RX.test(p.repo || '') || !SUBPATH_RX.test(p.path || '') || p.path.includes('..')) throw new Error('Invalid repository or path.');
     const name = p.name || path.basename(p.path);
-    if (!SKILL_NAME_RX.test(name)) throw new Error('Nome de skill inválido.');
+    if (!SKILL_NAME_RX.test(name)) throw new Error('Invalid skill name.');
     // Updating a skill CURI already manages is maintenance; new code still faces the script gate in run().
     const managed = p.update && db.prepare("SELECT 1 FROM installed_instances WHERE kind='skill' AND name=? AND managed_by_curi=1").get(name);
     return { category: managed ? 'maintenance' : 'skill_trusted', publisher: p.repo.split('/')[0], resource: `skill:${name}`, source: `https://github.com/${p.repo}/tree/${p.ref || 'HEAD'}/${p.path}`, lockKey: `skill:${name}` };
@@ -62,12 +62,12 @@ registerHandler('skill.install', {
     const dest = skillTarget(name);
     ctx.stage('A resolver o commit', 0.05);
     const ls = await lsRemote(`https://github.com/${p.repo}.git`);
-    if (!ls.exists) throw new Error(`Repositório inacessível: ${ls.error}`);
+    if (!ls.exists) throw new Error(`Repository unreachable: ${ls.error}`);
     const commit = p.commit && /^[0-9a-f]{40}$/.test(p.commit) ? p.commit : ls.head;
     const marker = readJson(path.join(dest, '.curi-managed.json'));
-    if (fs.existsSync(dest) && !marker) throw permanent(`Já existe uma skill "${name}" que não é gerida pelo CURI; não será sobrescrita.`, { action: 'Renomeie ou remova a skill existente' });
+    if (fs.existsSync(dest) && !marker) throw permanent(`A skill named "${name}" already exists and isn't managed by CURI; it won't be overwritten.`, { action: 'Rename or remove the existing skill' });
     if (marker?.commit === commit && marker.files && Object.entries(marker.files).every(([f, h]) => sha256File(path.join(dest, f)) === h)) {
-      ctx.log('A mesma versão já está instalada e íntegra.');
+      ctx.log('The same version is already installed and intact.');
       return { verified: true, verification: { commit, idempotent: true } };
     }
     if (ctx.cancelled()) return { cancelled: true };
@@ -75,18 +75,18 @@ registerHandler('skill.install', {
     const work = fs.mkdtempSync(path.join(ensureDir(path.join(dataDir(), 'tmp')), 'skill-'));
     try {
       const res = await fetch(`https://codeload.github.com/${p.repo}/tar.gz/${commit}`, { signal: AbortSignal.timeout(120000) });
-      if (!res.ok) throw new Error(`Transferência falhou: HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`Download failed: HTTP ${res.status}`);
       const buf = Buffer.from(await res.arrayBuffer());
-      if (buf.length > 50e6) throw permanent('Pacote demasiado grande (>50 MB).');
+      if (buf.length > 50e6) throw permanent('Package too large (>50 MB).');
       fs.writeFileSync(path.join(work, 'pkg.tgz'), buf);
       const top = `${p.repo.split('/')[1]}-${commit}`;
       fs.mkdirSync(path.join(work, 'x'));
       await pexec('/usr/bin/tar', ['-xzf', path.join(work, 'pkg.tgz'), '-C', path.join(work, 'x'), `${top}/${p.path}`], { timeout: 120000 });
       const src = path.join(work, 'x', top, p.path);
-      if (!fs.existsSync(path.join(src, 'SKILL.md'))) throw permanent(`Não existe SKILL.md em ${p.path} neste commit.`);
+      if (!fs.existsSync(path.join(src, 'SKILL.md'))) throw permanent(`No SKILL.md in ${p.path} at this commit.`);
       ctx.checkpoint({ commit, tarball_sha256: sha(buf) });
       if (ctx.cancelled()) return { cancelled: true };
-      ctx.stage('Análise estática', 0.5);
+      ctx.stage('Static analysis', 0.5);
       const files = walk(src);
       const findings = [];
       let executables = 0;
@@ -100,17 +100,17 @@ registerHandler('skill.install', {
         }
       }
       const high = findings.filter(f => f.severity === 'high');
-      if (high.length) throw permanent(`Bloqueado pela análise de segurança: ${high.slice(0, 3).map(f => `${f.file}:${f.line} ${f.rule}`).join('; ')}`, { findings: high.slice(0, 20) });
+      if (high.length) throw permanent(`Blocked by the security scan: ${high.slice(0, 3).map(f => `${f.file}:${f.line} ${f.rule}`).join('; ')}`, { findings: high.slice(0, 20) });
       const scripts = files.filter(f => /\.(sh|py|js|mjs|ts|rb|pl)$/i.test(f)).length;
       // Executable content: Maximum Autonomy covers trusted publishers with a clean scan; anything with
       // review findings, and every other mode, needs a person to approve this specific installation.
       const review = findings.some(f => f.severity === 'medium');
       const codeCovered = ctx.mode === 'maximum' && !review;
       if ((scripts || executables || review) && !ctx.approvedByUser && !codeCovered) {
-        return { needsApproval: [`A skill inclui ${scripts} script(s) e ${executables} ficheiro(s) executável(eis)${findings.length ? ` e ${findings.length} achado(s) de revisão` : ''}. Revisão humana necessária antes de instalar.`] };
+        return { needsApproval: [`The skill includes ${scripts} script(s) and ${executables} executable file(s)${findings.length ? ` and ${findings.length} review finding(s)` : ''}. A person needs to review it before installing.`] };
       }
       if (ctx.cancelled()) return { cancelled: true };
-      ctx.stage('A instalar', 0.75);
+      ctx.stage('Installing', 0.75);
       const nameInFile = frontmatterName(fs.readFileSync(path.join(src, 'SKILL.md'), 'utf8'));
       const staged = path.join(path.dirname(dest), `.${name}.curi-staging-${process.pid}`);
       fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -121,7 +121,7 @@ registerHandler('skill.install', {
       let backup = null;
       if (fs.existsSync(dest)) { backup = path.join(paths.backups, `skill-${name}-${Date.now()}`); fs.renameSync(dest, backup); }
       fs.renameSync(staged, dest);
-      ctx.stage('A verificar', 0.9);
+      ctx.stage('Verifying', 0.9);
       const ok = Object.entries(fileHashes).every(([f, hsh]) => sha256File(path.join(dest, f)) === hsh);
       db.prepare(`INSERT INTO installed_instances(resource_id,name,kind,scope,path,managed_by_curi,checksum,health,details,observed_at) VALUES (?,?,?,?,?,?,?,?,?,?)
         ON CONFLICT(kind,scope,name) DO UPDATE SET resource_id=COALESCE(excluded.resource_id, installed_instances.resource_id), path=excluded.path, managed_by_curi=1, checksum=excluded.checksum, health=excluded.health, details=excluded.details, observed_at=excluded.observed_at`)
@@ -133,17 +133,17 @@ registerHandler('skill.install', {
 
 registerHandler('skill.remove', {
   async plan(db, p) {
-    if (!SKILL_NAME_RX.test(p.name || '')) throw new Error('Nome de skill inválido.');
-    if (p.name === 'curi-resource-router') throw new Error('A skill do CURI é removida pelo Claude Bridge (reversão da transação).');
+    if (!SKILL_NAME_RX.test(p.name || '')) throw new Error('Invalid skill name.');
+    if (p.name === 'curi-resource-router') throw new Error('CURI\'s own skill is removed from Settings › Claude integration (transaction rollback).');
     return { category: 'destructive', resource: `skill:${p.name}`, lockKey: `skill:${p.name}`, source: 'local' };
   },
   async run(db, p, ctx) {
     const dest = skillTarget(p.name);
     const marker = readJson(path.join(dest, '.curi-managed.json'));
     if (!fs.existsSync(dest)) return { verified: true, verification: { already_absent: true } };
-    if (!marker) throw permanent('Esta skill não foi instalada pelo CURI; não será removida.');
+    if (!marker) throw permanent('This skill wasn\'t installed by CURI; it won\'t be removed.');
     const drift = Object.entries(marker.files || {}).filter(([f, h]) => sha256File(path.join(dest, f)) !== h).map(([f]) => f);
-    if (drift.length && !ctx.approvedByUser) return { needsApproval: [`Ficheiros alterados fora do CURI: ${drift.join(', ')}. Confirme para mover mesmo assim (fica uma cópia em backups).`] };
+    if (drift.length && !ctx.approvedByUser) return { needsApproval: [`Files changed outside CURI: ${drift.join(', ')}. Confirm to move it anyway (a copy stays in backups).`] };
     const backup = path.join(paths.backups, `skill-${p.name}-removed-${Date.now()}`);
     fs.renameSync(dest, backup);
     db.prepare("DELETE FROM installed_instances WHERE kind='skill' AND scope='user' AND name=?").run(p.name);
@@ -156,7 +156,7 @@ export function mcpLauncherSpec(name) { return { command: nodeBin(), args: [path
 
 export async function claudeMcp(args) {
   const bin = findClaudeBinary();
-  if (!bin) throw permanent('O Claude Code não está instalado.', { action: 'Instalar o Claude Code em Ligações' });
+  if (!bin) throw permanent('Claude Code isn\'t installed.', { action: 'Install Claude Code in Connections' });
   return pexec(bin, ['mcp', ...args], { timeout: 60000 });
 }
 export const otherEntries = name => JSON.stringify(Object.entries(readJson(claudeJsonPath())?.mcpServers || {}).filter(([k]) => k !== name).sort());
@@ -164,7 +164,7 @@ export const otherEntries = name => JSON.stringify(Object.entries(readJson(claud
 registerHandler('mcp.enable', {
   async plan(db, p) {
     const d = db.prepare('SELECT * FROM mcp_definitions WHERE name=?').get(p.name);
-    if (!d) throw new Error('Definição MCP inexistente.');
+    if (!d) throw new Error('Unknown MCP definition.');
     const secrets = JSON.parse(d.secret_env);
     const missing = [];
     for (const ref of Object.values(secrets)) if (!(await credentialFor(ref))) missing.push(ref);
@@ -176,19 +176,19 @@ registerHandler('mcp.enable', {
     const cur = readJson(claudeJsonPath())?.mcpServers?.[d.name];
     const want = d.transport === 'stdio' ? mcpLauncherSpec(d.name) : null;
     const before = otherEntries(d.name);
-    if (cur && want && (cur.command !== want.command || JSON.stringify(cur.args) !== JSON.stringify(want.args))) throw permanent(`Já existe uma entrada MCP "${d.name}" diferente no Claude Code; não será sobrescrita.`);
+    if (cur && want && (cur.command !== want.command || JSON.stringify(cur.args) !== JSON.stringify(want.args))) throw permanent(`A different "${d.name}" MCP entry already exists in Claude Code; it won't be overwritten.`);
     if (!cur) {
-      ctx.stage('A registar no Claude Code', 0.3);
+      ctx.stage('Registering in Claude Code', 0.3);
       if (d.transport === 'stdio') await claudeMcp(['add', '--scope', 'user', d.name, '--', want.command, ...want.args]);
       else await claudeMcp(['add', '--scope', 'user', '--transport', d.transport, d.name, d.url]);
-      if (otherEntries(d.name) !== before) throw permanent('Outras entradas MCP mudaram durante o registo — abortado.');
+      if (otherEntries(d.name) !== before) throw permanent('Other MCP entries changed during registration; aborted.');
     }
     db.prepare('UPDATE mcp_definitions SET enabled=1, updated_at=? WHERE name=?').run(now(), d.name);
-    ctx.stage('A testar a ligação', 0.7);
+    ctx.stage('Testing the connection', 0.7);
     const h = await mcpHealth(findClaudeBinary());
     const s = h.servers.find(x => x.name === d.name);
     const needsAuth = s && /auth/i.test(s.status);
-    return { verified: Boolean(s?.healthy), verification: { listed: Boolean(s), healthy: Boolean(s?.healthy), status: s?.status || 'não listado', needs_auth: needsAuth }, recovery: { disable: `mcp.disable ${d.name}` } };
+    return { verified: Boolean(s?.healthy), verification: { listed: Boolean(s), healthy: Boolean(s?.healthy), status: s?.status || 'not listed', needs_auth: needsAuth }, recovery: { disable: `mcp.disable ${d.name}` } };
   },
 });
 
@@ -196,9 +196,9 @@ registerHandler('mcp.disable', {
   async plan(db, p) { return { category: 'destructive', resource: `mcp:${p.name}`, lockKey: `mcp:${p.name}`, source: 'local' }; },
   async run(db, p, ctx) {
     const d = db.prepare('SELECT * FROM mcp_definitions WHERE name=?').get(p.name);
-    if (!d) throw permanent('Só servidores definidos no CURI podem ser desativados aqui.');
+    if (!d) throw permanent('Only servers defined in CURI can be disabled here.');
     const cur = readJson(claudeJsonPath())?.mcpServers?.[p.name];
-    if (cur) { const before = otherEntries(p.name); await claudeMcp(['remove', '--scope', 'user', p.name]); if (otherEntries(p.name) !== before) throw permanent('Outras entradas MCP mudaram — verifique o Claude Code.'); }
+    if (cur) { const before = otherEntries(p.name); await claudeMcp(['remove', '--scope', 'user', p.name]); if (otherEntries(p.name) !== before) throw permanent('Other MCP entries changed; check Claude Code.'); }
     db.prepare('UPDATE mcp_definitions SET enabled=0, updated_at=? WHERE name=?').run(now(), p.name);
     return { verified: !readJson(claudeJsonPath())?.mcpServers?.[p.name], verification: { unregistered: true }, recovery: { enable: `mcp.enable ${p.name}` } };
   },
@@ -213,7 +213,7 @@ registerHandler('sources.verify', {
     let ok = 0, fail = 0;
     for (const [i, id] of ids.entries()) {
       if (ctx.cancelled()) return { cancelled: true, recovery: { verified_so_far: ok } };
-      ctx.stage(`A verificar ${i + 1}/${ids.length}`, i / ids.length);
+      ctx.stage(`Verifying ${i + 1}/${ids.length}`, i / ids.length);
       try { const r = await verifyResource(db, id, { useApi }); r.checks.some(c => c.exists === true || c.ok) ? ok++ : fail++; } catch (e) { fail++; if (e.code === 'RATE_LIMIT') { ctx.log(e.message, 'warn'); break; } }
     }
     return { verified: true, verification: { attempted: ids.length, ok, fail, github_api: useApi } };
@@ -221,7 +221,7 @@ registerHandler('sources.verify', {
 });
 
 registerHandler('cleanup.temp', {
-  async plan() { return { category: 'cleanup', resource: 'ficheiros temporários do CURI', lockKey: 'cleanup', source: 'local' }; },
+  async plan() { return { category: 'cleanup', resource: 'CURI temporary files', lockKey: 'cleanup', source: 'local' }; },
   async run() {
     const tmp = path.join(dataDir(), 'tmp');
     let removed = 0;
@@ -273,7 +273,7 @@ registerHandler('agent.install', {
     fs.renameSync(tmp, target);
     const domain = `gui/${process.getuid()}`;
     try { await pexec('/bin/launchctl', ['bootout', `${domain}/${AGENT_LABEL}`]); } catch {}
-    ctx.stage('A carregar no launchd', 0.6);
+    ctx.stage('Loading into launchd', 0.6);
     await pexec('/bin/launchctl', ['bootstrap', domain, target]);
     const st = await agentStatus();
     return { verified: st.loaded, verification: st, recovery: { remove: 'agent.remove' } };
@@ -298,11 +298,11 @@ registerHandler('cli.link', {
     const wrapper = path.join(ensureDir(path.join(dataDir(), 'bin')), 'curi');
     fs.writeFileSync(wrapper, `#!/bin/sh\nexec "${nodeBin()}" "${paths.cliEntry}" "$@"\n`, { mode: 0o755 });
     if (fs.existsSync(CLI_LINK) && fs.realpathSync(CLI_LINK) === fs.realpathSync(wrapper)) return { verified: true, verification: { already_linked: true } };
-    if (/["'\\$`]/.test(wrapper)) throw permanent('Caminho com caracteres não suportados para a ação de administrador.');
-    ctx.stage('A pedir autorização de administrador ao macOS', 0.4);
-    const script = `do shell script "/bin/mkdir -p /usr/local/bin && /bin/ln -sfn '${wrapper}' '${CLI_LINK}'" with prompt "O CURI quer instalar o comando 'curi' em /usr/local/bin." with administrator privileges`;
+    if (/["'\\$`]/.test(wrapper)) throw permanent('The path has characters the admin action doesn\'t support.');
+    ctx.stage('Asking macOS for administrator permission', 0.4);
+    const script = `do shell script "/bin/mkdir -p /usr/local/bin && /bin/ln -sfn '${wrapper}' '${CLI_LINK}'" with prompt "CURI wants to install the 'curi' command in /usr/local/bin." with administrator privileges`;
     try { await pexec('/usr/bin/osascript', ['-e', script], { timeout: 300000 }); }
-    catch (e) { if (/-128|cancel/i.test(String(e.stderr || e.message))) throw permanent('Autorização de administrador cancelada.'); throw e; }
+    catch (e) { if (/-128|cancel/i.test(String(e.stderr || e.message))) throw permanent('Administrator permission cancelled.'); throw e; }
     const ok = fs.existsSync(CLI_LINK) && fs.realpathSync(CLI_LINK) === fs.realpathSync(wrapper);
     return { verified: ok, verification: { link: CLI_LINK, target: wrapper } };
   },
@@ -315,7 +315,7 @@ export async function execMcp(db, name) {
   const env = { ...process.env, ...JSON.parse(d.env) };
   for (const [k, ref] of Object.entries(JSON.parse(d.secret_env))) {
     const v = await credentialFor(ref);
-    if (!v) { process.stderr.write(`CURI: falta a credencial ${ref} para ${name}. Ligue-a em CURI → Ligações.\n`); process.exit(3); }
+    if (!v) { process.stderr.write(`CURI: the ${ref} credential for ${name} is missing. Add it in CURI → Connections.\n`); process.exit(3); }
     env[k] = v;
   }
   db.close();
@@ -326,57 +326,72 @@ export async function execMcp(db, name) {
 
 // ---------- System detection, discovery, verification, rollback ----------
 registerHandler('system.scan', {
-  async plan() { return { category: 'observe', resource: 'este dispositivo', lockKey: 'system.scan', source: 'local', maxAttempts: 1 }; },
+  async plan() { return { category: 'observe', resource: 'this device', lockKey: 'system.scan', source: 'local', maxAttempts: 1 }; },
   async run(db, p, ctx) {
     const { scanSystem } = await import('./detect.mjs');
     const r = await scanSystem(db, { onStage: (s, pr) => ctx.stage(s, pr), cancelled: ctx.cancelled });
     if (r.cancelled) return { cancelled: true };
-    ctx.log(`${r.matched.length} recursos do catálogo encontrados; ${r.changes.installed.length} novos instalados, ${r.changes.configured.length} configurados, ${r.changes.removed.length} já não encontrados.`);
+    ctx.log(`${r.matched.length} catalogue resources found; ${r.changes.installed.length} newly installed, ${r.changes.configured.length} configured, ${r.changes.removed.length} no longer found.`);
     return { verified: true, verification: { matched: r.matched.length, changes: r.changes, sources: r.sources } };
   },
 });
 
 registerHandler('discover', {
-  async plan(db, p) { return { category: 'observe', resource: p.mode === 'frontier' ? 'reconhecimento de fronteira' : `descoberta: ${String(p.intent || '').slice(0, 60)}`, lockKey: 'discover', source: 'api.github.com', maxAttempts: 1 }; },
+  async plan(db, p) { return { category: 'observe', resource: p.mode === 'frontier' ? 'frontier sweep' : `descoberta: ${String(p.intent || '').slice(0, 60)}`, lockKey: 'discover', source: 'api.github.com', maxAttempts: 1 }; },
   async run(db, p, ctx) {
     const { discover } = await import('./discover.mjs');
     let total = 1, done = 0;
     const r = await discover(db, { mode: p.mode === 'frontier' ? 'frontier' : 'task', intent: String(p.intent || ''), windows: p.windows, maxQueries: p.maxQueries || 6, actor: 'operations',
       onPlan: qs => { total = qs.length; ctx.stage(`${total} consulta(s) planeada(s)`, 0.02); },
-      onEvent: e => { done++; ctx.stage(`Consulta ${done}/${total}: ${e.q.q}${e.error ? ` — ${e.error}` : ` (${e.n} resultados)`}`, done / total); } });
-    ctx.log(`Execução #${r.scanId}: ${r.status}, ${r.total} resultados.`);
-    if (r.status === 'failed') throw permanent(`A descoberta falhou: ${r.errors} consulta(s) com erro (rede ou limite do GitHub).`);
-    return { verified: true, verification: { scan_id: r.scanId, status: r.status, results: r.total, independent_share: r.independentShare } };
+      onEvent: e => { done++; ctx.stage(`Query ${done}/${total}: ${e.q.q}${e.error ? ` (${e.error})` : ` (${e.n} results)`}`, done / total); } });
+    ctx.log(`Run #${r.scanId}: ${r.status}, ${r.total} results.`);
+    if (r.status === 'failed') throw permanent(`Discovery failed: ${r.errors} quer${r.errors === 1 ? 'y' : 'ies'} errored (network or GitHub rate limit).`);
+    const { inspectCandidates } = await import('./candidates.mjs');
+    const ins = await inspectCandidates(db, { limit: 15, onStage: (st, pr) => ctx.stage(st, 0.6 + pr * 0.4), cancelled: ctx.cancelled });
+    ctx.log(`${ins.inspected} inspected; ${ins.installable} can be installed from CURI.`);
+    return { verified: true, verification: { scan_id: r.scanId, status: r.status, results: r.total, independent_share: r.independentShare, inspected: ins.inspected, installable: ins.installable } };
   },
 });
 
 registerHandler('github.stars', {
-  async plan() { return { category: 'observe', resource: 'estrelas do GitHub', lockKey: 'github.stars', source: 'api.github.com/user/starred', maxAttempts: 1 }; },
+  async plan() { return { category: 'observe', resource: 'GitHub stars', lockKey: 'github.stars', source: 'api.github.com/user/starred', maxAttempts: 1 }; },
   async run(db, p, ctx) {
     const { importStars } = await import('./discover.mjs');
-    const r = await importStars(db, { onStage: (s, pr) => ctx.stage(s, pr) });
-    ctx.log(`${r.total} repositórios com estrela; ${r.known} já no catálogo; ${r.relevant} novos relevantes para agentes.`);
+    const r = await importStars(db, { onStage: (s, pr) => ctx.stage(s, pr * 0.5) });
+    const { inspectCandidates } = await import('./candidates.mjs');
+    Object.assign(r, await inspectCandidates(db, { limit: 25, onStage: (st, pr) => ctx.stage(st, 0.5 + pr * 0.5), cancelled: ctx.cancelled }));
+    ctx.log(`${r.total} starred repositories; ${r.known} already in the catalogue; ${r.relevant} new and relevant to agents.`);
+    return { verified: true, verification: r };
+  },
+});
+
+registerHandler('discover.inspect', {
+  async plan() { return { category: 'observe', resource: 'discoveries', lockKey: 'discover.inspect', source: 'api.github.com and package registries', maxAttempts: 1 }; },
+  async run(db, p, ctx) {
+    const { inspectCandidates } = await import('./candidates.mjs');
+    const r = await inspectCandidates(db, { limit: Math.min(40, Number(p.limit) || 20), onStage: (s, pr) => ctx.stage(s, pr), cancelled: ctx.cancelled });
+    ctx.log(`${r.inspected} inspected; ${r.installable} can be installed from CURI.`);
     return { verified: true, verification: r };
   },
 });
 
 registerHandler('verify.run', {
-  async plan(db, p) { return { category: p.cleanSession ? 'costly' : 'observe', resource: 'integração CURI', lockKey: 'verify.run', source: 'local', maxAttempts: 1 }; },
+  async plan(db, p) { return { category: p.cleanSession ? 'costly' : 'observe', resource: 'CURI integration', lockKey: 'verify.run', source: 'local', maxAttempts: 1 }; },
   async run(db, p, ctx) {
     const { runVerification } = await import('./verify.mjs');
-    const v = await runVerification(db, { requireBridge: p.requireBridge !== false, cleanSession: Boolean(p.cleanSession), actor: 'operations', onProgress: (id, pr) => ctx.stage(`A verificar: ${id}`, pr) });
+    const v = await runVerification(db, { requireBridge: p.requireBridge !== false, cleanSession: Boolean(p.cleanSession), actor: 'operations', onProgress: (id, pr) => ctx.stage(`Verifying: ${id}`, pr) });
     if (p.cleanSession) { const { recordVerification } = await import('./claude-auth.mjs'); const c = v.checks.find(x => x.id === 'claude.clean_session'); if (c) recordVerification(c.status === 'pass' ? { status: 'COMPLETED', ok: true } : { status: c.status === 'blocked' ? 'BLOCKED' : 'FAILED', reason: JSON.stringify(c.evidence).slice(0, 300) }); }
     return { verified: v.verdict !== 'FAILED', verification: { verdict: v.verdict, passed: v.passed, total: v.total, checks: v.checks.map(c => ({ id: c.id, status: c.status, mandatory: c.mandatory, ms: c.ms, evidence: c.evidence })), receipt_file: v.receipt_file } };
   },
 });
 
 registerHandler('curi.rollback', {
-  async plan(db, p) { if (!/^tx-[\w-]{1,60}$/.test(p.tx || '')) throw new Error('Transação inválida.'); return { category: 'destructive', resource: p.tx, lockKey: 'curi.integration', source: 'local', maxAttempts: 1 }; },
+  async plan(db, p) { if (!/^tx-[\w-]{1,60}$/.test(p.tx || '')) throw new Error('Invalid transaction.'); return { category: 'destructive', resource: p.tx, lockKey: 'curi.integration', source: 'local', maxAttempts: 1 }; },
   async run(db, p, ctx) {
     const { rollback } = await import('./bridge.mjs');
-    ctx.stage('A reverter a transação', 0.4);
+    ctx.stage('Rolling back the transaction', 0.4);
     const r = await rollback(db, p.tx, { actor: 'operations' });
-    if (r.status === 'rollback_partial') throw permanent(`Reversão parcial: ${r.results.filter(x => !x.ok).map(x => x.reason).join(' ')}`, { results: r.results });
+    if (r.status === 'rollback_partial') throw permanent(`Partial rollback: ${r.results.filter(x => !x.ok).map(x => x.reason).join(' ')}`, { results: r.results });
     return { verified: true, verification: r };
   },
 });

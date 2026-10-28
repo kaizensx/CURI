@@ -37,38 +37,38 @@ applyMotion(currentMotion());
 // ---------- routes ----------
 // Information architecture: five places for the job (see what you have, find, understand, get it, connect),
 // two for the system. Older sections stay reachable as tabs or deep links, never as clutter in the sidebar.
-const ACTIVITY_TABS = [['operations', 'Operações'], ['audit', 'Registo de auditoria'], ['jobs', 'Pesquisas e quotas']];
-const SETTINGS_TABS = [['settings', 'Geral'], ['automation', 'Autonomia'], ['bridge', 'Integração com o Claude'], ['security', 'Segurança'], ['about', 'Sobre']];
+const ACTIVITY_TABS = [['operations', 'Operations'], ['audit', 'Audit log'], ['jobs', 'Searches and quotas']];
+const SETTINGS_TABS = [['settings', 'General'], ['automation', 'Autonomy'], ['bridge', 'Claude integration'], ['security', 'Security'], ['about', 'About']];
 const tabbed = (tabs, view) => async (...a) => {
   const page = await view(...a);
   const cur = location.hash.replace(/^#\//, '').split(/[/?]/)[0];
-  const nav = h('nav', { class: 'tabs hub-tabs', 'aria-label': 'Secções' }, tabs.map(([id, l]) => h('a', { href: `#/${id}`, 'aria-current': id === cur ? 'page' : null }, l)));
+  const nav = h('nav', { class: 'tabs hub-tabs', 'aria-label': 'Sections' }, tabs.map(([id, l]) => h('a', { href: `#/${id}`, 'aria-current': id === cur ? 'page' : null }, l)));
   const head = page.querySelector?.('.page-head');
   if (head) head.after(nav); else page.prepend?.(nav);
   return page;
 };
 const ROUTES = [
-  { id: 'home', label: 'Início', icon: 'home', group: 'CURI', view: home, key: '1' },
-  { id: 'library', label: 'Biblioteca', icon: 'library', group: 'CURI', view: library, key: '2' },
-  { id: 'discover', label: 'Descobrir', icon: 'radar', group: 'CURI', view: discoverView, key: '3' },
-  { id: 'capabilities', label: 'Capacidades', icon: 'map', group: 'CURI', view: capabilitiesView, key: '4' },
-  { id: 'device', label: 'Este dispositivo', icon: 'device', group: 'CURI', view: device, key: '5' },
-  { id: 'connections', label: 'Ligações', icon: 'link', group: 'CURI', view: connections, key: '6' },
-  { id: 'operations', label: 'Atividade', icon: 'activity', group: 'Sistema', view: tabbed(ACTIVITY_TABS, operations), key: '7' },
-  { id: 'settings', label: 'Definições', icon: 'settings', group: 'Sistema', view: tabbed(SETTINGS_TABS, settings), key: '8' },
-  { id: 'audit', hidden: true, parent: 'operations', label: 'Registo de auditoria', view: tabbed(ACTIVITY_TABS, audit) },
-  { id: 'jobs', hidden: true, parent: 'operations', label: 'Pesquisas e quotas', view: tabbed(ACTIVITY_TABS, jobs) },
-  { id: 'automation', hidden: true, parent: 'settings', label: 'Autonomia', view: tabbed(SETTINGS_TABS, automation) },
-  { id: 'bridge', hidden: true, parent: 'settings', label: 'Integração com o Claude', view: tabbed(SETTINGS_TABS, bridge) },
-  { id: 'security', hidden: true, parent: 'settings', label: 'Segurança', view: tabbed(SETTINGS_TABS, security) },
-  { id: 'about', hidden: true, parent: 'settings', label: 'Sobre', view: tabbed(SETTINGS_TABS, about) },
-  { id: 'compare', hidden: true, parent: 'library', label: 'Comparar', view: compareView },
-  { id: 'resource', hidden: true, parent: 'library', label: 'Recurso', view: resource },
-  { id: 'integrations', hidden: true, parent: 'library', label: 'Integrações rápidas', view: integrations },
+  { id: 'home', label: 'Home', icon: 'home', group: 'CURI', view: home, key: '1' },
+  { id: 'library', label: 'Library', icon: 'library', group: 'CURI', view: library, key: '2' },
+  { id: 'discover', label: 'Discover', icon: 'radar', group: 'CURI', view: discoverView, key: '3' },
+  { id: 'capabilities', label: 'Capabilities', icon: 'map', group: 'CURI', view: capabilitiesView, key: '4' },
+  { id: 'device', label: 'This device', icon: 'device', group: 'CURI', view: device, key: '5' },
+  { id: 'connections', label: 'Connections', icon: 'link', group: 'CURI', view: connections, key: '6' },
+  { id: 'operations', label: 'Activity', icon: 'activity', group: 'System', view: tabbed(ACTIVITY_TABS, operations), key: '7' },
+  { id: 'settings', label: 'Settings', icon: 'settings', group: 'System', view: tabbed(SETTINGS_TABS, settings), key: '8' },
+  { id: 'audit', hidden: true, parent: 'operations', label: 'Audit log', view: tabbed(ACTIVITY_TABS, audit) },
+  { id: 'jobs', hidden: true, parent: 'operations', label: 'Searches and quotas', view: tabbed(ACTIVITY_TABS, jobs) },
+  { id: 'automation', hidden: true, parent: 'settings', label: 'Autonomy', view: tabbed(SETTINGS_TABS, automation) },
+  { id: 'bridge', hidden: true, parent: 'settings', label: 'Claude integration', view: tabbed(SETTINGS_TABS, bridge) },
+  { id: 'security', hidden: true, parent: 'settings', label: 'Security', view: tabbed(SETTINGS_TABS, security) },
+  { id: 'about', hidden: true, parent: 'settings', label: 'About', view: tabbed(SETTINGS_TABS, about) },
+  { id: 'compare', hidden: true, parent: 'library', label: 'Compare', view: compareView },
+  { id: 'resource', hidden: true, parent: 'library', label: 'Resource', view: resource },
+  { id: 'integrations', hidden: true, parent: 'library', label: 'Quick integrations', view: integrations },
   { id: 'skills', hidden: true, parent: 'device', label: 'Skills', view: skills },
-  { id: 'mcp', hidden: true, parent: 'device', label: 'Servidores MCP', view: mcp },
+  { id: 'mcp', hidden: true, parent: 'device', label: 'MCP servers', view: mcp },
   { id: 'welcome', hidden: true, label: 'Boas-vindas', view: welcome },
-  { id: 'wizard', hidden: true, label: 'Configuração', view: wizard },
+  { id: 'wizard', hidden: true, label: 'Setup', view: wizard },
 ];
 // Old addresses keep working.
 const ALIASES = { dashboard: 'home', radar: 'discover', map: 'capabilities', machine: 'device' };
@@ -82,9 +82,9 @@ const trayIds = new Set(JSON.parse(sessionStorage.getItem('curi-compare') || '[]
 const saveTray = () => { sessionStorage.setItem('curi-compare', JSON.stringify([...trayIds])); renderNavBadges(); };
 export const compareTray = {
   get ids() { return trayIds; }, get size() { return trayIds.size; }, has: id => trayIds.has(id),
-  add(id) { if (trayIds.size < 5) trayIds.add(id); else toast('Máximo de 5 recursos na comparação', 'bad'); saveTray(); },
+  add(id) { if (trayIds.size < 5) trayIds.add(id); else toast('You can compare up to 5 resources', 'bad'); saveTray(); },
   delete(id) { trayIds.delete(id); saveTray(); },
-  toggle(id) { if (trayIds.has(id)) trayIds.delete(id); else if (trayIds.size < 5) trayIds.add(id); else toast('Máximo de 5 recursos', 'bad'); saveTray(); },
+  toggle(id) { if (trayIds.has(id)) trayIds.delete(id); else if (trayIds.size < 5) trayIds.add(id); else toast('Up to 5 resources', 'bad'); saveTray(); },
   clear() { trayIds.clear(); saveTray(); },
 };
 
@@ -94,7 +94,7 @@ let engineDown = false;
 function engineState(ok) {
   if (ok === !engineDown) return;
   engineDown = !ok;
-  if (engineDown) toast('Sem ligação ao motor do CURI. A tentar de novo…', 'bad', { timeout: 6000 }); else toast('Ligação ao motor restabelecida.', 'good');
+  if (engineDown) toast('Lost connection to the CURI engine. Retrying…', 'bad', { timeout: 6000 }); else toast('Reconnected to the engine.', 'good');
 }
 export function setPoll(fn, ms) {
   clearInterval(pollTimer);
@@ -105,7 +105,7 @@ const watching = new Map();
 let watchTimer = null;
 // Polls Core while a long job runs; on completion: refresh the view, toast, and notify if the app is in the background.
 export function watchJob(name, doneMessage) {
-  watching.set(name, doneMessage || 'Tarefa concluída');
+  watching.set(name, doneMessage || 'Done');
   if (watchTimer) return;
   watchTimer = setInterval(async () => {
     let r;
@@ -123,7 +123,7 @@ export function watchJob(name, doneMessage) {
 
 // ---------- shell ----------
 function shell() {
-  const nav = h('nav', { class: 'nav', 'aria-label': 'Navegação principal' }, h('div', { class: 'nav-indicator', 'aria-hidden': 'true' }));
+  const nav = h('nav', { class: 'nav', 'aria-label': 'Main navigation' }, h('div', { class: 'nav-indicator', 'aria-hidden': 'true' }));
   let group = null, wrap;
   for (const r of ROUTES.filter(x => !x.hidden)) {
     if (r.group !== group) { group = r.group; wrap = h('div', { class: 'nav-group' }, group === 'CURI' ? null : h('span', { class: 'micro' }, group)); nav.append(wrap); }
@@ -133,8 +133,8 @@ function shell() {
   document.body.prepend(h('div', { class: 'titlebar', 'data-tauri-drag-region': '' }));
   document.body.append(h('div', { class: 'shell' },
     h('aside', { class: 'sidebar' },
-      h('div', { class: 'brand', 'data-tauri-drag-region': '' }, h('span', { class: 'brand-mark', 'aria-hidden': 'true' }, brandMark({ small: true, size: 18 })), h('div', { class: 'brand-text' }, h('div', { class: 'brand-name' }, 'CURI'), h('div', { class: 'brand-sub' }, 'Capacidades para agentes'))),
-      h('button', { type: 'button', class: 'search-trigger', onclick: () => openPalette(), 'aria-label': 'Abrir paleta de comandos' }, icon('search', 'sm'), h('span', null, 'Procurar ou executar…'), h('kbd', null, '⌘K')),
+      h('div', { class: 'brand', 'data-tauri-drag-region': '' }, h('span', { class: 'brand-mark', 'aria-hidden': 'true' }, brandMark({ small: true, size: 18 })), h('div', { class: 'brand-text' }, h('div', { class: 'brand-name' }, 'CURI'), h('div', { class: 'brand-sub' }, 'Capabilities for your agents'))),
+      h('button', { type: 'button', class: 'search-trigger', onclick: () => openPalette(), 'aria-label': 'Open command palette' }, icon('search', 'sm'), h('span', null, 'Search or run…'), h('kbd', null, '⌘K')),
       nav,
       h('div', { class: 'sidebar-foot', id: 'side-foot' })),
     h('main', { id: 'main', tabindex: '-1' })));
@@ -159,7 +159,7 @@ function renderNavBadges() {
 async function footer() {
   try {
     const s = await api('status');
-    document.getElementById('side-foot').replaceChildren(h('div', { class: 'row' }, status(s.bootstrap.state)), h('div', { class: 'row num' }, `${s.resources} recursos · schema v${s.schema_version}`));
+    document.getElementById('side-foot').replaceChildren(h('div', { class: 'row' }, status(s.bootstrap.state)), h('div', { class: 'row num' }, `${s.resources} resources · schema v${s.schema_version}`));
   } catch {}
 }
 
@@ -169,7 +169,7 @@ export async function mount() {
   const seq = ++renderSeq;
   clearInterval(pollTimer); jobListeners = [];
   const main = document.getElementById('main');
-  if (!TOKEN) { fill(main, h('div', { class: 'page' }, empty('lock', 'Sessão sem token', 'Abra pela aplicação CURI ou com "curi app" para obter um link autenticado.'))); return; }
+  if (!TOKEN) { fill(main, h('div', { class: 'page' }, empty('lock', 'No session token', 'Open CURI from the app, or run "curi app" to get an authenticated link.'))); return; }
   const [path, arg] = location.hash.replace(/^#\//, '').split('?')[0].split('/');
   if (ALIASES[path]) { location.replace(`#/${ALIASES[path]}${location.hash.includes('?') ? `?${location.hash.split('?')[1]}` : ''}`); return; }
   const route = byId[path];
@@ -186,7 +186,7 @@ export async function mount() {
   // Slow views (live preflight, MCP health) get a skeleton; fast ones swap without a flash.
   const pending = setTimeout(() => { if (seq === renderSeq) fill(main, h('div', { class: 'page', 'aria-busy': 'true' }, h('div', { class: 'micro' }, route.label), h('div', { class: 'skel', style: { height: '28px', width: '240px', margin: '8px 0 28px' } }), skeleton(5, 56))); }, 150);
   try { page = await route.view(arg && decodeURIComponent(arg)); }
-  catch (e) { page = h('div', { class: 'page' }, empty('alert', 'Não foi possível carregar', e.message, h('button', { type: 'button', class: 'btn', onclick: () => mount() }, 'Tentar novamente'))); }
+  catch (e) { page = h('div', { class: 'page' }, empty('alert', 'Couldn\'t load this page', e.message, h('button', { type: 'button', class: 'btn', onclick: () => mount() }, 'Try again'))); }
   clearTimeout(pending);
   if (seq !== renderSeq) return;
   const h1 = page.querySelector?.('h1');
@@ -208,39 +208,39 @@ window.addEventListener('hashchange', mount);
 // ---------- command palette (no open/close animation: used many times a day) ----------
 function openPalette() {
   if (document.querySelector('.palette')) return;
-  const input = h('input', { type: 'text', placeholder: 'Procurar recursos, secções e ações…', 'aria-label': 'Paleta de comandos', role: 'combobox', 'aria-expanded': 'true', 'aria-controls': 'p-list', autocomplete: 'off', spellcheck: 'false' });
+  const input = h('input', { type: 'text', placeholder: 'Search resources, sections and actions…', 'aria-label': 'Command palette', role: 'combobox', 'aria-expanded': 'true', 'aria-controls': 'p-list', autocomplete: 'off', spellcheck: 'false' });
   const list = h('div', { class: 'p-list', id: 'p-list', role: 'listbox' });
   const scrim = h('div', { class: 'scrim instant' });
-  const node = h('div', { class: 'palette', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Paleta de comandos' }, h('div', { class: 'p-input' }, icon('search'), input, h('kbd', null, 'esc')), list,
-    h('div', { class: 'p-foot' }, h('span', null, h('kbd', null, '↑↓'), ' navegar'), h('span', null, h('kbd', null, '↵'), ' abrir'), h('span', null, h('kbd', null, 'esc'), ' fechar')));
+  const node = h('div', { class: 'palette', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Command palette' }, h('div', { class: 'p-input' }, icon('search'), input, h('kbd', null, 'esc')), list,
+    h('div', { class: 'p-foot' }, h('span', null, h('kbd', null, '↑↓'), ' navigate'), h('span', null, h('kbd', null, '↵'), ' open'), h('span', null, h('kbd', null, 'esc'), ' close')));
   const prev = document.activeElement;
   const close = () => { scrim.remove(); node.remove(); prev?.focus?.(); };
   scrim.addEventListener('mousedown', close);
   const actions = [
-    { label: 'Procurar no GitHub', icon: 'radar', run: () => go('discover') },
-    { label: 'Comparar selecionados', icon: 'compare', run: () => go('compare') },
-    { label: 'Ver servidores MCP', icon: 'mcp', run: () => go('mcp') },
-    { label: 'Ver skills instaladas', icon: 'skills', run: () => go('skills') },
-    { label: 'Integrações rápidas (MCP fixos)', icon: 'plus', run: () => go('integrations') },
-    { label: 'Executar verificação independente', icon: 'shield', run: () => go('bridge') },
-    { label: 'Correr manutenção agora', icon: 'bolt', run: async () => { const r = await api('maintenanceRun'); toast(`${r.queued.length} tarefa(s) iniciada(s); ${r.suggestions.length} à espera de autorização`, 'good'); } },
-    { label: 'Ligar o Claude Code', icon: 'bridge', run: () => go('connections') },
-    { label: 'Ver operações pendentes', icon: 'activity', run: () => go('operations?status=awaiting_approval') },
-    { label: 'Revogar autonomia', icon: 'lock', run: async () => { await api('policyRevoke'); toast('Autonomia revogada', 'good'); } },
-    { label: 'Adicionar URL ao catálogo', icon: 'plus', run: () => window.__curiMenu('add-url-dialog') },
-    { label: 'Exportar registo', icon: 'download', run: () => withProgress('A exportar o registo', () => api('exportFile').then(r => `${r.count} recursos exportados para ${r.file}`)) },
-    { label: 'Detetar o que está instalado', icon: 'refresh', run: () => go('device') },
-    { label: 'Alternar tema claro/escuro', icon: 'sparkle', run: () => applyTheme(matchMedia('(prefers-color-scheme: dark)').matches ? (currentTheme() === 'light' ? 'system' : 'light') : (currentTheme() === 'dark' ? 'system' : 'dark')) },
+    { label: 'Search GitHub', icon: 'radar', run: () => go('discover') },
+    { label: 'Compare selected', icon: 'compare', run: () => go('compare') },
+    { label: 'MCP servers', icon: 'mcp', run: () => go('mcp') },
+    { label: 'Installed skills', icon: 'skills', run: () => go('skills') },
+    { label: 'Quick integrations (pinned MCP)', icon: 'plus', run: () => go('integrations') },
+    { label: 'Run independent verification', icon: 'shield', run: () => go('bridge') },
+    { label: 'Run maintenance now', icon: 'bolt', run: async () => { const r = await api('maintenanceRun'); toast(`${r.queued.length} task(s) started; ${r.suggestions.length} waiting for permission`, 'good'); } },
+    { label: 'Connect Claude Code', icon: 'bridge', run: () => go('connections') },
+    { label: 'Pending operations', icon: 'activity', run: () => go('operations?status=awaiting_approval') },
+    { label: 'Revoke autonomy', icon: 'lock', run: async () => { await api('policyRevoke'); toast('Autonomy revoked', 'good'); } },
+    { label: 'Add a URL to the catalogue', icon: 'plus', run: () => window.__curiMenu('add-url-dialog') },
+    { label: 'Export registry', icon: 'download', run: () => withProgress('A exportar o registo', () => api('exportFile').then(r => `${r.count} resources exported to ${r.file}`)) },
+    { label: 'Detect what\'s installed', icon: 'refresh', run: () => go('device') },
+    { label: 'Toggle light/dark theme', icon: 'sparkle', run: () => applyTheme(matchMedia('(prefers-color-scheme: dark)').matches ? (currentTheme() === 'light' ? 'system' : 'light') : (currentTheme() === 'dark' ? 'system' : 'dark')) },
   ];
   let items = [], sel = 0, seq = 0;
   const render = async () => {
     const term = input.value.trim().toLowerCase();
     const my = ++seq;
-    const nav = ROUTES.filter(r => !r.hidden && (!term || r.label.toLowerCase().includes(term))).map(r => ({ section: 'Secções', label: r.label, icon: r.icon, hint: r.key ? `⌘${r.key}` : '', run: () => go(r.id) }));
-    const acts = actions.filter(a => !term || a.label.toLowerCase().includes(term)).map(a => ({ ...a, section: 'Ações' }));
+    const nav = ROUTES.filter(r => !r.hidden && (!term || r.label.toLowerCase().includes(term))).map(r => ({ section: 'Sections', label: r.label, icon: r.icon, hint: r.key ? `⌘${r.key}` : '', run: () => go(r.id) }));
+    const acts = actions.filter(a => !term || a.label.toLowerCase().includes(term)).map(a => ({ ...a, section: 'Actions' }));
     let res = [];
     if (term.length >= 2) {
-      try { res = (await api('search', { query: term, limit: 8 })).results.map(r => ({ section: 'Recursos', label: r.name, icon: TYPE_ICON[r.type] || 'info', hint: r.type, run: () => go(`resource/${encodeURIComponent(r.id)}`) })); } catch {}
+      try { res = (await api('search', { query: term, limit: 8 })).results.map(r => ({ section: 'Resources', label: r.name, icon: TYPE_ICON[r.type] || 'info', hint: r.type, run: () => go(`resource/${encodeURIComponent(r.id)}`) })); } catch {}
       if (my !== seq) return;
     }
     items = term ? [...res, ...nav, ...acts] : [...nav, ...acts];
@@ -254,7 +254,7 @@ function openPalette() {
       el.addEventListener('click', () => choose(i));
       out.push(el);
       return out;
-    }) : [h('div', { class: 'empty' }, h('p', null, 'Sem resultados locais.'), h('button', { type: 'button', class: 'btn', onclick: () => { close(); go(`radar?intent=${encodeURIComponent(input.value)}`); } }, icon('radar', 'sm'), 'Procurar no GitHub'))]));
+    }) : [h('div', { class: 'empty' }, h('p', null, 'No local results.'), h('button', { type: 'button', class: 'btn', onclick: () => { close(); go(`radar?intent=${encodeURIComponent(input.value)}`); } }, icon('radar', 'sm'), 'Search GitHub'))]));
     input.setAttribute('aria-activedescendant', `p-${sel}`);
   };
   const highlight = () => { list.querySelectorAll('.p-item').forEach(el => el.setAttribute('aria-selected', String(el.id === `p-${sel}`))); input.setAttribute('aria-activedescendant', `p-${sel}`); list.querySelector(`#p-${sel}`)?.scrollIntoView({ block: 'nearest' }); };
@@ -291,11 +291,11 @@ window.__curiMenu = cmd => {
 };
 
 async function addUrlDialog() {
-  const url = await promptDialog({ title: 'Adicionar ao catálogo', body: 'Cole o URL de um repositório GitHub ou de um site. O CURI classifica-o e inspeciona o que publica; nada é instalado.', placeholder: 'https://github.com/dono/projeto', confirm: 'Adicionar' });
+  const url = await promptDialog({ title: 'Add to catalogue', body: 'Paste a GitHub repository or website URL. CURI classifies it and inspects what it publishes; nothing gets installed.', placeholder: 'https://github.com/owner/project', confirm: 'Add' });
   if (!url) return;
   try {
     const r = await api('add', { url: url.trim() });
-    toast(r.duplicate ? `Já existia: ${r.name}` : `Adicionado: ${r.name}`, 'good');
+    toast(r.duplicate ? `Already in the catalogue: ${r.name}` : `Added: ${r.name}`, 'good');
     if (!r.duplicate) api('opEnqueue', { kind: 'resource.inspect', params: { id: r.id }, approved: true }).catch(() => {});
     go(`resource/${encodeURIComponent(r.id)}`);
   } catch (e) { toast(e.message, 'bad'); }
@@ -307,7 +307,7 @@ const urlFrom = dt => (dt.getData('text/uri-list') || dt.getData('text/plain') |
 window.addEventListener('dragenter', e => {
   if (![...(e.dataTransfer?.types || [])].some(t => t === 'text/uri-list' || t === 'text/plain')) return;
   dragDepth++;
-  dropEl ||= document.body.appendChild(h('div', { class: 'dropzone', role: 'status' }, h('div', null, h('div', { class: 'glyph' }, icon('plus', 'lg')), h('strong', null, 'Largar para adicionar ao catálogo'), h('p', { class: 'muted' }, 'O URL é normalizado e classificado; nunca é instalado.'))));
+  dropEl ||= document.body.appendChild(h('div', { class: 'dropzone', role: 'status' }, h('div', null, h('div', { class: 'glyph' }, icon('plus', 'lg')), h('strong', null, 'Drop to add to the catalogue'), h('p', { class: 'muted' }, 'The URL is normalised and classified; it\'s never installed.'))));
 });
 window.addEventListener('dragover', e => { if (dropEl) e.preventDefault(); });
 window.addEventListener('dragleave', () => { if (--dragDepth <= 0 && dropEl) { dropEl.remove(); dropEl = null; dragDepth = 0; } });
@@ -315,8 +315,8 @@ window.addEventListener('drop', async e => {
   if (!dropEl) return;
   e.preventDefault(); dropEl.remove(); dropEl = null; dragDepth = 0;
   const url = urlFrom(e.dataTransfer);
-  if (!url) { toast('Só URLs http(s) podem ser adicionados.', 'bad'); return; }
-  try { const r = await api('add', { url }); toast(r.duplicate ? `Já existia: ${r.name}` : `Adicionado: ${r.name} (${r.status})`, 'good'); go(`resource/${encodeURIComponent(r.id)}`); } catch (err) { toast(err.message, 'bad'); }
+  if (!url) { toast('Only http(s) URLs can be added.', 'bad'); return; }
+  try { const r = await api('add', { url }); toast(r.duplicate ? `Already in the catalogue: ${r.name}` : `Added: ${r.name} (${r.status})`, 'good'); go(`resource/${encodeURIComponent(r.id)}`); } catch (err) { toast(err.message, 'bad'); }
 });
 
 // Desktop app: no browser page menu, except over editable or selectable text.

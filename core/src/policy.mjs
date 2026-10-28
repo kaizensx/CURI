@@ -5,27 +5,27 @@ import { audit } from './audit-log.mjs';
 
 export const POLICY_VERSION = 'curi-autonomy-1';
 export const MODES = ['standard', 'automatic', 'maximum'];
-export const MODE_LABEL = { standard: 'Padrão', automatic: 'Automático', maximum: 'Autonomia máxima' };
+export const MODE_LABEL = { standard: 'Standard', automatic: 'Automatic', maximum: 'Maximum autonomy' };
 
 // category -> decision per mode: 'auto' (no app prompt), 'ask' (explicit approval per operation).
 // Native administrator dialogs are always additionally required for 'privileged' work.
 export const MATRIX = {
-  observe:          { label: 'Verificar fontes, atualizar metadados, testar ligações e saúde', standard: 'auto', automatic: 'auto', maximum: 'auto' },
-  curi_integration: { label: 'Instalar, reparar ou atualizar a skill e o MCP do próprio CURI', standard: 'ask', automatic: 'auto', maximum: 'auto' },
-  runtime:          { label: 'Instalar ou atualizar o runtime do CURI (Node.js na pasta do CURI)', standard: 'ask', automatic: 'auto', maximum: 'auto' },
-  cleanup:          { label: 'Limpar ficheiros temporários do CURI', standard: 'ask', automatic: 'auto', maximum: 'auto' },
-  skill_trusted:    { label: 'Instalar skills de editores de confiança (commit fixo, análise limpa)', standard: 'ask', automatic: 'auto', maximum: 'auto' },
-  mcp_trusted:      { label: 'Registar servidores MCP de editores de confiança', standard: 'ask', automatic: 'ask', maximum: 'auto' },
-  package_trusted:  { label: 'Instalar ferramentas e apps de editores de confiança pelo gestor de pacotes (Homebrew, npm, uv, WinGet…)', standard: 'ask', automatic: 'auto', maximum: 'auto' },
-  package_verified: { label: 'Instalar pacotes do catálogo cuja origem foi confirmada no registo oficial (npm, PyPI, Homebrew)', standard: 'ask', automatic: 'ask', maximum: 'auto' },
-  plugin_trusted:   { label: 'Instalar plugins do Claude Code de editores de confiança', standard: 'ask', automatic: 'ask', maximum: 'auto' },
-  project_change:   { label: 'Adicionar bibliotecas e componentes a um projeto seu (altera o package.json/pyproject)', standard: 'ask', automatic: 'ask', maximum: 'auto' },
-  maintenance:      { label: 'Atualizar, reativar e reparar o que já está instalado', standard: 'ask', automatic: 'auto', maximum: 'auto' },
-  background:       { label: 'Instalar o serviço de fundo do CURI (LaunchAgent do utilizador)', standard: 'ask', automatic: 'ask', maximum: 'auto' },
-  untrusted:        { label: 'Instalar de editores desconhecidos', standard: 'ask', automatic: 'ask', maximum: 'ask' },
-  destructive:      { label: 'Remover, desinstalar ou reverter', standard: 'ask', automatic: 'ask', maximum: 'ask' },
-  privileged:       { label: 'Ações de administrador (com diálogo nativo do macOS)', standard: 'ask', automatic: 'ask', maximum: 'ask' },
-  costly:           { label: 'Ações que consomem uso pago (pedidos a modelos)', standard: 'ask', automatic: 'ask', maximum: 'ask' },
+  observe:          { label: 'Verify sources, refresh metadata, test connections and health', standard: 'auto', automatic: 'auto', maximum: 'auto' },
+  curi_integration: { label: 'Install, repair or update CURI\'s own skill and MCP', standard: 'ask', automatic: 'auto', maximum: 'auto' },
+  runtime:          { label: 'Install or update CURI\'s runtime (Node.js inside CURI\'s folder)', standard: 'ask', automatic: 'auto', maximum: 'auto' },
+  cleanup:          { label: 'Clean up CURI\'s temporary files', standard: 'ask', automatic: 'auto', maximum: 'auto' },
+  skill_trusted:    { label: 'Install skills from trusted publishers (pinned commit, clean scan)', standard: 'ask', automatic: 'auto', maximum: 'auto' },
+  mcp_trusted:      { label: 'Register MCP servers from trusted publishers', standard: 'ask', automatic: 'ask', maximum: 'auto' },
+  package_trusted:  { label: 'Install tools and apps from trusted publishers through the package manager (Homebrew, npm, uv, WinGet…)', standard: 'ask', automatic: 'auto', maximum: 'auto' },
+  package_verified: { label: 'Install catalogue packages whose source is confirmed in the official registry (npm, PyPI, Homebrew)', standard: 'ask', automatic: 'ask', maximum: 'auto' },
+  plugin_trusted:   { label: 'Install Claude Code plugins from trusted publishers', standard: 'ask', automatic: 'ask', maximum: 'auto' },
+  project_change:   { label: 'Add libraries and components to one of your projects (changes package.json/pyproject)', standard: 'ask', automatic: 'ask', maximum: 'auto' },
+  maintenance:      { label: 'Update, re-enable and repair what\'s already installed', standard: 'ask', automatic: 'auto', maximum: 'auto' },
+  background:       { label: 'Install CURI\'s background service (user LaunchAgent)', standard: 'ask', automatic: 'ask', maximum: 'auto' },
+  untrusted:        { label: 'Install from unknown publishers', standard: 'ask', automatic: 'ask', maximum: 'ask' },
+  destructive:      { label: 'Remove, uninstall or roll back', standard: 'ask', automatic: 'ask', maximum: 'ask' },
+  privileged:       { label: 'Administrator actions (with the system\'s own dialog)', standard: 'ask', automatic: 'ask', maximum: 'ask' },
+  costly:           { label: 'Actions that spend paid usage (model requests)', standard: 'ask', automatic: 'ask', maximum: 'ask' },
 };
 
 export const DEFAULT_TRUSTED = ['anthropics', 'modelcontextprotocol', 'microsoft', 'chromedevtools', 'upstash', 'vercel-labs', 'expo', 'greensock', 'google', 'android', 'cloudflare'];
@@ -44,7 +44,7 @@ export function setTrustedPublishers(db, list, actor = 'user') {
 }
 
 export function grantMode(db, mode, { actor = 'user' } = {}) {
-  if (!MODES.includes(mode)) throw new Error('Modo inválido.');
+  if (!MODES.includes(mode)) throw new Error('Invalid mode.');
   const ts = now();
   db.prepare('UPDATE consent SET revoked_at=? WHERE revoked_at IS NULL').run(ts);
   const scopes = Object.fromEntries(Object.entries(MATRIX).map(([k, v]) => [k, v[mode]]));
@@ -70,17 +70,17 @@ export function evaluate(db, op) {
   if (trustScoped.includes(category) && (!op.publisher || !trustedPublishers(db).includes(op.publisher.toLowerCase()))) {
     // A catalogued package whose registry entry points back at its repository keeps a verified provenance.
     category = category === 'package_trusted' && op.verifiedSource ? 'package_verified' : 'untrusted';
-    reasons.push(op.publisher ? `Editor "${op.publisher}" não está na lista de confiança.` : 'Editor desconhecido.');
+    reasons.push(op.publisher ? `Publisher "${op.publisher}" isn't on the trusted list.` : 'Unknown publisher.');
   }
   const rule = MATRIX[category];
-  if (!rule) return { decision: 'block', category, reasons: [`Categoria desconhecida: ${category}`] };
+  if (!rule) return { decision: 'block', category, reasons: [`Unknown category: ${category}`] };
   for (const c of op.checks || []) {
-    if (c.ok === false) return { decision: 'block', category, reasons: [...reasons, `Verificação obrigatória falhou: ${c.name} — ${c.detail}`] };
+    if (c.ok === false) return { decision: 'block', category, reasons: [...reasons, `A required check failed: ${c.name} (${c.detail})`] };
   }
-  if (op.requiresConnection && !op.connectionOk) return { decision: 'block', category, reasons: [...reasons, `Requer ligação a ${op.requiresConnection}.`] };
-  if (op.scopeChanged) { reasons.push('As permissões pedidas mudaram desde a última aprovação.'); return { decision: 'ask', category, mode: consent.mode, reasons }; }
+  if (op.requiresConnection && !op.connectionOk) return { decision: 'block', category, reasons: [...reasons, `Needs a connection to ${op.requiresConnection}.`] };
+  if (op.scopeChanged) { reasons.push('The requested permissions changed since the last approval.'); return { decision: 'ask', category, mode: consent.mode, reasons }; }
   const decision = rule[consent.mode] || 'ask';
-  reasons.push(decision === 'auto' ? `Coberto pelo modo ${MODE_LABEL[consent.mode]} (${rule.label}).` : `O modo ${MODE_LABEL[consent.mode]} exige aprovação para: ${rule.label}.`);
-  if (category === 'privileged') reasons.push('O macOS pedirá a palavra-passe de administrador.');
+  reasons.push(decision === 'auto' ? `Covered by ${MODE_LABEL[consent.mode]} mode (${rule.label}).` : `${MODE_LABEL[consent.mode]} mode needs approval for: ${rule.label}.`);
+  if (category === 'privileged') reasons.push('The system will ask for the administrator password.');
   return { decision, category, mode: consent.mode, reasons };
 }

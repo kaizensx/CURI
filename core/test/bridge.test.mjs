@@ -76,7 +76,7 @@ test('T06 external edit is detected as drift and rollback refuses to clobber it'
   assert.equal(plan.actions.find(a => a.id === 'skill.write').state, 'update');
   const rb = await bridge.rollback(db, txId);
   assert.equal(rb.status, 'rollback_partial');
-  assert.ok(fs.existsSync(skillFile), 'ficheiro editado pelo utilizador não foi removido');
+  assert.ok(fs.existsSync(skillFile), 'a file edited by the user was not removed');
   fs.writeFileSync(skillFile, orig);
 });
 

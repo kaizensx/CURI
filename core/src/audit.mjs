@@ -2,10 +2,10 @@
 
 // Precedence (V2-09): only one orchestration framework drives a workflow at a time.
 export const PRECEDENCE = [
-  { rank: 1, rule: 'Oficial Anthropic (anthropics/*) e skills já ativas no ambiente do utilizador', match: r => /^gh:anthropics\//.test(r.id) },
-  { rank: 2, rule: 'Oficial do fornecedor da plataforma (Expo, Vercel, GSAP, Android, Google, Cloudflare)', match: r => /^gh:(expo|vercel-labs|greensock|android|google|cloudflare)\//.test(r.id) },
-  { rank: 3, rule: 'Skills focadas e composable com um objetivo único', match: r => r.type === 'Skill' },
-  { rank: 4, rule: 'Packs/harnesses grandes (Superpowers, ECC, Everything Claude Code, wshobson/agents...) apenas sob demanda, nunca vários em simultâneo', match: () => true },
+  { rank: 1, rule: 'Official Anthropic (anthropics/*) and skills already active in the user\'s environment', match: r => /^gh:anthropics\//.test(r.id) },
+  { rank: 2, rule: 'Official from the platform vendor (Expo, Vercel, GSAP, Android, Google, Cloudflare)', match: r => /^gh:(expo|vercel-labs|greensock|android|google|cloudflare)\//.test(r.id) },
+  { rank: 3, rule: 'Focused, composable single-purpose skills', match: r => r.type === 'Skill' },
+  { rank: 4, rule: 'Large packs/harnesses (Superpowers, ECC, Everything Claude Code, wshobson/agents...) only on demand, never several at once', match: () => true },
 ];
 
 export function precedenceRank(r) { return PRECEDENCE.find(p => p.match(r)).rank; }
@@ -19,13 +19,13 @@ export function resourceAudit(db) {
     capability: cap,
     resources: v.sort((a, b) => a.rank - b.rank).map(r => ({ id: r.id, name: r.name, rank: r.rank })),
     preferred: v[0].id,
-    policy: 'Usar o de menor rank; restantes ficam ON_DEMAND/CATALOGUED.',
+    policy: 'Use the lowest rank; the rest stay ON_DEMAND/CATALOGUED.',
   }));
   const orchestration = agentRes.filter(r => r.caps.includes('agent-orchestration')).map(r => ({ id: r.id, name: r.name, rank: r.rank }));
   return {
     precedence_policy: PRECEDENCE.map(({ rank, rule }) => ({ rank, rule })),
     skill_overlaps: overlaps,
-    orchestration_frameworks: { count: orchestration.length, items: orchestration, rule: 'No máximo um framework de orquestração ativo por sessão/projeto.' },
+    orchestration_frameworks: { count: orchestration.length, items: orchestration, rule: 'At most one orchestration framework active per session/project.' },
     multi_source_resources: db.prepare('SELECT resource_id id, COUNT(*) n FROM resource_urls GROUP BY resource_id HAVING COUNT(DISTINCT url_normalized) > 1').all(),
     risks: db.prepare("SELECT id, name, risk_notes FROM resources WHERE risk_notes IS NOT NULL AND risk_notes <> ''").all(),
     unavailable_or_deprecated: db.prepare("SELECT id, name, status FROM resources WHERE status IN ('UNAVAILABLE','DEPRECATED')").all(),

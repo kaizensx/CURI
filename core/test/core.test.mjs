@@ -29,12 +29,12 @@ test('every seed URL is preserved and attributed to its list; REA present', () =
     const { entries } = reg.parseSeedFile(file);
     for (const e of entries) {
       const row = db.prepare('SELECT resource_id FROM resource_urls WHERE url_original=? AND source=?').get(e.url, f);
-      assert.ok(row, `URL em falta: ${e.url} (${f})`);
+      assert.ok(row, `Missing URL: ${e.url} (${f})`);
     }
   }
   const rea = db.prepare("SELECT r.id, COUNT(u.id) n FROM resources r JOIN resource_urls u ON u.resource_id=r.id WHERE r.gh_full_name='morluto/rea'").get();
   assert.equal(rea.id, 'gh:morluto/rea');
-  assert.ok(rea.n >= 2, 'REA aparece no catálogo inicial e nas fontes de fronteira');
+  assert.ok(rea.n >= 2, 'REA appears in the starter catalogue and in the frontier sources');
   assert.equal(first.invalid.length, 0);
 });
 
@@ -84,8 +84,8 @@ for (const [q, wantAny, k] of CASES) {
   test(`routing: "${q}"`, () => {
     const r = search(db, q, { limit: k });
     const ids = r.results.map(x => x.id);
-    assert.ok(wantAny.some(w => ids.includes(w)), `top${k}=${ids.join(', ')} não contém ${wantAny.join(' | ')}`);
-    for (const x of r.results) assert.ok(x.explanation, 'cada resultado tem explicação');
+    assert.ok(wantAny.some(w => ids.includes(w)), `top${k}=${ids.join(', ')} doesn't contain ${wantAny.join(' | ')}`);
+    for (const x of r.results) assert.ok(x.explanation, 'every result has an explanation');
   });
 }
 
@@ -110,7 +110,7 @@ test('T09 add URL: dedup across spelling variants, provenance, immediately searc
 });
 
 test('INSTALLED status requires verified installation evidence', () => {
-  assert.throws(() => reg.setStatus(db, 'web:reactbits.dev', 'INSTALLED'), /evidência/);
+  assert.throws(() => reg.setStatus(db, 'web:reactbits.dev', 'INSTALLED'), /evidence/);
 });
 
 test('T10 star velocity: insufficient history unless real snapshots span the window', () => {
@@ -141,7 +141,7 @@ test('score: components without evidence are null; confidence reflects coverage'
   const s = scoreCandidate({ queryText: 'mcp server for blender', description: 'MCP server to control Blender', topics: ['mcp'], name: 'blender-mcp', license: 'MIT', pushedAt: new Date().toISOString() });
   assert.ok(s.total > 0.5);
   assert.equal(s.components.security, null);
-  assert.ok(scoreCandidate({ name: 'x', description: 'x', pushedAt: '2020-01-01', archived: true, license: 'MIT' }).hard_gates.includes('repositório arquivado'));
+  assert.ok(scoreCandidate({ name: 'x', description: 'x', pushedAt: '2020-01-01', archived: true, license: 'MIT' }).hard_gates.includes('archived repository'));
 });
 
 test('T04 offline: discovery fails honestly, local search keeps working', async () => {
@@ -226,7 +226,7 @@ test('newer schema is refused by an older client (no corruption)', () => {
   const d = openDb(file);
   d.prepare("INSERT INTO schema_migrations(version,name,applied_at) VALUES (99,'future','t')").run();
   d.close();
-  assert.throws(() => openDb(file), /mais recente/);
+  assert.throws(() => openDb(file), /newer than this client/);
 });
 
 test('T21 concurrent writers (separate processes) do not corrupt the registry', async () => {

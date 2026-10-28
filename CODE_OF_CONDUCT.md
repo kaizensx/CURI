@@ -1,11 +1,11 @@
-# Código de conduta
+# Code of conduct
 
-Este projeto é um espaço de trabalho técnico. Esperamos de toda a gente:
+This project is a technical workspace. We expect everyone to show:
 
-- Respeito por pessoas, independentemente de experiência, origem ou identidade.
-- Crítica ao trabalho, nunca a quem o fez.
-- Boa-fé ao ler e ao responder.
+- Respect for people, whatever their experience, background or identity.
+- Criticism of the work, never of the person who did it.
+- Good faith when reading and replying.
 
-Não são aceites assédio, insultos, ataques pessoais, nem a publicação de informação privada de terceiros.
+Harassment, insults, personal attacks and publishing other people's private information aren't accepted.
 
-Comportamentos inaceitáveis podem ser reportados em privado aos mantenedores através dos contactos do perfil do repositório. Os mantenedores podem remover contribuições e restringir participação para proteger a comunidade.
+You can report unacceptable behaviour privately to the maintainers through the contact details on the repository profile. Maintainers may remove contributions and restrict participation to protect the community.
