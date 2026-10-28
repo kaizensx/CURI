@@ -6,6 +6,7 @@ import { icon } from '../lib/icons.js';
 import { api, btn, toast, contextMenu, empty, notice, promptDialog } from '../lib/ui.js';
 import { go, mount, params, compareTray } from '../app.js';
 import { runOperation } from './control.js';
+import { installedView } from './installed.js';
 import { KIND_ICON, STATE_LABEL, stateChip, kindTile, where, runAction, actionButton, cmdLine, addToProject, personalPanel } from './common.js';
 
 export const TYPE_ICON = { Skill: 'skills', Plugin: 'layers', MCP: 'mcp', Library: 'library', Framework: 'library', Tool: 'terminal', Documentation: 'info', Registry: 'search', Template: 'copy', Inspiration: 'sparkle' };
@@ -55,6 +56,22 @@ const quickLabel = r => (!r.state && r.installable && r.kind !== 'reference' ? [
   : r.has_project && !r.state ? ['Add to project', 'plus', ''] : ['Manage', 'settings', 'ghost']);
 
 export async function library() {
+  const tab = params().get('tab') || lsGet('curi-lib-tab', 'installed');
+  lsSet('curi-lib-tab', tab);
+  const count = h('span', { class: 'n' });
+  const tabs = h('nav', { class: 'tabs lib-tabs', 'aria-label': 'Library' },
+    h('a', { href: '#/library?tab=installed', onclick: e => { if (tab === 'installed') e.preventDefault(); }, 'aria-current': tab === 'installed' ? 'page' : null }, icon('check', 'sm'), 'Installed', tab === 'installed' ? count : null),
+    h('a', { href: '#/library?tab=catalogue', 'aria-current': tab === 'catalogue' ? 'page' : null }, icon('library', 'sm'), 'Catalogue'));
+  if (tab !== 'catalogue') {
+    const body = await installedView(n => { count.textContent = String(n); });
+    return h('div', { class: 'page' },
+      h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'Library'), h('p', null, 'What your agents and this computer already have, and where each thing lives.')), h('div', { class: 'actions' }, tabs)),
+      body);
+  }
+  return catalogue(tabs);
+}
+
+async function catalogue(tabs) {
   const p = params();
   const [everything, capMap, cols] = await Promise.all([api('library'), api('capabilityMap'), api('collections')]);
   // Only what CURI can act on: install, connect, add to a project, or manage what's already here.
@@ -136,7 +153,7 @@ export async function library() {
     const rows = all.filter(r => st.sel.has(r.id));
     const ready = rows.filter(r => !r.state && r.ready && r.kind !== 'reference');
     fill(bulk, ids.length ? h('div', { class: 'tray', role: 'region', 'aria-label': 'Selection' },
-      h('span', { class: 'names' }, `${ids.length} selecionado${ids.length > 1 ? 's' : ''}`),
+      h('span', { class: 'names' }, `${ids.length} selected`),
       btn('Compare', () => { compareTray.clear(); ids.slice(0, 5).forEach(id => compareTray.add(id)); go('compare'); }, { size: 'sm', iconName: 'compare', disabled: ids.length < 2 }),
       btn('Collection', async () => { const name = await promptDialog({ title: `Add ${ids.length} to a collection`, body: cols.length ? `Existing: ${cols.map(c => c.name).join(', ')}` : null, placeholder: 'collection name', confirm: 'Add' }); if (!name?.trim()) return; for (const r of rows) r.mine = await api('mark', { id: r.id, patch: { collections: [...(r.mine.collections || []), name.trim()] } }); if (!cols.some(c => c.name === name.trim())) cols.push({ name: name.trim() }); toast(`${rows.length} in "${name.trim()}"`, 'good'); render(); }, { size: 'sm', iconName: 'layers' }),
       btn('Favourites', async () => { for (const r of rows) r.mine = await api('mark', { id: r.id, patch: { fav: true } }); render(); }, { size: 'sm', iconName: 'star' }),
@@ -179,7 +196,7 @@ export async function library() {
   const ready = all.filter(r => !r.state && r.ready).length;
   return h('div', { class: 'page' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'Library'), h('p', null, `${all.length} resources CURI can act on: ${here} are already here or in your account, ${ready} install in one click, and the rest go into your projects.`)),
-      h('div', { class: 'actions' }, btn('Add URL', () => window.__curiMenu('add-url-dialog'), { kind: 'ghost', iconName: 'plus' }))),
+      h('div', { class: 'actions' }, btn('Add URL', () => window.__curiMenu('add-url-dialog'), { kind: 'ghost', iconName: 'plus' }), tabs)),
     h('div', { class: 'lib' }, rail, h('div', null,
       h('div', { class: 'lib-top' }, h('div', { class: 'searchbox' }, icon('search', 'sm'), input), sortSel, layoutBtns, count),
       chipsRow, list)),
@@ -187,7 +204,7 @@ export async function library() {
 }
 
 // ---------- Resource sheet ----------
-const EV = { registry: 'confirmed in registry', curated: 'revisto', manifest: 'declared by the project', documented: 'documentado' };
+const EV = { registry: 'confirmed in registry', curated: 'reviewed', manifest: 'declared by the project', documented: 'documented' };
 const METHOD = { plugin: 'Claude Code plugin', skill: 'Claude Code skill', mcp: 'MCP server in Claude Code', package: 'Package manager', download: 'Official installer' };
 const TYPE_PT = { bin: 'Executable', app: 'App', brew: 'Homebrew', cask: 'Homebrew Cask', npm: 'npm global', uv: 'uv tool', pipx: 'pipx', pip: 'Python (pip)', cargo: 'Cargo', winget: 'WinGet', scoop: 'Scoop', flatpak: 'Flatpak', mcp: 'MCP server', plugin: 'Plugin', skill: 'Skill', 'account-skill': 'Account skill', dir: 'Folder', env: 'Variable' };
 
@@ -215,7 +232,7 @@ export async function resource(id) {
     x.enabled === false ? h('span', { class: 'state reference' }, 'Disabled') : null)))) : null;
 
   const options = A.install.length ? h('div', { class: 'box' }, A.install.map(a => h('div', { class: 'opt' },
-    h('div', null, h('div', { class: 't' }, a.label), h('div', { class: 's' }, [a.sub, a.evidence ? EV[a.evidence] : null, a.missing ? `falta ${a.missing.join(', ')}` : null, a.secrets?.length ? `key: ${a.secrets.join(', ')}` : null, a.auth === 'oauth' ? 'OAuth sign-in in Claude Code' : null, a.scripts ? 'inclui scripts' : null].filter(Boolean).join(' · '))),
+    h('div', null, h('div', { class: 't' }, a.label), h('div', { class: 's' }, [a.sub, a.evidence ? EV[a.evidence] : null, a.missing ? `needs ${a.missing.join(', ')}` : null, a.secrets?.length ? `key: ${a.secrets.join(', ')}` : null, a.auth === 'oauth' ? 'OAuth sign-in in Claude Code' : null, a.scripts ? 'includes scripts' : null].filter(Boolean).join(' · '))),
     actionButton({ ...a, label: a.prereq && a.disabled ? a.label : a.op?.kind === 'mcp.add' ? 'Enable' : a.op?.kind === 'package.install' ? 'Install' : a.op?.kind === 'plugin.install' ? 'Install' : a.op?.kind === 'skill.install' ? 'Install' : a.label }, r.name, after, { kind: a === A.primary ? 'primary' : '' }),
     a.setup?.length ? h('ol', { class: 'steps' }, a.setup.map(s => h('li', null, s))) : null))) : null;
 

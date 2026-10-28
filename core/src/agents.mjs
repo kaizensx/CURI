@@ -87,7 +87,7 @@ function claudeDesktop() {
   try {
     for (const a of fs.readdirSync(sp)) for (const b of fs.readdirSync(path.join(sp, a))) {
       const m = readJson(path.join(sp, a, b, 'manifest.json'));
-      for (const s of m?.skills || []) account.push({ name: s.name, description: (s.description || '').slice(0, 240), enabled: s.enabled !== false, origin: s.creatorType === 'user' ? 'adicionada por si' : s.creatorType === 'anthropic' ? 'Anthropic' : (s.creatorType || null), updated_at: s.updatedAt || null, scope: 'account', managed_by: 'account' });
+      for (const s of m?.skills || []) account.push({ name: s.name, description: (s.description || '').slice(0, 240), enabled: s.enabled !== false, origin: s.creatorType === 'user' ? 'Added by you' : s.creatorType === 'anthropic' ? 'Anthropic' : (s.creatorType || null), updated_at: s.updatedAt || null, scope: 'account', managed_by: 'account' });
     }
   } catch {}
   const seen = new Set();

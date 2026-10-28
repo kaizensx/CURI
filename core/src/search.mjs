@@ -57,12 +57,12 @@ export function search(db, query, { limit = 10, type, status, capability, tier, 
     if (capability && !db.prepare('SELECT 1 FROM resource_capabilities WHERE resource_id=? AND capability_id=?').get(r.id, capability)) continue;
     let score = s.cap * 0.6 + s.text * 0.4;
     const adj = [];
-    if (r.type === 'Registry' && !wantRegistries) { score *= 0.6; adj.push('diretório/fonte de descoberta (penalizado)'); }
+    if (r.type === 'Registry' && !wantRegistries) { score *= 0.6; adj.push('directory or discovery source (penalised)'); }
     if (r.status === 'REJECTED' || r.status === 'DEPRECATED') { score *= 0.3; adj.push(`estado ${r.status}`); }
     // "alternative to X": X is the reference point, not an answer.
-    if (/alternativ/.test(fold(q)) && contentTokens(r.name).some(t => t.length >= 3 && fold(q).split(/\W+/).includes(t))) { score *= 0.4; adj.push('é o recurso de referência da comparação'); }
-    if (r.last_verified) { score += 0.03; adj.push('fonte verificada'); }
-    if (r.status === 'INSTALLED' || r.status === 'CONFIGURED') { score += 0.05; adj.push('já disponível localmente'); }
+    if (/alternativ/.test(fold(q)) && contentTokens(r.name).some(t => t.length >= 3 && fold(q).split(/\W+/).includes(t))) { score *= 0.4; adj.push('is the resource being compared against'); }
+    if (r.last_verified) { score += 0.03; adj.push('verified source'); }
+    if (r.status === 'INSTALLED' || r.status === 'CONFIGURED') { score += 0.05; adj.push('already available locally'); }
     results.push({
       ...r,
       score: Math.round(score * 1000) / 1000,
@@ -81,8 +81,8 @@ export function search(db, query, { limit = 10, type, status, capability, tier, 
     intent: { capabilities: intents.map(i => ({ id: i.id, label: i.label, matched: i.matched })), domains: [...new Set(intents.map(i => i.domain))], terms },
     coverage: results.length ? (results[0].score >= 0.35 ? 'strong' : 'weak') : 'none',
     advice: !results.length || results[0].score < 0.35
-      ? 'Cobertura local fraca: considerar descoberta externa (curi discover --mode task) e verificar fontes primárias.'
-      : 'Cobertura local suficiente: verificar a documentação oficial do recurso escolhido antes de usar APIs.',
+      ? 'Thin local coverage: consider external discovery (curi discover --mode task) and check primary sources.'
+      : 'Enough local coverage: check the chosen resource\'s official docs before using its APIs.',
     results,
   };
 }
@@ -102,8 +102,8 @@ export function compare(db, ids) {
   const shared = [...all].filter(c => present.every(i => i.capabilities.includes(c)));
   const missingEvidence = present.flatMap(i => [
     !i.last_verified && `${i.id}: fonte nunca verificada`,
-    i.license === 'unknown' && `${i.id}: licença desconhecida`,
-    !i.latest_snapshot && `${i.id}: sem snapshot de manutenção/atividade`,
+    i.license === 'unknown' && `${i.id}: unknown licence`,
+    !i.latest_snapshot && `${i.id}: no maintenance or activity snapshot`,
   ].filter(Boolean));
   return { items, shared_capabilities: shared, unique_capabilities: Object.fromEntries(present.map(i => [i.id, i.capabilities.filter(c => !shared.includes(c))])), missing_evidence: missingEvidence };
 }

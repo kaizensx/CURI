@@ -53,7 +53,7 @@ function mcpOptionsFrom(facts) {
   }
   // An MCP server published on npm with an executable runs through npx.
   if (!out.length) for (const x of facts?.packages?.npm || []) if (x.bin?.length && /mcp/i.test(x.name)) out.push({ method: 'mcp', transport: 'stdio', command: 'npx', args: ['-y', `${x.name}@${x.version}`], secrets: [], requires: ['node'], evidence: 'registry', label: `npx ${x.name}` });
-  for (const r of facts?.mcp_registry?.remotes || []) if (r.url) out.push({ method: 'mcp', transport: /sse/i.test(r.type) ? 'sse' : 'http', url: r.url, secrets: [], requires: [], evidence: 'manifest', label: `remoto ${new URL(r.url).host}` });
+  for (const r of facts?.mcp_registry?.remotes || []) if (r.url) out.push({ method: 'mcp', transport: /sse/i.test(r.type) ? 'sse' : 'http', url: r.url, secrets: [], requires: [], evidence: 'manifest', label: `remote ${new URL(r.url).host}` });
   return out;
 }
 

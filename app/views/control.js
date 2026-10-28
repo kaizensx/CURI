@@ -87,20 +87,27 @@ function providerCard(c, refresh) {
       c.has_secret ? btn('Test', async () => { await withProgress(`A testar ${c.name}`, async () => { const r = await api('connectionTest', { provider: c.provider }); return r.ok ? r.detail : { ok: false, message: r.detail || r.status }; }, { stage: `A contactar ${c.name}…` }).catch(() => {}); refresh(); }, { kind: 'ghost sm', iconName: 'refresh' }) : null,
       c.has_secret ? btn('Remove local access', async () => { if (await confirmDialog({ title: `Remove ${c.name}?`, body: 'Deletes the credential from the system vault. To invalidate it for good, revoke it on the provider\'s website too.', confirm: 'Remove', danger: true })) { await withProgress(`Removing ${c.name}`, () => api('connectionRemove', { provider: c.provider }).then(r => (r.removed ? 'Credential deleted from the system vault.' : 'There was no credential in the system vault.'))); refresh(); } }, { kind: 'ghost sm danger', iconName: 'trash' }) : null,
       h('span', { class: 'spacer' }), externalLink(c.docs, 'How to get one'),
-      c.last_ok ? h('span', { class: 'muted small' }, `testado ${relTime(c.last_tested)}`) : null)));
+      c.last_ok ? h('span', { class: 'muted small' }, `tested ${relTime(c.last_tested)}`) : null)));
 }
 
 // Reuse an existing GitHub sign-in (GitHub CLI) and read the user's stars, without pasting tokens.
+let ghCache = null;
 function githubReuse(list, refresh) {
   const gh = list.find(c => c.provider === 'github');
   const box = h('div');
-  api('githubExisting').then(x => {
+  // Drawn straight away from the last answer, so the 4-second refresh never blanks the card; the
+  // background check only redraws when something actually changed.
+  const paint = x => {
     if (gh?.status === 'connected') fill(box, panel({ title: 'GitHub connected', meta: gh.account || '' }, h('div', { class: 'row' }, h('p', { class: 'muted', style: { margin: 0, flex: 1 } }, 'Searches use authenticated limits. CURI can review the repositories you starred and pick out what\'s useful to your agents.'),
       btn('Read my stars', () => runOperation('github.stars', {}, 'Read GitHub stars', { refresh: false }), { kind: 'primary', iconName: 'star' }))));
     else if (x.gh_logged_in) fill(box, panel({ title: 'GitHub session found', meta: x.gh_user || 'GitHub CLI' }, h('div', { class: 'row' }, h('p', { class: 'muted', style: { margin: 0, flex: 1 } }, 'The GitHub CLI (gh) is already signed in on this device. With your permission, CURI asks it for the token the official way (gh auth token), tests it and stores it in the system vault.'),
       btn('Reuse this session', () => withProgress('Connecting GitHub with the gh session', async () => { const r = await api('githubAdoptCli'); refresh(); return r.saved ? `Connected as ${r.account || 'GitHub'}.` : `Not connected: ${r.detail || 'test failed'}`; }), { kind: 'primary', iconName: 'link' }))));
     else fill(box);
-  }).catch(() => {});
+  };
+  const key = x => `${gh?.status}|${gh?.account}|${x.gh_logged_in}|${x.gh_user}`;
+  if (ghCache) paint(ghCache);
+  else if (gh?.status === 'connected') paint({});
+  api('githubExisting').then(x => { if (!ghCache || key(x) !== key(ghCache)) paint(x); ghCache = x; }).catch(() => {});
   return box;
 }
 
@@ -144,7 +151,7 @@ export async function integrations() {
       panel({ title: 'MCP servers', meta: 'started by Claude through the CURI launcher', flush: true }, h('div', { class: 'rows' }, pr.mcp.map(m => h('div', { class: 'r' },
         h('span', { class: 'itile' }, icon('mcp')), h('div', { class: 'grow' }, h('div', { class: 't1' }, m.title, ' ', h('span', { class: 'muted mono small' }, m.args.at(-1))), h('div', { class: 't2' }, m.purpose)),
         m.trusted ? badge(m.publisher, 'info') : badge(`${m.publisher} · untrusted`, 'warn'),
-        Object.entries(m.secrets_present).map(([k, ok]) => (ok ? badge(`${k} ✓`, 'good') : h('a', { class: 'badge warn', href: '#/connections' }, `falta ${k}`))),
+        Object.entries(m.secrets_present).map(([k, ok]) => (ok ? badge(`${k} ✓`, 'good') : h('a', { class: 'badge warn', href: '#/connections' }, `missing ${k}`))),
         m.enabled ? status('configured', 'Active') : null,
         m.enabled ? btn('Disable', () => runOperation('mcp.disable', { name: m.name }, `Disable ${m.title}`), { kind: 'ghost sm' })
           : btn('Enable', async () => { if (!m.defined) await api('mcpDefine', m); await runOperation('mcp.enable', { name: m.name }, `Enable ${m.title}`); }, { kind: 'primary sm' }))))),
@@ -155,7 +162,7 @@ export async function integrations() {
         s.installed ? [btn('Update', () => runOperation('skill.install', { repo: s.repo, path: s.path }, `Update ${s.name}`), { kind: 'ghost sm', iconName: 'refresh' }), btn('Remove', () => runOperation('skill.remove', { name: s.name }, `Remove ${s.name}`), { kind: 'ghost sm danger' })]
           : s.exists_unmanaged ? null : btn('Install', () => runOperation('skill.install', { repo: s.repo, path: s.path }, `Install ${s.name}`), { kind: 'primary sm' }))))),
       panel({ title: 'Custom MCP servers', meta: `${custom.length}` }, custom.length ? h('div', { class: 'rows' }, custom.map(d => h('div', { class: 'r' }, h('div', { class: 'grow' }, h('div', { class: 't1' }, d.name), h('div', { class: 't2 mono' }, d.transport === 'stdio' ? [d.command, ...d.args].join(' ') : d.url)),
-        d.enabled ? status('configured', 'Active') : badge('inativo'),
+        d.enabled ? status('configured', 'Active') : badge('inactive'),
         d.enabled ? btn('Disable', () => runOperation('mcp.disable', { name: d.name }, `Disable ${d.name}`), { kind: 'ghost sm' }) : [btn('Enable', () => runOperation('mcp.enable', { name: d.name }, `Enable ${d.name}`), { kind: 'primary sm' }), btn('', async () => { if (await confirmDialog({ title: `Delete the ${d.name} definition?`, body: 'Only deletes the definition in CURI; the server isn\'t active in Claude.', confirm: 'Delete', danger: true })) { await api('mcpUndefine', { name: d.name }); mount(); } }, { kind: 'ghost sm', iconName: 'trash', title: 'Delete definition' })]))) : null, form),
       panel({ title: 'Background service' }, h('div', { class: 'row' }, agent.loaded ? status('configured', 'Running in launchd') : agent.installed ? status('blocked', 'Installed, not loaded') : badge('not installed'),
         h('span', { class: 'muted' }, agent.loaded ? `Every ${Math.round((agent.interval_s || 0) / 60)} min it runs approved operations and scheduled checks, even with the app closed.` : 'Lets approved work run with the window closed (user LaunchAgent, no privileges).'),
@@ -164,8 +171,8 @@ export async function integrations() {
 
 function customMcpForm() {
   const name = h('input', { type: 'text', placeholder: 'name (e.g. my-server)', 'aria-label': 'Name' });
-  const transport = h('select', { class: 'select', 'aria-label': 'Transport' }, h('option', { value: 'stdio' }, 'stdio (processo local)'), h('option', { value: 'http' }, 'HTTP (remoto)'));
-  const command = h('input', { type: 'text', placeholder: 'npx · uvx · node · python3 · /caminho/absoluto', 'aria-label': 'Command' });
+  const transport = h('select', { class: 'select', 'aria-label': 'Transport' }, h('option', { value: 'stdio' }, 'stdio (local process)'), h('option', { value: 'http' }, 'HTTP (remote)'));
+  const command = h('input', { type: 'text', placeholder: 'npx · uvx · node · python3 · /absolute/path', 'aria-label': 'Command' });
   const args = h('textarea', { class: 'area', rows: '3', placeholder: 'One argument per line', 'aria-label': 'Arguments' });
   const url = h('input', { type: 'url', placeholder: 'https://…', 'aria-label': 'URL' });
   const env = h('textarea', { class: 'area', rows: '2', placeholder: 'NAME=value (not secret), one per line', 'aria-label': 'Variables' });
@@ -244,7 +251,7 @@ export async function automation() {
       h('div', { class: 'row' }, h('span', { class: 'spacer' }), !pol.consent.implicit && pol.consent.mode !== 'standard' ? btn('Revoke now', async () => { const r = await api('policyRevoke'); toast(`Autonomy revoked. ${r.requeued_for_approval.length} queued operation(s) went back to asking for approval. Finished operations aren't undone.`, 'good'); mount(); }, { kind: 'danger', iconName: 'x' }) : null),
       panel({ title: 'Permission matrix', meta: 'automatic = no prompt · approve = always asks', flush: true }, h('div', { class: 'table-wrap' }, h('table', { class: 't matrix' },
         h('thead', null, h('tr', null, h('th', null, 'Category'), modes.map(m => h('th', { class: m === pol.consent.mode && !pol.consent.implicit ? 'cur' : null }, MODE_COPY[m][0])))),
-        h('tbody', null, Object.entries(pol.matrix).map(([k, v]) => h('tr', null, h('td', null, v.label), modes.map(m => h('td', { class: m === pol.consent.mode && !pol.consent.implicit ? 'cur' : null }, v[m] === 'auto' ? h('span', { class: 'badge good' }, icon('check'), 'automatic') : h('span', { class: 'badge' }, icon('lock'), 'aprovar'))))))))),
+        h('tbody', null, Object.entries(pol.matrix).map(([k, v]) => h('tr', null, h('td', null, v.label), modes.map(m => h('td', { class: m === pol.consent.mode && !pol.consent.implicit ? 'cur' : null }, v[m] === 'auto' ? h('span', { class: 'badge good' }, icon('check'), 'automatic') : h('span', { class: 'badge' }, icon('lock'), 'asks'))))))))),
       h('div', { class: 'grid cols-2' },
         panel({ title: 'Trusted publishers' }, h('p', { class: 'muted small', style: { marginTop: 0 } }, 'GitHub repository owners whose code may be installed under the policy. One per line. Anything outside this list asks for approval.'), pub,
           h('div', { class: 'row', style: { marginTop: '10px' } }, h('span', { class: 'spacer' }), btn('Save', async () => { const r = await api('trustedSet', { publishers: pub.value.split('\n') }); toast(`${r.length} trusted publishers`, 'good'); }, { kind: 'primary' }))),

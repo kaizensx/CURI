@@ -4,7 +4,7 @@ const GH_RESERVED = new Set(['topics', 'trending', 'marketplace', 'orgs', 'featu
 
 export function normalizeUrl(raw) {
   const u = new URL(String(raw).trim());
-  if (!/^https?:$/.test(u.protocol)) throw new Error(`Protocolo não suportado: ${u.protocol}`);
+  if (!/^https?:$/.test(u.protocol)) throw new Error(`Unsupported protocol: ${u.protocol}`);
   u.protocol = 'https:';
   u.hostname = u.hostname.toLowerCase().replace(/^www\./, '');
   u.hash = '';

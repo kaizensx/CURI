@@ -126,6 +126,8 @@ function claim(db) {
   });
 }
 
+const INVENTORY_KINDS = /^(package|plugin|mcp|skill)\.(install|upgrade|update|remove|uninstall|enable|disable|add)$/;
+
 export async function runNext(db) {
   const id = claim(db);
   if (!id) return null;
@@ -133,6 +135,7 @@ export async function runNext(db) {
   const h = handlers.get(op.kind);
   const ctx = {
     stage: (name, progress = null) => { set(db, id, { stage: name, progress }); log(db, id, 'info', name); },
+    progress: value => set(db, id, { progress: value }),
     log: (m, level = 'info') => log(db, id, level, m),
     checkpoint: data => set(db, id, { checkpoint: data }),
     get checkpointData() { return getOp(db, id).checkpoint; },
@@ -144,7 +147,16 @@ export async function runNext(db) {
     const out = await h.run(db, op.params, ctx);
     if (out?.needsApproval) { set(db, id, { status: 'awaiting_approval', decision: 'ask', decision_reasons: out.needsApproval, approved_by: null, attempts: 0 }); log(db, id, 'warn', out.needsApproval.join(' ')); audit(db, 'system', 'operation.paused_for_approval', id, { kind: op.kind }); return getOp(db, id); }
     if (out?.cancelled) { set(db, id, { status: 'cancelled', finished_at: now(), recovery: out.recovery || null }); audit(db, 'system', 'operation.cancelled', id, null); return getOp(db, id); }
-    set(db, id, { status: out?.verified ? 'verified' : 'completed', verification: out?.verification || null, recovery: out?.recovery || null, progress: 1, stage: out?.verified ? 'verificado' : 'done (no independent verification)', finished_at: now() });
+    // Anything that adds, removes or toggles something on the device re-reads the inventory before the
+    // operation closes, so the Library shows the new state the moment the progress window goes away.
+    if (INVENTORY_KINDS.test(op.kind) && !process.env.CURI_SKIP_RESCAN) {
+      try {
+        const { scanSystem } = await import('./detect.mjs');
+        ctx.stage('Updating what CURI sees on this device', 0.96);
+        await scanSystem(db);
+      } catch (e) { log(db, id, 'warn', `Couldn't refresh the inventory: ${e.message}`); }
+    }
+    set(db, id, { status: out?.verified ? 'verified' : 'completed', verification: out?.verification || null, recovery: out?.recovery || null, progress: 1, stage: out?.verified ? 'verified' : 'done (no independent verification)', finished_at: now() });
     audit(db, 'system', 'operation.done', id, { kind: op.kind, verified: Boolean(out?.verified) });
   } catch (e) {
     const fresh = getOp(db, id);

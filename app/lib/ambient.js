@@ -36,22 +36,30 @@ const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
 export function ambient(canvas, { background = '#08090b', midtone = '#1d2a44', highlight = '#7fa6ec', speed = 0.25, scale = 1.15, brightness = 0.5 } = {}) {
   const gl = canvas.getContext('webgl', { alpha: false, antialias: false, powerPreference: 'low-power' });
   if (!gl) return () => {};
-  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
-  const prog = gl.createProgram();
-  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return () => {};
-  gl.useProgram(prog);
-  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
-  const pos = gl.getAttribLocation(prog, 'position'); gl.enableVertexAttribArray(pos); gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
-  const u = Object.fromEntries(['resolution', 'time', 'scale', 'brightness', 'background', 'midtone', 'highlight'].map(k => [k, gl.getUniformLocation(prog, k)]));
-  gl.uniform3fv(u.background, rgb(background)); gl.uniform3fv(u.midtone, rgb(midtone)); gl.uniform3fv(u.highlight, rgb(highlight));
-  gl.uniform1f(u.scale, scale); gl.uniform1f(u.brightness, brightness);
+  let u = null;
+  // Everything on the GPU side is rebuilt from here, because WebKit drops the context of a hidden
+  // view (another tab, a minimised window) and hands back a blank one when it comes back.
+  const setup = () => {
+    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { u = null; return; }
+    gl.useProgram(prog);
+    const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+    const pos = gl.getAttribLocation(prog, 'position'); gl.enableVertexAttribArray(pos); gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+    u = Object.fromEntries(['resolution', 'time', 'scale', 'brightness', 'background', 'midtone', 'highlight'].map(k => [k, gl.getUniformLocation(prog, k)]));
+    gl.uniform3fv(u.background, rgb(background)); gl.uniform3fv(u.midtone, rgb(midtone)); gl.uniform3fv(u.highlight, rgb(highlight));
+    gl.uniform1f(u.scale, scale); gl.uniform1f(u.brightness, brightness);
+  };
+  setup();
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
-  let t = 4.2, last = 0, frame = 0, visible = true, dead = false;
+  let t = 4.2, last = 0, frame = 0, visible = true, dead = false, seen = false;
   const draw = () => {
+    if (!u || gl.isContextLost()) return;
     const box = canvas.getBoundingClientRect();
+    if (!box.width || !box.height) return;
     const dpr = Math.min(devicePixelRatio || 1, 1, Math.sqrt(260000 / Math.max(1, box.width * box.height)));
     const w = Math.max(1, Math.round(box.width * dpr)), h = Math.max(1, Math.round(box.height * dpr));
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
@@ -59,12 +67,25 @@ export function ambient(canvas, { background = '#08090b', midtone = '#1d2a44', h
   };
   const off = () => document.documentElement.dataset.motion === 'off' || motion.matches;
   const tick = now => { frame = 0; t += (last ? Math.min((now - last) / 1000, 0.05) : 0) * speed; last = now; draw(); loop(); };
-  const loop = () => { if (!frame && !dead && visible && !document.hidden && !off() && canvas.isConnected) frame = requestAnimationFrame(tick); else if (!canvas.isConnected) stop(); };
-  const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; last = 0; loop(); }); io.observe(canvas);
+  const loop = () => {
+    if (canvas.isConnected) seen = true;
+    else if (seen) { stop(); return; }
+    if (!frame && !dead && visible && !document.hidden && !off()) frame = requestAnimationFrame(tick);
+  };
+  const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; last = 0; draw(); loop(); }); io.observe(canvas);
   const ro = new ResizeObserver(() => { draw(); }); ro.observe(canvas);
-  const vis = () => { last = 0; loop(); };
-  document.addEventListener('visibilitychange', vis);
-  const stop = () => { dead = true; cancelAnimationFrame(frame); io.disconnect(); ro.disconnect(); document.removeEventListener('visibilitychange', vis); };
+  const wake = () => { last = 0; if (gl.isContextLost()) return; if (!u) setup(); draw(); loop(); };
+  const lost = e => { e.preventDefault(); cancelAnimationFrame(frame); frame = 0; u = null; };
+  const restored = () => { setup(); wake(); };
+  canvas.addEventListener('webglcontextlost', lost);
+  canvas.addEventListener('webglcontextrestored', restored);
+  document.addEventListener('visibilitychange', wake);
+  addEventListener('focus', wake); addEventListener('pageshow', wake);
+  const stop = () => {
+    dead = true; cancelAnimationFrame(frame); io.disconnect(); ro.disconnect();
+    canvas.removeEventListener('webglcontextlost', lost); canvas.removeEventListener('webglcontextrestored', restored);
+    document.removeEventListener('visibilitychange', wake); removeEventListener('focus', wake); removeEventListener('pageshow', wake);
+  };
   draw(); loop();
   return stop;
 }

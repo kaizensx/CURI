@@ -370,14 +370,14 @@ main .page { view-transition-name: page; }
 .op-head h3 { margin: 2px 0 0; font: 650 var(--t-md)/1.25 var(--font-display); }
 .op-stage { font-size: var(--t-sm); color: var(--ink-1); min-height: 1.5em; overflow-wrap: anywhere; }
 .op-bar { position: relative; height: 6px; border-radius: 6px; background: var(--surface-4); overflow: hidden; }
-.op-bar > i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: linear-gradient(90deg, var(--signal-strong), var(--signal)); transition: width var(--d-slow) var(--ease-out); }
-.op-bar.indet > i { width: 35% !important; animation: op-indet 1.15s var(--ease-in-out) infinite; }
-@keyframes op-indet { from { transform: translateX(-110%); } to { transform: translateX(300%); } }
+.op-bar > i { position: absolute; inset: 0 auto 0 0; overflow: hidden; border-radius: inherit; background: linear-gradient(90deg, var(--signal-strong), var(--signal)); transition: width var(--d-slow) var(--ease-out); }
+.op-bar.working > i::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgb(255 255 255 / .35), transparent); transform: translateX(-100%); animation: op-sheen 1.6s linear infinite; }
+@keyframes op-sheen { to { transform: translateX(100%); } }
 .op-meta { display: flex; gap: 8px; align-items: center; }
 .op-log { max-height: 150px; font-size: 11px; background: var(--surface-2); border-radius: var(--r-sm); padding: 8px 10px; }
 .op-modal .actions { margin-top: 2px; }
 .spin.lg { width: 20px; height: 20px; border-width: 2px; }
 /* Reduced motion keeps an unmistakable "working" signal without sweeping movement. */
-@media (prefers-reduced-motion: reduce) { .op-bar.indet > i { animation: op-pulse 1.6s ease-in-out infinite !important; transform: none; width: 100% !important; } }
-html[data-motion="reduced"] .op-bar.indet > i, html[data-motion="off"] .op-bar.indet > i { animation: op-pulse 1.6s ease-in-out infinite !important; width: 100% !important; transform: none; }
+@media (prefers-reduced-motion: reduce) { .op-bar.working > i::after { animation: none; display: none; } }
+html[data-motion="reduced"] .op-bar.working > i::after, html[data-motion="off"] .op-bar.working > i::after { display: none; }
 @keyframes op-pulse { 50% { opacity: .35; } }
