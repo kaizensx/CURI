@@ -18,13 +18,23 @@ const NAME_RX = /^[@A-Za-z0-9][A-Za-z0-9@._/+-]{0,120}$/;
 const readJson = p => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } };
 const ownerOf = (db, id) => db.prepare('SELECT gh_full_name FROM resources WHERE id=?').get(id || '')?.gh_full_name?.split('/')[0] || null;
 
+// What package managers print on the way, mapped to how far along the install roughly is. Only ever
+// moves the bar forward, so out-of-order lines are harmless.
+const MILESTONES = [
+  [/^==> (Fetching|Downloading)|^Downloading |Collecting |Resolving|resolved \d+|Updating crates.io index/i, 0.25],
+  [/^==> (Pouring|Installing|Extracting)|Installing collected|Prepared \d+|Compiling |reify|Building wheel|^added \d+|Unpacking/i, 0.6],
+  [/^==> (Caveats|Summary|Linking)|Installed \d+|Successfully installed|Finished |changed \d+|audited \d+|🍺/i, 0.85],
+];
+
 // Streams a command's output into the operation log; honours cancellation between output chunks.
-function stream(cmd, args, ctx, { timeoutMs = 30 * 60e3, env = {} } = {}) {
+function stream(cmd, args, ctx, { timeoutMs = 30 * 60e3, env = {}, span = [0.1, 0.9] } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { env: { ...childEnv(), HOMEBREW_NO_ENV_HINTS: '1', NONINTERACTIVE: '1', CI: '1', ...env }, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
-    let tail = '', lastLog = 0;
+    let tail = '', lastLog = 0, reached = 0, sent = 0;
     const onData = d => {
       tail = (tail + d).slice(-8000);
+      for (const ln of String(d).split(/\r?\n/)) for (const [rx, at] of MILESTONES) if (at > reached && rx.test(ln.trim())) reached = at;
+      if (reached > sent && ctx.progress) (sent = reached, ctx.progress(span[0] + (span[1] - span[0]) * reached));
       const line = String(d).split(/\r?\n/).map(x => x.trim()).filter(Boolean).pop();
       if (line && Date.now() - lastLog > 400) { ctx.log(line.slice(0, 200)); lastLog = Date.now(); }
       if (ctx.cancelled()) child.kill('SIGTERM');
@@ -68,7 +78,7 @@ registerHandler('package.install', {
     if (before.has(key)) { recordPackage(db, p, before.get(key), false); ctx.log(`Already installed (${before.get(key) || 'unknown version'}).`); return { verified: true, verification: { already_installed: true, version: before.get(key) } }; }
     if (ctx.cancelled()) return { cancelled: true };
     const args = p.manager === 'uv' && p.from ? ['tool', 'install', p.name, '--from', p.from] : m.install(p.name, p.pin ? p.version : null);
-    ctx.stage(`Installing with ${m.label}: ${p.name}`, null);
+    ctx.stage(`Installing with ${m.label}: ${p.name}`, 0.1);
     ctx.log(`$ ${m.bin} ${args.join(' ')}`);
     await stream(bin, args, ctx);
     if (ctx.cancelled()) return { cancelled: true };
@@ -88,7 +98,7 @@ registerHandler('package.upgrade', {
     const key = ['uv', 'pipx'].includes(p.manager) ? p.name.toLowerCase() : p.name;
     const before = (await m.list(bin)).get(key);
     if (before === undefined) throw permanent(`${p.name} isn't installed with ${m.label}.`);
-    ctx.stage(`A atualizar ${p.name} (${before || '?'})`, null);
+    ctx.stage(`Updating ${p.name} (${before || '?'})`, 0.1);
     await stream(bin, m.upgrade(p.name), ctx);
     const after = (await m.list(bin)).get(key);
     recordPackage(db, p, after, Boolean(db.prepare('SELECT managed_by_curi FROM installed_instances WHERE kind=? AND name=?').get(`package:${p.manager}`, p.name)?.managed_by_curi));
@@ -104,7 +114,7 @@ registerHandler('package.remove', {
     if (!bin) throw permanent(`${m.label} isn't installed.`);
     const key = ['uv', 'pipx'].includes(p.manager) ? p.name.toLowerCase() : p.name;
     if (!(await m.list(bin)).has(key)) return { verified: true, verification: { already_absent: true } };
-    ctx.stage(`Removing ${p.name} with ${m.label}`, null);
+    ctx.stage(`Removing ${p.name} with ${m.label}`, 0.1);
     await stream(bin, m.remove(p.name), ctx);
     const gone = !(await m.list(bin)).has(key);
     if (gone) db.prepare('DELETE FROM installed_instances WHERE kind=? AND name=?').run(`package:${p.manager}`, p.name);
@@ -137,7 +147,7 @@ registerHandler('plugin.install', {
     const existing = findPlugin(await pluginList(), p.plugin);
     if (existing && existing.scope !== 'synced') return { verified: true, verification: { already_installed: existing.id, enabled: existing.enabled } };
     if (ctx.cancelled()) return { cancelled: true };
-    ctx.stage(`Installing the ${p.plugin} plugin from ${p.marketplace}`, null);
+    ctx.stage(`Installing the ${p.plugin} plugin from ${p.marketplace}`, 0.15);
     // --marketplace adds the marketplace first (user settings) under Claude Code's own checks.
     await claudePlugin(['install', p.plugin, '--marketplace', p.marketplace, '--scope', 'user'], ctx);
     ctx.stage('Verifying', 0.9);
@@ -149,7 +159,7 @@ registerHandler('plugin.install', {
   },
 });
 
-for (const [kind, verb, category, label] of [['plugin.enable', 'enable', 'maintenance', 'A ativar'], ['plugin.disable', 'disable', 'destructive', 'A desativar'], ['plugin.update', 'update', 'maintenance', 'A atualizar'], ['plugin.uninstall', 'uninstall', 'destructive', 'A desinstalar']]) {
+for (const [kind, verb, category, label] of [['plugin.enable', 'enable', 'maintenance', 'Enabling'], ['plugin.disable', 'disable', 'destructive', 'Disabling'], ['plugin.update', 'update', 'maintenance', 'Updating'], ['plugin.uninstall', 'uninstall', 'destructive', 'Uninstalling']]) {
   registerHandler(kind, {
     async plan(db, p) {
       if (!PLUGIN_RX.test(p.plugin || '')) throw new Error('Invalid plugin.');
@@ -160,7 +170,7 @@ for (const [kind, verb, category, label] of [['plugin.enable', 'enable', 'mainte
       if (!before) { if (verb === 'uninstall') return { verified: true, verification: { already_absent: true } }; throw permanent('The plugin isn\'t installed.'); }
       if (before.scope === 'synced') throw permanent('This plugin comes from your claude.ai account; manage it in claude.ai › Settings.', { action: 'Open account settings' });
       if ((verb === 'enable' && before.enabled) || (verb === 'disable' && !before.enabled)) return { verified: true, verification: { unchanged: true, enabled: before.enabled } };
-      ctx.stage(`${label} ${before.id}`, null);
+      ctx.stage(`${label} ${before.id}`, 0.15);
       await claudePlugin([verb, before.id, ...(['enable', 'disable', 'uninstall'].includes(verb) ? ['--scope', before.scope || 'user'] : [])], ctx);
       const after = findPlugin(await pluginList(), before.id);
       const ok = verb === 'uninstall' ? !after : verb === 'enable' ? Boolean(after?.enabled) : verb === 'disable' ? after && !after.enabled : Boolean(after);

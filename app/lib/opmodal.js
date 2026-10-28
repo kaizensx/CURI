@@ -48,24 +48,41 @@ function render(box, op, title, queued, state) {
   const actions = [];
   if (op.status === 'awaiting_approval') {
     actions.push(h('button', { type: 'button', class: 'btn', onclick: async () => { await api('opReject', { id: op.id }); state.refresh(); } }, 'Reject'));
-    actions.push(h('button', { type: 'button', class: 'btn primary', onclick: async () => { await api('opApprove', { id: op.id }); state.refresh(); } }, icon('check', 'sm'), ' Aprovar e continuar'));
+    actions.push(h('button', { type: 'button', class: 'btn primary', onclick: async () => { await api('opApprove', { id: op.id }); state.refresh(); } }, icon('check', 'sm'), ' Approve and continue'));
   } else if (running) {
     actions.push(h('button', { type: 'button', class: 'btn', disabled: op.cancel_requested ? true : null, onclick: async () => { await api('opCancel', { id: op.id }); state.refresh(); } }, op.cancel_requested ? 'Cancelling at the next safe point…' : 'Cancel'));
   } else {
-    if (['failed', 'cancelled'].includes(op.status)) actions.push(h('button', { type: 'button', class: 'btn', onclick: async () => { await api('opRetry', { id: op.id }); state.refresh(); } }, icon('refresh', 'sm'), ' Repetir'));
+    if (['failed', 'cancelled'].includes(op.status)) actions.push(h('button', { type: 'button', class: 'btn', onclick: async () => { await api('opRetry', { id: op.id }); state.refresh(); } }, icon('refresh', 'sm'), ' Retry'));
     actions.push(h('a', { class: 'btn ghost', href: `#/operations?id=${op.id}`, onclick: () => state.close() }, 'Details'));
     actions.push(h('button', { type: 'button', class: 'btn primary', onclick: () => state.close(), 'data-close': '' }, queued ? `Close (+${queued} queued)` : 'Close'));
   }
   const ic = running ? h('span', { class: 'spin lg' }) : icon(op.status === 'awaiting_approval' ? 'shield' : ['verified', 'completed'].includes(op.status) ? 'check' : op.status === 'cancelled' ? 'x' : 'alert', 'lg');
-  fill(box, 
+  // The bar lives outside the re-rendered parts so its animation never restarts, and it only moves
+  // forward: the last measured progress is kept while a step has no measurable progress of its own.
+  if (!state.bar) {
+    state.bar = h('div', { class: 'op-bar', role: 'progressbar', 'aria-label': 'Progress', 'aria-valuemin': '0', 'aria-valuemax': '100' }, h('i'));
+    state.top = h('div', { class: 'op-top' });
+    state.rest = h('div', { class: 'op-rest' });
+    state.max = 0;
+    fill(box, state.top, state.bar, state.rest);
+  }
+  if (pct != null) state.max = Math.max(state.max, pct);
+  // Between real milestones the bar keeps creeping towards the next one, slower the closer it gets,
+  // so a long download never looks frozen and the bar never claims to be finished early.
+  if (op.status === 'running') state.max = Math.min(Math.max(state.max, 3) + Math.max(0, (Math.max(pct ?? 0, state.max) + 30 > 95 ? 95 : Math.max(pct ?? 0, state.max) + 30) - state.max) * 0.03, 95);
+  const shown = ['verified', 'completed'].includes(op.status) ? 100 : Math.round(state.max);
+  state.bar.classList.toggle('working', running);
+  state.bar.classList.toggle('done', !running);
+  state.bar.firstChild.style.width = `${Math.max(shown, running ? 4 : 0)}%`;
+  if (shown) state.bar.setAttribute('aria-valuenow', String(shown)); else state.bar.removeAttribute('aria-valuenow');
+  fill(state.top,
     h('div', { class: 'op-head' }, h('span', { class: `result-ic ${kind}` }, ic),
       h('div', { class: 'grow' }, h('h3', { id: 'op-title' }, title || op.resource || op.kind), title && op.resource ? h('div', { class: 'muted small mono' }, op.resource) : null),
       h('span', { class: `badge ${kind}` }, label)),
-    h('div', { class: 'op-stage', id: 'op-stage', 'aria-live': 'polite' }, op.status === 'queued' ? 'Waiting its turn in the queue…' : op.stage || (running ? 'A preparar…' : '')),
-    h('div', { class: `op-bar ${pct == null && running ? 'indet' : ''}`, role: 'progressbar', 'aria-label': 'Progress', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': pct == null ? null : String(pct) },
-      h('i', { style: { width: pct == null ? '' : `${pct}%` } })),
-    h('div', { class: 'op-meta muted small' }, h('span', null, pct == null ? (running ? 'This step has no measurable progress' : '') : `${pct}%`), h('span', { class: 'spacer' }),
-      h('span', { class: 'num' }, op.started_at ? `Time: ${elapsed(op.started_at, TERMINAL.includes(op.status) ? op.finished_at : null)}` : ''), op.attempts > 1 ? h('span', null, ` · tentativa ${op.attempts}/${op.max_attempts}`) : null),
+    h('div', { class: 'op-stage', id: 'op-stage', 'aria-live': 'polite' }, op.status === 'queued' ? 'Waiting its turn in the queue…' : op.stage || (running ? 'Getting ready…' : '')));
+  fill(state.rest,
+    h('div', { class: 'op-meta muted small' }, h('span', { class: 'num' }, running ? (shown ? `${shown}% · working` : 'Working…') : shown ? `${shown}%` : ''), h('span', { class: 'spacer' }),
+      h('span', { class: 'num' }, op.started_at ? `Time: ${elapsed(op.started_at, TERMINAL.includes(op.status) ? op.finished_at : null)}` : ''), op.attempts > 1 ? h('span', null, ` · attempt ${op.attempts}/${op.max_attempts}`) : null),
     op.status === 'awaiting_approval' ? h('div', { class: 'notice warn' }, icon('shield', 'sm'), h('div', null, op.decision_reasons.map(r => h('div', null, r)))) : null,
     op.error ? h('div', { class: 'notice bad' }, icon('alert', 'sm'), h('div', { class: 'selectable' }, op.error, op.recovery ? h('div', { class: 'muted small' }, `Recovery: ${typeof op.recovery === 'object' ? Object.entries(op.recovery).map(([k, v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v).slice(0, 120)}`).join(' · ') : op.recovery}`) : null)) : null,
     op.status === 'verified' && op.verification ? h('div', { class: 'notice info' }, icon('check', 'sm'), h('div', { class: 'small' }, summarize(op))) : null,

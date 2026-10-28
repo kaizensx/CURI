@@ -105,12 +105,12 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
   const lists = {};
   const mgrs = Object.entries(MANAGERS).filter(([k]) => managers[k]?.available);
   for (const [n, [k, m]] of mgrs.entries()) {
-    onStage(`A consultar ${m.label}`, 0.36 + 0.24 * (n / Math.max(1, mgrs.length)));
+    onStage(`Asking ${m.label}`, 0.36 + 0.24 * (n / Math.max(1, mgrs.length)));
     lists[k] = await m.list(managers[k].path).catch(() => new Map());
     managers[k].count = lists[k].size;
     if (cancelled()) return { cancelled: true };
   }
-  onStage('A consultar pacotes Python', 0.62);
+  onStage('Listing Python packages', 0.62);
   const pip = await pythonPackages();
 
   onStage('Reading agents: Claude Code, Claude Desktop, Codex, Cursor…', 0.7);
@@ -197,7 +197,7 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
   });
 
   const runtimes = {};
-  for (const b of ['node', 'git', 'uv', 'cargo', 'docker', 'go', 'java', 'brew']) runtimes[b === 'brew' ? 'homebrew' : b] = bins.has(b) ? (await binVersion(b)) || 'presente' : null;
+  for (const b of ['node', 'git', 'uv', 'cargo', 'docker', 'go', 'java', 'brew']) runtimes[b === 'brew' ? 'homebrew' : b] = bins.has(b) ? (await binVersion(b)) || 'present' : null;
   const py = bins.get('python3') || bins.get('python');
   runtimes.python3 = py ? versionOf(await run(py.path, ['--version'])) : null;
   const cc = agents.find(a => a.id === 'claude-code');
@@ -217,6 +217,8 @@ export async function scanSystem(db, { onStage = () => {}, cancelled = () => fal
     matched: results.map(m => ({ ...m, name: idx.get(m.id)?.r.name || m.id, kind: idx.get(m.id)?.kind })),
     sources: { executables_checked: probeBins.size, executables_found: bins.size, apps: apps.size, packages: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, v.size])), pip_packages: pip.pkgs.size, pythons: pip.pythons, agents: agents.filter(a => a.present).length },
     not_in_catalog: { apps: [...apps.keys()].filter(a => !claimedApp.has(a) && !knownApps.has(a)).sort(), npm_global: [...(lists.npm?.keys() || [])].filter(n => ![...idx.values()].some(x => x.sig.pkgs.npm.has(n))) },
+    packages: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, [...v].map(([n, ver]) => [n, ver || null]).sort((a, b) => a[0].localeCompare(b[0]))])),
+    apps: [...apps.keys()].sort(),
     changes,
   };
   setPref(db, 'last_system_scan', report);

@@ -30,6 +30,7 @@ import { spawn } from 'node:child_process';
 import { paths } from './paths.mjs';
 import { openExternal as platformOpen, deviceInfo } from './platform.mjs';
 import { resourceView, presenceOf } from './actions.mjs';
+import { inventory as installedInventory } from './inventory.mjs';
 import { profileFor, deviceContext, getFacts } from './facts.mjs';
 import { lastScan } from './detect.mjs';
 import { capabilityMap, compareDecision, capLabel } from './capabilities.mjs';
@@ -125,12 +126,16 @@ export const ACTIONS = {
   },
   scans: db => db.prepare('SELECT id, mode, params, status, error, queries, started_at, finished_at, (SELECT COUNT(*) FROM scan_candidates c WHERE c.scan_id=s.id) n FROM scans s ORDER BY id DESC LIMIT 50').all().map(s => ({ ...s, params: JSON.parse(s.params || '{}'), queries: JSON.parse(s.queries || '[]') })),
   // All recent candidates across scans (dashboard + radar overview). Real rows only.
-  candidatesAll: (db, p, ctx = deviceContext(db)) => db.prepare(`SELECT c.*, s.mode, s.started_at scan_started, f.data facts_json FROM scan_candidates c JOIN scans s ON s.id=c.scan_id LEFT JOIN candidate_facts f ON f.full_name=c.full_name ORDER BY c.id DESC LIMIT ?`).all(I(p.limit, 300, 1, 2000))
+  candidatesAll: (db, p, ctx = deviceContext(db), known = new Map(db.prepare('SELECT id, lower(gh_full_name) fn FROM resources WHERE gh_full_name IS NOT NULL').all().map(r => [r.fn, r.id]))) => db.prepare(`SELECT c.*, s.mode, s.started_at scan_started, f.data facts_json FROM scan_candidates c JOIN scans s ON s.id=c.scan_id LEFT JOIN candidate_facts f ON f.full_name=c.full_name ORDER BY c.id DESC LIMIT ?`).all(I(p.limit, 300, 1, 2000))
     .map(c => {
       const row = { ...c, topics: JSON.parse(c.topics || '[]'), score: JSON.parse(c.score || 'null') || {}, install: null };
       // Install options are derived on read from the stored inspection, with the current rules.
       if (c.facts_json) { const f = JSON.parse(c.facts_json); row.install = f.reachable ? installSummary(c.full_name, f, ctx) : { installable: false }; }
       delete row.facts_json;
+      // Whether it is already in the library and on this device is read live, so an install done anywhere
+      // (here, the Library, a terminal) shows up instead of offering to install it again.
+      const rid = known.get(String(c.full_name).toLowerCase());
+      if (rid) { const pres = presenceOf(db, rid); row.in_registry = 1; row.resource_id = rid; row.presence = pres.state ? { state: pres.state, where: [...new Set(pres.found.map(f => f.agent_label || f.type))] } : null; }
       // Judged on read with the current rules, so improvements apply to everything already found.
       row.score.agent = agentRelevance({ name: row.full_name.split('/')[1], description: row.description, topics: row.topics, stars: row.stars, created_at: row.gh_created_at, pushed_at: row.gh_pushed_at, license: row.license });
       if (['candidate', 'filtered'].includes(row.decision)) { row.decision = row.score.agent.noise ? 'filtered' : 'candidate'; row.reason = row.score.agent.noise || null; }
@@ -264,6 +269,7 @@ export const ACTIONS = {
   },
   agentStatus: () => agentStatus(),
   systemScan: db => getPref(db, 'last_system_scan', null),
+  installed: db => installedInventory(db),
   // App updates: compares with the latest GitHub Release of the configured repository. Downloads are
   // opened in the browser; the release must publish SHA256SUMS so the DMG can be checked after download.
   updateCheck: async db => {

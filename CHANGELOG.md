@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Library › Installed: everything that's already here, grouped by where it lives: your claude.ai account, Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI and this computer (apps and packages). Search across all of it, and manage it from there.
+- This device is now an overview: the system, each agent with what it holds, base tools and package managers. Every number opens the matching list.
+- After an install, removal or toggle, CURI looks at the device again before the progress window closes, so the change shows up straight away. Discover shows what's already installed instead of offering it again.
+- The progress bar follows what the package manager actually reports and only ever moves forward.
+- Fixed: the Home background went blank after switching away and back; the GitHub card in Connections flickered.
+
 ## 3.3.0 — 2026-10-28
 
 - Everything is in English now: the app, the native menu, the engine's messages, the code and the docs.

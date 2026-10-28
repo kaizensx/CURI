@@ -97,12 +97,14 @@ export async function discoverView() {
         h('span', { class: 'grow' }),
         btn('', () => api('openExternal', { url: c.url }), { size: 'sm', kind: 'ghost', iconName: 'external', title: 'Open on GitHub' }),
         isOpen ? btn('', async () => { await api('reject', { id: c.id, reason: 'not relevant' }); c.decision = 'rejected'; render(); }, { size: 'sm', kind: 'ghost', iconName: 'x', title: 'Not interested' }) : null,
-        isOpen ? btn('Install', () => install(c, refresh), { size: 'sm', kind: 'primary', iconName: 'download' })
-          : btn('Open', () => api('library').then(l => { const r = l.find(x => x.gh_full_name?.toLowerCase() === c.full_name); go(r ? `resource/${encodeURIComponent(r.id)}` : 'library'); }), { size: 'sm' })));
+        c.presence ? h('span', { class: 'state installed', title: c.presence.where.join(', ') }, `Installed · ${c.presence.where[0] || 'this device'}`) : null,
+        c.presence ? btn('Open', () => go(`resource/${encodeURIComponent(c.resource_id)}`), { size: 'sm' })
+          : isOpen || (c.resource_id && ins.installable) ? btn('Install', () => install(c, refresh), { size: 'sm', kind: 'primary', iconName: 'download' })
+          : btn('Open', () => go(c.resource_id ? `resource/${encodeURIComponent(c.resource_id)}` : 'library'), { size: 'sm' })));
   };
   const toggle = (label, on, fn) => { const b = h('button', { type: 'button', class: `fchip ${on ? '' : 'off'}`, 'aria-pressed': String(on) }, label); b.addEventListener('click', () => { fn(); persist(); render(); }); return b; };
   const render = () => {
-    fill(tabs, [['ready', 'Ready to install', installable.length], ['stars', 'From your stars', fromStars.length], ['done', 'Added', done.length]].map(([id, l, n]) => {
+    fill(tabs, [['ready', 'Ready to install', installable.length], ['stars', 'From your stars', fromStars.length], ['done', 'In your library', done.length]].map(([id, l, n]) => {
       const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.tab === id) }, l, h('span', { class: 'n' }, n));
       b.addEventListener('click', () => { st.tab = id; st.limit = 40; render(); });
       return b;
