@@ -1,0 +1,83 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "CURI",
+  "version": "3.2.0",
+  "identifier": "app.curi.desktop",
+  "build": {
+    "frontendDist": "../boot"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "CURI",
+        "width": 1360,
+        "height": 900,
+        "minWidth": 960,
+        "minHeight": 620,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": {
+          "x": 18,
+          "y": 22
+        },
+        "transparent": true,
+        "windowEffects": {
+          "effects": [
+            "sidebar"
+          ],
+          "state": "followsWindowActiveState"
+        },
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src ipc: http://ipc.localhost"
+    },
+    "macOSPrivateApi": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "app",
+      "dmg"
+    ],
+    "category": "DeveloperTool",
+    "shortDescription": "Claude Universal Resource Intelligence",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.png"
+    ],
+    "resources": {
+      "../../core/bin/": "curi/core/bin/",
+      "../../core/src/": "curi/core/src/",
+      "../../core/data/": "curi/core/data/",
+      "../../core/package.json": "curi/core/package.json",
+      "../../app/": "curi/app/",
+      "../../bridge/": "curi/bridge/"
+    },
+    "macOS": {
+      "minimumSystemVersion": "13.0",
+      "dmg": {
+        "background": "../../brand/export/dmg-background.png",
+        "windowSize": {
+          "width": 660,
+          "height": 400
+        },
+        "appPosition": {
+          "x": 180,
+          "y": 190
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 190
+        }
+      }
+    },
+    "copyright": "© 2026 CURI contributors"
+  }
+}

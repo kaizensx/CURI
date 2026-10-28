@@ -1,0 +1,11 @@
+name: Proposta
+description: Uma capacidade nova ou uma integração a suportar.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes: { label: Que problema resolve }
+    validations: { required: true }
+  - type: textarea
+    id: integration
+    attributes: { label: Integração (se aplicável), description: "Repositório oficial, licença, como se autentica, o que precisa de aceder." }

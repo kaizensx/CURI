@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "curi-ui-window-chrome",
+  "description": "The CURI UI (served by Core on loopback) may only drag and zoom the window via its title-bar region. No other Tauri API is exposed to it.",
+  "windows": ["main"],
+  "remote": { "urls": ["http://127.0.0.1:*/*"] },
+  "permissions": ["core:window:allow-start-dragging", "core:window:allow-internal-toggle-maximize"]
+}

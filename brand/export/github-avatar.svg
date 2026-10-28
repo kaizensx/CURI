@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="CURI">
+  <title>CURI</title>
+  <defs><linearGradient id="sv" x1="0" y1="180" x2="0" y2="850" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f5f7fb"/><stop offset="1" stop-color="#9aa2b2"/></linearGradient></defs>
+  <rect width="1024" height="1024" fill="#15171b"/>
+  <path d="M769.46 699.06 A318.24 318.24 0 1 1 769.46 324.94" fill="none" stroke="url(#sv)" stroke-width="68.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M652.38 679.3 A218.4 218.4 0 1 1 652.38 344.7" fill="none" stroke="url(#sv)" stroke-width="68.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M556.41 621.93 A118.56 118.56 0 1 1 556.41 402.07" fill="none" stroke="url(#sv)" stroke-width="68.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="920" cy="512" r="37.44" fill="#5c8ff0"/>
+</svg>

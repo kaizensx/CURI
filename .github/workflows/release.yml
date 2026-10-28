@@ -1,0 +1,81 @@
+name: Release
+
+# Builds the macOS app and DMG for a version tag and attaches them to a DRAFT release.
+# Publishing the draft is a manual step. Signing and notarization run only when the
+# Apple secrets below exist; otherwise the artifacts are clearly labelled "unsigned".
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-15
+    env:
+      HAS_CERT: ${{ secrets.APPLE_CERTIFICATE != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Tests
+        working-directory: core
+        run: npm test
+
+      - name: Version matches tag
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          test "$(node -p "require('./core/package.json').version")" = "$v"
+          test "$(node -p "require('./desktop/src-tauri/tauri.conf.json').version")" = "$v"
+
+      - name: Import signing certificate
+        if: env.HAS_CERT == 'true'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          echo "$APPLE_CERTIFICATE" | base64 --decode > cert.p12
+          security create-keychain -p ci build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p ci build.keychain
+          security import cert.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci build.keychain
+          rm cert.p12
+
+      - name: Build universal app and DMG
+        working-directory: desktop
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          npm ci
+          npx tauri build --target universal-apple-darwin
+
+      - name: Checksums and signing status
+        run: |
+          cd desktop/src-tauri/target/universal-apple-darwin/release/bundle
+          app=macos/CURI.app
+          if codesign --verify --deep --strict "$app" 2>/dev/null && codesign -dv "$app" 2>&1 | grep -q "Authority=Developer ID"; then echo "SIGNED=yes" >> "$GITHUB_ENV"; else echo "SIGNED=no" >> "$GITHUB_ENV"; fi
+          if xcrun stapler validate "$app" >/dev/null 2>&1; then echo "NOTARIZED=yes" >> "$GITHUB_ENV"; else echo "NOTARIZED=no" >> "$GITHUB_ENV"; fi
+          shasum -a 256 dmg/*.dmg > dmg/SHA256SUMS
+
+      - name: Draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: CURI ${{ github.ref_name }}${{ env.SIGNED == 'no' && ' (unsigned)' || '' }}
+          body: |
+            Assinado: ${{ env.SIGNED }} · Notarizado: ${{ env.NOTARIZED }}
+            Verifique o download com `shasum -a 256 -c SHA256SUMS`.
+            Notas completas em CHANGELOG.md.
+          files: |
+            desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/SHA256SUMS

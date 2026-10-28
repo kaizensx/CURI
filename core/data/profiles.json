@@ -1,0 +1,1737 @@
+{
+ "note": "Perfis revistos à mão. Cada opção de instalação foi confirmada no respetivo registo (npm, PyPI, Homebrew, WinGet/Flathub ids publicados pelos projetos) em 2026-10-28. Completam ou corrigem o que a inspeção automática (seed-facts.json) deriva.",
+ "resources": {
+  "web:projects.blender.org/blender/blender": {
+   "kind": "app",
+   "agent_use": "O agente controla o Blender (cenas, objetos, materiais, render) através do servidor MCP para Blender.",
+   "related": [
+    "gh:ahujasid/mcp-for-blender"
+   ],
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "blender",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "BlenderFoundation.Blender",
+     "os": [
+      "windows"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "flatpak",
+     "name": "org.blender.Blender",
+     "os": [
+      "linux"
+     ]
+    },
+    {
+     "method": "download",
+     "url": "https://www.blender.org/download/",
+     "label": "Transferir do site oficial"
+    }
+   ]
+  },
+  "gh:ahujasid/mcp-for-blender": {
+   "kind": "mcp",
+   "agent_use": "Dá ao agente ferramentas para criar e alterar cenas no Blender em tempo real.",
+   "related": [
+    "web:projects.blender.org/blender/blender"
+   ],
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "command": "uvx",
+     "args": [
+      "mcp-for-blender==2.2.6"
+     ],
+     "requires": [
+      "uv"
+     ],
+     "label": "uvx mcp-for-blender",
+     "setup": [
+      "No Blender: Edit › Preferences › Add-ons › Install from Disk… e escolha o addon.py do repositório.",
+      "Ative o addon e, no painel lateral (N) › BlenderMCP, carregue em Connect."
+     ]
+    }
+   ]
+  },
+  "gh:comfy-org/comfyui": {
+   "kind": "app",
+   "agent_use": "Geração de imagem e vídeo por grafos de nós; o agente usa a API local do ComfyUI (porta 8188) ou o comfy-cli.",
+   "install": [
+    {
+     "method": "download",
+     "url": "https://www.comfy.org/download",
+     "label": "ComfyUI Desktop (site oficial)"
+    },
+    {
+     "method": "package",
+     "manager": "uv",
+     "name": "comfy-cli",
+     "label": "comfy-cli (instalar e gerir o ComfyUI)"
+    }
+   ]
+  },
+  "gh:openshot/openshot-qt": {
+   "kind": "app",
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "openshot-video-editor",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "OpenShot.OpenShot",
+     "os": [
+      "windows"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "flatpak",
+     "name": "org.openshot.OpenShot",
+     "os": [
+      "linux"
+     ]
+    }
+   ]
+  },
+  "gh:zaproxy/zaproxy": {
+   "kind": "app",
+   "agent_use": "Tem API REST e modo sem interface: o agente pode lançar e ler varrimentos de segurança.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "zap",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "ZAP.ZAP",
+     "os": [
+      "windows"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "flatpak",
+     "name": "org.zaproxy.ZAP",
+     "os": [
+      "linux"
+     ]
+    }
+   ]
+  },
+  "gh:openscad/openscad": {
+   "kind": "app",
+   "agent_use": "CAD por código: o agente escreve ficheiros .scad e exporta STL pela linha de comando.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "openscad",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "OpenSCAD.OpenSCAD",
+     "os": [
+      "windows"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "flatpak",
+     "name": "org.openscad.OpenSCAD",
+     "os": [
+      "linux"
+     ]
+    }
+   ]
+  },
+  "gh:kicad/kicad-source-mirror": {
+   "kind": "app",
+   "agent_use": "Eletrónica (esquemas e PCB); scriptável em Python, o agente pode gerar e verificar placas.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "kicad",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "KiCad.KiCad",
+     "os": [
+      "windows"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "flatpak",
+     "name": "org.kicad.KiCad",
+     "os": [
+      "linux"
+     ]
+    }
+   ]
+  },
+  "gh:freecad/freecad": {
+   "kind": "app",
+   "agent_use": "CAD paramétrico scriptável em Python; o agente pode gerar peças por script.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "freecad",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "FreeCAD.FreeCAD",
+     "os": [
+      "windows"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "flatpak",
+     "name": "org.freecad.FreeCAD",
+     "os": [
+      "linux"
+     ]
+    }
+   ]
+  },
+  "gh:rizinorg/cutter": {
+   "kind": "app",
+   "related": [
+    "gh:rizinorg/rizin",
+    "gh:morluto/rea"
+   ],
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "cutter",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "flatpak",
+     "name": "re.rizin.cutter",
+     "os": [
+      "linux"
+     ]
+    }
+   ]
+  },
+  "gh:audacity/audacity": {
+   "kind": "app",
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "audacity",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "Audacity.Audacity",
+     "os": [
+      "windows"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "flatpak",
+     "name": "org.audacityteam.Audacity",
+     "os": [
+      "linux"
+     ]
+    }
+   ]
+  },
+  "gh:prusa3d/prusaslicer": {
+   "kind": "app",
+   "agent_use": "Fatiador para impressão 3D; tem linha de comando para o agente gerar G-code.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "prusaslicer",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "Prusa3D.PrusaSlicer",
+     "os": [
+      "windows"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "flatpak",
+     "name": "com.prusa3d.PrusaSlicer",
+     "os": [
+      "linux"
+     ]
+    }
+   ]
+  },
+  "gh:softfever/orcaslicer": {
+   "kind": "app",
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "orcaslicer",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "SoftFever.OrcaSlicer",
+     "os": [
+      "windows"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "flatpak",
+     "name": "io.github.softfever.OrcaSlicer",
+     "os": [
+      "linux"
+     ]
+    }
+   ]
+  },
+  "web:rive.app": {
+   "kind": "app",
+   "agent_use": "Editor de animações interativas; o agente integra o runtime Rive nos seus projetos.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "rive",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "download",
+     "url": "https://rive.app/downloads",
+     "label": "Transferir do site oficial"
+    }
+   ]
+  },
+  "web:lottiefiles.com": {
+   "kind": "reference",
+   "agent_use": "Serviço web de animações Lottie; o agente usa os ficheiros exportados (lottie-web, dotLottie) nos projetos."
+  },
+  "gh:nationalsecurityagency/ghidra": {
+   "kind": "app",
+   "agent_use": "Engenharia reversa; o agente usa-o através do REA ou em modo headless (analyzeHeadless).",
+   "related": [
+    "gh:morluto/rea"
+   ],
+   "install": [
+    {
+     "method": "package",
+     "manager": "brew",
+     "name": "ghidra",
+     "os": [
+      "macos",
+      "linux"
+     ]
+    },
+    {
+     "method": "download",
+     "url": "https://github.com/NationalSecurityAgency/ghidra/releases/latest",
+     "label": "Transferir a última versão"
+    }
+   ]
+  },
+  "gh:ffmpeg/ffmpeg": {
+   "kind": "cli",
+   "agent_use": "O agente converte, corta e analisa vídeo e áudio pela linha de comando.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "brew",
+     "name": "ffmpeg",
+     "os": [
+      "macos",
+      "linux"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "Gyan.FFmpeg",
+     "os": [
+      "windows"
+     ]
+    }
+   ]
+  },
+  "gh:frida/frida": {
+   "kind": "cli",
+   "agent_use": "Instrumentação dinâmica de processos; o agente usa frida/frida-trace ou o REA.",
+   "related": [
+    "gh:morluto/rea"
+   ],
+   "install": [
+    {
+     "method": "package",
+     "manager": "uv",
+     "name": "frida-tools"
+    },
+    {
+     "method": "package",
+     "manager": "pipx",
+     "name": "frida-tools"
+    }
+   ]
+  },
+  "gh:vercel/turborepo": {
+   "kind": "cli",
+   "install": [
+    {
+     "method": "package",
+     "manager": "npm",
+     "name": "turbo"
+    }
+   ],
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install -D turbo"
+    }
+   ]
+  },
+  "gh:graphify-labs/graphify": {
+   "kind": "cli",
+   "install": [
+    {
+     "method": "package",
+     "manager": "uv",
+     "name": "graphifyy"
+    },
+    {
+     "method": "package",
+     "manager": "pipx",
+     "name": "graphifyy"
+    }
+   ]
+  },
+  "gh:anthropics/claude-code-action": {
+   "kind": "reference",
+   "agent_use": "Corre o Claude Code em GitHub Actions (revisões, respostas a issues). Instala-se num repositório, não no dispositivo.",
+   "notes": "Configurar com /install-github-app no Claude Code ou com o workflow do repositório."
+  },
+  "gh:anthropics/claude-code-security-review": {
+   "kind": "reference",
+   "agent_use": "Revisão de segurança de pull requests em GitHub Actions. Instala-se num repositório, não no dispositivo."
+  },
+  "gh:orval-labs/orval": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install -D orval"
+    }
+   ]
+  },
+  "gh:changesets/changesets": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install -D @changesets/cli"
+    }
+   ]
+  },
+  "gh:fastapi/fastapi": {
+   "kind": "framework",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install \"fastapi[standard]\""
+    }
+   ]
+  },
+  "gh:mikedh/trimesh": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install trimesh"
+    }
+   ]
+  },
+  "gh:angr/angr": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install angr"
+    }
+   ]
+  },
+  "gh:platformio/platformio-core": {
+   "kind": "cli",
+   "agent_use": "O agente compila e carrega firmware para placas (Arduino, ESP32…) pela linha de comando.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "uv",
+     "name": "platformio"
+    },
+    {
+     "method": "package",
+     "manager": "pipx",
+     "name": "platformio"
+    }
+   ]
+  },
+  "gh:semgrep/semgrep": {
+   "kind": "cli",
+   "agent_use": "Análise estática; o agente corre semgrep com --json e lê os achados.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "brew",
+     "name": "semgrep",
+     "os": [
+      "macos",
+      "linux"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "uv",
+     "name": "semgrep"
+    }
+   ]
+  },
+  "gh:greensock/gsap": {
+   "kind": "library",
+   "related": [
+    "gh:greensock/gsap-skills"
+   ],
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install gsap"
+    }
+   ]
+  },
+  "gh:pmndrs/react-three-fiber": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install three @react-three/fiber"
+    }
+   ]
+  },
+  "gh:pmndrs/drei": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install @react-three/drei"
+    }
+   ]
+  },
+  "gh:mrdoob/three.js": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install three"
+    }
+   ]
+  },
+  "gh:darkroomengineering/lenis": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install lenis"
+    }
+   ]
+  },
+  "gh:juliangarnier/anime": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install animejs"
+    }
+   ]
+  },
+  "gh:theatre-js/theatre": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install @theatre/core @theatre/studio"
+    }
+   ]
+  },
+  "gh:mswjs/msw": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install -D msw"
+    }
+   ]
+  },
+  "gh:dequelabs/axe-core": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install -D axe-core"
+    }
+   ]
+  },
+  "gh:better-auth/better-auth": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install better-auth"
+    }
+   ]
+  },
+  "gh:drizzle-team/drizzle-orm": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install drizzle-orm && npm install -D drizzle-kit"
+    }
+   ]
+  },
+  "gh:tanstack/query": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install @tanstack/react-query"
+    }
+   ]
+  },
+  "gh:pointfreeco/swift-composable-architecture": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "swiftpm",
+     "command": ".package(url: \"https://github.com/pointfreeco/swift-composable-architecture\", from: \"1.0.0\")"
+    }
+   ]
+  },
+  "gh:academysoftwarefoundation/opentimelineio": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install opentimelineio"
+    }
+   ]
+  },
+  "gh:alphacep/vosk-api": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install vosk"
+    }
+   ]
+  },
+  "gh:librosa/librosa": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install librosa"
+    }
+   ]
+  },
+  "gh:huggingface/transformers": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install transformers"
+    }
+   ]
+  },
+  "gh:scikit-learn/scikit-learn": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install scikit-learn"
+    }
+   ]
+  },
+  "gh:microsoft/markitdown": {
+   "kind": "cli",
+   "agent_use": "Converte PDF, Word, Excel, PowerPoint e imagens em Markdown que o agente lê.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "uv",
+     "name": "markitdown",
+     "label": "uv tool markitdown (linha de comando)"
+    },
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "command": "uvx",
+     "args": [
+      "markitdown-mcp==0.0.1a8"
+     ],
+     "requires": [
+      "uv"
+     ],
+     "label": "Servidor MCP markitdown-mcp"
+    }
+   ]
+  },
+  "gh:motiondivision/motion": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install motion"
+    }
+   ]
+  },
+  "gh:pmndrs/react-spring": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install @react-spring/web"
+    }
+   ]
+  },
+  "gh:colinhacks/zod": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install zod"
+    }
+   ]
+  },
+  "gh:isl-org/open3d": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install open3d"
+    }
+   ]
+  },
+  "gh:pytorch/pytorch": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install torch"
+    }
+   ]
+  },
+  "gh:vllm-project/vllm": {
+   "kind": "library",
+   "notes": "Requer GPU (CUDA/ROCm) em Linux para desempenho real.",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install vllm"
+    }
+   ]
+  },
+  "gh:berriai/litellm": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install litellm"
+    }
+   ]
+  },
+  "gh:remotion-dev/remotion": {
+   "kind": "framework",
+   "agent_use": "Vídeo em React: o agente escreve composições e renderiza MP4 pela linha de comando.",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npx create-video@latest"
+    }
+   ]
+  },
+  "gh:expo/expo": {
+   "kind": "framework",
+   "related": [
+    "gh:expo/skills"
+   ],
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npx create-expo-app@latest"
+    }
+   ]
+  },
+  "gh:flutter/flutter": {
+   "kind": "framework",
+   "install": [
+    {
+     "method": "package",
+     "manager": "cask",
+     "name": "flutter",
+     "os": [
+      "macos"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "winget",
+     "name": "Google.Flutter",
+     "os": [
+      "windows"
+     ]
+    }
+   ]
+  },
+  "gh:microsoft/playwright": {
+   "kind": "framework",
+   "related": [
+    "gh:microsoft/playwright-mcp"
+   ],
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm init playwright@latest"
+    }
+   ]
+  },
+  "gh:storybookjs/storybook": {
+   "kind": "framework",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npx storybook@latest init"
+    }
+   ]
+  },
+  "gh:biomejs/biome": {
+   "kind": "cli",
+   "install": [
+    {
+     "method": "package",
+     "manager": "brew",
+     "name": "biome",
+     "os": [
+      "macos",
+      "linux"
+     ]
+    }
+   ],
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install -D @biomejs/biome"
+    }
+   ]
+  },
+  "gh:googlechrome/lighthouse": {
+   "kind": "cli",
+   "install": [
+    {
+     "method": "package",
+     "manager": "npm",
+     "name": "lighthouse"
+    }
+   ]
+  },
+  "gh:supabase/supabase": {
+   "kind": "framework",
+   "agent_use": "O agente gere bases de dados, migrações e funções Supabase através do servidor MCP oficial.",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "http",
+     "url": "https://mcp.supabase.com/mcp",
+     "auth": "oauth",
+     "label": "Servidor MCP oficial (remoto)"
+    },
+    {
+     "method": "package",
+     "manager": "brew",
+     "name": "supabase",
+     "os": [
+      "macos",
+      "linux"
+     ],
+     "label": "Supabase CLI"
+    }
+   ]
+  },
+  "gh:getsentry/sentry": {
+   "kind": "app",
+   "agent_use": "O agente consulta erros e problemas do Sentry através do servidor MCP oficial.",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "http",
+     "url": "https://mcp.sentry.dev/mcp",
+     "auth": "oauth",
+     "label": "Servidor MCP oficial (remoto)"
+    }
+   ]
+  },
+  "gh:posthog/posthog": {
+   "kind": "app",
+   "agent_use": "O agente consulta eventos, funis e feature flags através do servidor MCP oficial.",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "http",
+     "url": "https://mcp.posthog.com/mcp",
+     "auth": "oauth",
+     "label": "Servidor MCP oficial (remoto)"
+    }
+   ]
+  },
+  "gh:get-convex/convex-backend": {
+   "kind": "framework",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "command": "npx",
+     "args": [
+      "-y",
+      "convex@1.48.0",
+      "mcp",
+      "start"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Servidor MCP do Convex"
+    }
+   ],
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npm install convex"
+    }
+   ]
+  },
+  "gh:n8n-io/n8n": {
+   "kind": "app",
+   "install": [
+    {
+     "method": "package",
+     "manager": "npm",
+     "name": "n8n"
+    }
+   ]
+  },
+  "gh:anomalyco/opencode": {
+   "kind": "cli",
+   "agent_use": "Outro agente de programação no terminal; útil para comparar ou combinar com o Claude Code.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "brew",
+     "name": "opencode",
+     "os": [
+      "macos",
+      "linux"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "npm",
+     "name": "opencode-ai"
+    }
+   ]
+  },
+  "gh:usestrix/strix": {
+   "kind": "cli",
+   "agent_use": "Agentes de pentest autónomos; correm contra uma app que controla, com prova de cada vulnerabilidade.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "uv",
+     "name": "strix-agent"
+    },
+    {
+     "method": "package",
+     "manager": "pipx",
+     "name": "strix-agent"
+    }
+   ]
+  },
+  "gh:fission-ai/openspec": {
+   "kind": "cli",
+   "install": [
+    {
+     "method": "package",
+     "manager": "npm",
+     "name": "@fission-ai/openspec"
+    }
+   ]
+  },
+  "gh:github/spec-kit": {
+   "kind": "cli",
+   "install": [
+    {
+     "method": "package",
+     "manager": "uv",
+     "name": "specify-cli",
+     "from": "git+https://github.com/github/spec-kit.git",
+     "label": "uv tool specify-cli"
+    }
+   ]
+  },
+  "gh:bmad-code-org/bmad-method": {
+   "kind": "framework",
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npx bmad-method install"
+    }
+   ]
+  },
+  "gh:vercel-labs/skills": {
+   "kind": "cli",
+   "agent_use": "CLI aberto para procurar e instalar skills de agentes (npx skills).",
+   "install": [
+    {
+     "method": "package",
+     "manager": "npm",
+     "name": "skills"
+    }
+   ]
+  },
+  "gh:tiangolo/full-stack-fastapi-template": {
+   "kind": "reference",
+   "agent_use": "Modelo de projeto completo (FastAPI + React); o agente parte dele para novos projetos."
+  },
+  "gh:debpalash/voicestudio": {
+   "kind": "app",
+   "install": [
+    {
+     "method": "download",
+     "url": "https://github.com/debpalash/voicestudio/releases/latest",
+     "label": "Transferir a última versão"
+    }
+   ]
+  },
+  "gh:manimcommunity/manim": {
+   "kind": "cli",
+   "agent_use": "Animações matemáticas por código; o agente escreve cenas em Python e renderiza vídeo.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "brew",
+     "name": "manim",
+     "os": [
+      "macos",
+      "linux"
+     ]
+    },
+    {
+     "method": "package",
+     "manager": "uv",
+     "name": "manim"
+    }
+   ]
+  },
+  "gh:unclecode/crawl4ai": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install crawl4ai"
+    }
+   ],
+   "install": [
+    {
+     "method": "package",
+     "manager": "uv",
+     "name": "crawl4ai",
+     "label": "uv tool crawl4ai (crwl)"
+    }
+   ]
+  },
+  "gh:opencv/opencv": {
+   "kind": "library",
+   "project": [
+    {
+     "manager": "pip",
+     "command": "pip install opencv-python"
+    }
+   ]
+  },
+  "gh:ggml-org/whisper.cpp": {
+   "kind": "cli",
+   "agent_use": "Transcrição de áudio local e rápida; o agente transcreve ficheiros pela linha de comando.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "brew",
+     "name": "whisper-cpp",
+     "os": [
+      "macos",
+      "linux"
+     ]
+    }
+   ]
+  },
+  "gh:modelcontextprotocol/servers": {
+   "kind": "mcp",
+   "agent_use": "Servidores MCP de referência: buscar páginas web, Git, hora, memória persistente e pensamento sequencial.",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "fetch",
+     "command": "uvx",
+     "args": [
+      "mcp-server-fetch==2026.10.24"
+     ],
+     "requires": [
+      "uv"
+     ],
+     "label": "fetch — ler páginas web"
+    },
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "git",
+     "command": "uvx",
+     "args": [
+      "mcp-server-git==2026.10.19"
+     ],
+     "requires": [
+      "uv"
+     ],
+     "label": "git — repositórios locais"
+    },
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "time",
+     "command": "uvx",
+     "args": [
+      "mcp-server-time==2026.10.19"
+     ],
+     "requires": [
+      "uv"
+     ],
+     "label": "time — datas e fusos horários"
+    },
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "memory",
+     "command": "npx",
+     "args": [
+      "-y",
+      "@modelcontextprotocol/server-memory@2.0.0"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "memory — memória persistente"
+    },
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "sequential-thinking",
+     "command": "npx",
+     "args": [
+      "-y",
+      "@modelcontextprotocol/server-sequential-thinking@2.0.0"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "sequential-thinking"
+    }
+   ]
+  },
+  "gh:microsoft/playwright-mcp": {
+   "kind": "mcp",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "playwright",
+     "command": "npx",
+     "args": [
+      "-y",
+      "@playwright/mcp@0.0.83"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "npx @playwright/mcp"
+    }
+   ]
+  },
+  "gh:firecrawl/firecrawl-mcp-server": {
+   "kind": "mcp",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "firecrawl",
+     "command": "npx",
+     "args": [
+      "-y",
+      "firecrawl-mcp@3.36.0"
+     ],
+     "secrets": [
+      "FIRECRAWL_API_KEY"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "npx firecrawl-mcp (requer chave paga)"
+    }
+   ]
+  },
+  "gh:upstash/context7": {
+   "kind": "mcp",
+   "agent_use": "Dá ao agente documentação atual e por versão de milhares de bibliotecas.",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "context7",
+     "command": "npx",
+     "args": [
+      "-y",
+      "@upstash/context7-mcp@4.4.4"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "npx @upstash/context7-mcp"
+    }
+   ]
+  },
+  "gh:chromedevtools/chrome-devtools-mcp": {
+   "kind": "mcp",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "chrome-devtools",
+     "command": "npx",
+     "args": [
+      "-y",
+      "chrome-devtools-mcp@1.12.0"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "npx chrome-devtools-mcp"
+    }
+   ]
+  },
+  "gh:morluto/rea": {
+   "kind": "mcp",
+   "agent_use": "Engenharia reversa para agentes: binários nativos, apps, firmware, browser e runtimes, com evidência em cada resultado.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "npm",
+     "name": "rea-agents",
+     "label": "npm rea-agents (CLI rea)"
+    },
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "rea",
+     "command": "rea",
+     "args": [
+      "mcp"
+     ],
+     "requires": [
+      "rea"
+     ],
+     "label": "Registar rea mcp no Claude Code"
+    }
+   ]
+  },
+  "gh:yamadashy/repomix": {
+   "kind": "cli",
+   "agent_use": "Empacota um repositório num único ficheiro para o agente ler; também tem modo MCP.",
+   "install": [
+    {
+     "method": "package",
+     "manager": "npm",
+     "name": "repomix"
+    },
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "repomix",
+     "command": "npx",
+     "args": [
+      "-y",
+      "repomix@1.18.1",
+      "--mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Servidor MCP repomix"
+    }
+   ]
+  },
+  "gh:vercel-labs/agent-browser": {
+   "kind": "cli",
+   "install": [
+    {
+     "method": "package",
+     "manager": "npm",
+     "name": "agent-browser"
+    }
+   ]
+  },
+  "web:ui.shadcn.com": {
+   "kind": "components",
+   "agent_use": "Com o servidor MCP do shadcn o agente procura e instala componentes de qualquer registo: Aceternity, Magic UI, React Bits, Animate UI, Motion Primitives, Kokonut, Cult UI, Shadcnblocks e UI Layouts.",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "shadcn",
+     "command": "npx",
+     "args": [
+      "shadcn@4.23.0",
+      "mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Servidor MCP do shadcn"
+    }
+   ],
+   "project": [
+    {
+     "manager": "npm",
+     "command": "npx shadcn@latest init"
+    }
+   ]
+  },
+  "web:magicui.design": {
+   "kind": "components",
+   "related": [
+    "web:ui.shadcn.com"
+   ],
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "magicui",
+     "command": "npx",
+     "args": [
+      "-y",
+      "@magicuidesign/mcp@2.0.0"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Servidor MCP da Magic UI"
+    },
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "shadcn",
+     "command": "npx",
+     "args": [
+      "shadcn@4.23.0",
+      "mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Dar acesso ao agente (MCP do shadcn)"
+    }
+   ],
+   "registry": "@magicui",
+   "agent_use": "Registo oficial do shadcn (@magicui). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "project": [
+    {
+     "manager": "shadcn",
+     "command": "npx shadcn@latest add @magicui/<componente>"
+    }
+   ]
+  },
+  "web:21st.dev": {
+   "kind": "components",
+   "agent_use": "O Magic MCP do 21st.dev gera componentes de UI a partir de uma descrição.",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "magic",
+     "command": "npx",
+     "args": [
+      "-y",
+      "@21st-dev/magic@0.2.3"
+     ],
+     "secrets": [
+      "API_KEY"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Magic MCP (requer chave do 21st.dev)"
+    }
+   ]
+  },
+  "web:horizonx.so/collections": {
+   "kind": "components",
+   "agent_use": "O servidor MCP da HorizonX dá ao agente componentes animados, texturas, mockups e shaders exportados como código.",
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "http",
+     "name": "horizonx",
+     "url": "https://horizonx.so/api/mcp",
+     "auth": "oauth",
+     "label": "Servidor MCP da HorizonX (remoto)"
+    }
+   ]
+  },
+  "web:reactbits.dev": {
+   "kind": "components",
+   "related": [
+    "web:ui.shadcn.com"
+   ],
+   "agent_use": "Registo oficial do shadcn (@react-bits). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "registry": "@react-bits",
+   "project": [
+    {
+     "manager": "shadcn",
+     "command": "npx shadcn@latest add @react-bits/<componente>"
+    }
+   ],
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "shadcn",
+     "command": "npx",
+     "args": [
+      "shadcn@4.23.0",
+      "mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Dar acesso ao agente (MCP do shadcn)"
+    }
+   ]
+  },
+  "web:ui.aceternity.com": {
+   "kind": "components",
+   "related": [
+    "web:ui.shadcn.com"
+   ],
+   "registry": "@aceternity",
+   "agent_use": "Registo oficial do shadcn (@aceternity). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "project": [
+    {
+     "manager": "shadcn",
+     "command": "npx shadcn@latest add @aceternity/<componente>"
+    }
+   ],
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "shadcn",
+     "command": "npx",
+     "args": [
+      "shadcn@4.23.0",
+      "mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Dar acesso ao agente (MCP do shadcn)"
+    }
+   ]
+  },
+  "web:motion-primitives.com": {
+   "kind": "components",
+   "related": [
+    "web:ui.shadcn.com"
+   ],
+   "registry": "@motion-primitives",
+   "agent_use": "Registo oficial do shadcn (@motion-primitives). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "project": [
+    {
+     "manager": "shadcn",
+     "command": "npx shadcn@latest add @motion-primitives/<componente>"
+    }
+   ],
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "shadcn",
+     "command": "npx",
+     "args": [
+      "shadcn@4.23.0",
+      "mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Dar acesso ao agente (MCP do shadcn)"
+    }
+   ]
+  },
+  "web:animate-ui.com": {
+   "kind": "components",
+   "related": [
+    "web:ui.shadcn.com"
+   ],
+   "registry": "@animate-ui",
+   "agent_use": "Registo oficial do shadcn (@animate-ui). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "project": [
+    {
+     "manager": "shadcn",
+     "command": "npx shadcn@latest add @animate-ui/<componente>"
+    }
+   ],
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "shadcn",
+     "command": "npx",
+     "args": [
+      "shadcn@4.23.0",
+      "mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Dar acesso ao agente (MCP do shadcn)"
+    }
+   ]
+  },
+  "web:cult-ui.com": {
+   "kind": "components",
+   "related": [
+    "web:ui.shadcn.com"
+   ],
+   "registry": "@cult-ui",
+   "agent_use": "Registo oficial do shadcn (@cult-ui). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "project": [
+    {
+     "manager": "shadcn",
+     "command": "npx shadcn@latest add @cult-ui/<componente>"
+    }
+   ],
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "shadcn",
+     "command": "npx",
+     "args": [
+      "shadcn@4.23.0",
+      "mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Dar acesso ao agente (MCP do shadcn)"
+    }
+   ]
+  },
+  "web:kokonutui.com": {
+   "kind": "components",
+   "related": [
+    "web:ui.shadcn.com"
+   ],
+   "registry": "@kokonutui",
+   "agent_use": "Registo oficial do shadcn (@kokonutui). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "project": [
+    {
+     "manager": "shadcn",
+     "command": "npx shadcn@latest add @kokonutui/<componente>"
+    }
+   ],
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "shadcn",
+     "command": "npx",
+     "args": [
+      "shadcn@4.23.0",
+      "mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Dar acesso ao agente (MCP do shadcn)"
+    }
+   ]
+  },
+  "web:shadcnblocks.com": {
+   "kind": "components",
+   "related": [
+    "web:ui.shadcn.com"
+   ],
+   "registry": "@shadcnblocks",
+   "agent_use": "Registo oficial do shadcn (@shadcnblocks). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "project": [
+    {
+     "manager": "shadcn",
+     "command": "npx shadcn@latest add @shadcnblocks/<componente>"
+    }
+   ],
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "shadcn",
+     "command": "npx",
+     "args": [
+      "shadcn@4.23.0",
+      "mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Dar acesso ao agente (MCP do shadcn)"
+    }
+   ]
+  },
+  "web:skills.sh/vercel-labs/skills/find-skills": {
+   "kind": "skill",
+   "install": [
+    {
+     "method": "skill",
+     "repo": "vercel-labs/skills",
+     "path": "skills/find-skills",
+     "name": "find-skills"
+    }
+   ]
+  },
+  "gh:msitarzewski/agency-agents": {
+   "kind": "reference",
+   "agent_use": "Coleção de subagentes especializados (ficheiros .md) para copiar para ~/.claude/agents."
+  },
+  "gh:anthropics/claude-code": {
+   "kind": "cli",
+   "agent_use": "O próprio agente de programação no terminal; o repositório também publica plugins oficiais (marketplace).",
+   "install": [
+    {
+     "method": "package",
+     "manager": "npm",
+     "name": "@anthropic-ai/claude-code",
+     "label": "npm @anthropic-ai/claude-code"
+    }
+   ]
+  },
+  "web:ui-layouts.com": {
+   "kind": "components",
+   "registry": "@ui-layouts",
+   "related": [
+    "web:ui.shadcn.com"
+   ],
+   "agent_use": "Registo oficial do shadcn (@ui-layouts). Com o servidor MCP do shadcn ativo, o agente procura e instala estes componentes diretamente no seu projeto.",
+   "project": [
+    {
+     "manager": "shadcn",
+     "command": "npx shadcn@latest add @ui-layouts/<componente>"
+    }
+   ],
+   "install": [
+    {
+     "method": "mcp",
+     "transport": "stdio",
+     "name": "shadcn",
+     "command": "npx",
+     "args": [
+      "shadcn@4.23.0",
+      "mcp"
+     ],
+     "requires": [
+      "node"
+     ],
+     "label": "Dar acesso ao agente (MCP do shadcn)"
+    }
+   ]
+  },
+  "web:hover.dev": {
+   "kind": "components",
+   "agent_use": "Catálogo de componentes para copiar do site para o projeto; não tem registo shadcn nem MCP, por isso o agente usa-o a partir do código que lhe indicar."
+  },
+  "web:lightswind.com": {
+   "kind": "components",
+   "agent_use": "Catálogo de componentes para copiar do site para o projeto; não tem registo shadcn nem MCP, por isso o agente usa-o a partir do código que lhe indicar."
+  }
+ }
+}

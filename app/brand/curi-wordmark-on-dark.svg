@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="140" viewBox="0 0 400 140" role="img" aria-label="CURI">
+  <title>CURI</title>
+  <path d="M97.58 98.44 A42.5 42.5 0 1 1 97.58 41.56" fill="none" stroke="#f5f7fb" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M149.5 27.5 L149.5 76" fill="none" stroke="#f5f7fb" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M221.5 76 A36 36 0 0 1 149.5 76" fill="none" stroke="#f5f7fb" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M221.5 76 L221.5 27.5" fill="none" stroke="#f5f7fb" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M262.5 112.5 L262.5 27.5" fill="none" stroke="#f5f7fb" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M262.5 27.5 L299 27.5" fill="none" stroke="#f5f7fb" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M299 27.5 A23.75 23.75 0 0 1 299 75" fill="none" stroke="#f5f7fb" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M299 75 L262.5 75" fill="none" stroke="#f5f7fb" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M295 75 L331 112.5" fill="none" stroke="#f5f7fb" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M372.5 27.5 L372.5 112.5" fill="none" stroke="#f5f7fb" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

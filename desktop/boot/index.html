@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <title>CURI</title>
+  <link rel="stylesheet" href="boot.css">
+  <script type="module" src="boot.js"></script>
+</head>
+<body>
+  <main>
+    <div class="brand"><img class="logo" src="brand/curi-symbol-on-dark.svg" alt="" width="44" height="44"><div><h1>CURI</h1><p>A preparar o ambiente</p></div></div>
+    <p class="sub">Na primeira execução, o CURI verifica e instala o que falta no diretório de dados da aplicação (nunca a nível de sistema). As execuções seguintes só confirmam.</p>
+    <ol id="steps" aria-live="polite"></ol>
+    <div id="error" role="alert" hidden></div>
+    <div class="row"><button id="retry" type="button" hidden>Tentar novamente</button></div>
+  </main>
+</body>
+</html>
