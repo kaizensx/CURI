@@ -1,6 +1,6 @@
 import { h, relTime, fmtDate, fill } from '../lib/dom.js';
 import { icon } from '../lib/icons.js';
-import { api, btn, status, badge, panel, pageHead, empty, notice, kv, table, toast, confirmDialog, externalLink, segmented, meter, when } from '../lib/ui.js';
+import { api, btn, status, badge, panel, pageHead, empty, notice, kv, table, toast, confirmDialog, externalLink, segmented, meter, when, pager } from '../lib/ui.js';
 import { go, mount, setPoll, params } from '../app.js';
 import { showOperation, withProgress } from '../lib/opmodal.js';
 
@@ -278,15 +278,16 @@ function opDetail(o) {
 
 export async function operations() {
   const root = h('div', { class: 'page' });
-  let filter = params().get('status') || 'all', q = '', open = params().get('id');
+  let filter = params().get('status') || 'all', q = '', open = params().get('id'), page = 0;
   const search = h('input', { type: 'search', placeholder: 'Search by kind or resource', 'aria-label': 'Search operations' });
-  search.addEventListener('input', () => { q = search.value; render(); });
+  search.addEventListener('input', () => { q = search.value; page = 0; render(); });
   async function render() {
     const all = await api('ops', { limit: 500, q });
     const pending = all.filter(o => o.status === 'awaiting_approval');
     const active = all.filter(o => ['queued', 'running'].includes(o.status));
     const shown = all.filter(o => filter === 'all' || o.status === filter);
-    const list = h('div', { class: 'rows' }, shown.map(o => {
+    if (page * 30 >= shown.length) page = 0;
+    const list = h('div', { class: 'rows' }, shown.slice(page * 30, (page + 1) * 30).map(o => {
       const row = h('details', { class: 'r op', open: o.id === open || null },
         h('summary', { class: 'row nowrap' }, opBadge(o.status), h('div', { class: 'grow' }, h('div', { class: 't1' }, o.resource || o.kind), h('div', { class: 't2' }, `${o.kind} · ${o.stage || ''} · ${relTime(o.updated_at)}`)),
           o.status === 'running' && o.progress != null ? h('div', { style: { width: '120px' } }, meter(o.progress)) : null,
@@ -301,8 +302,9 @@ export async function operations() {
       pageHead({ eyebrow: 'Control', title: 'Operations', sub: 'A persistent queue: survives restarts, never duplicates work and records every decision. Cancel stops at the next safe point; anything already written is described under "Recovery".' }),
       h('section', { class: 'panel kpis small' }, kpi('Awaiting approval', pending.length), kpi('Active', active.length), kpi('Verified', all.filter(o => o.status === 'verified').length), kpi('Failed', all.filter(o => o.status === 'failed').length), kpi('Total', all.length)),
       pending.length ? notice('warn', `${pending.length} operation(s) waiting for your decision.`) : null,
-      h('div', { class: 'toolbar' }, segmented([['all', 'All'], ['awaiting_approval', 'Approval'], ['running', 'A executar'], ['queued', 'Queued'], ['verified', 'Verified'], ['failed', 'Failed']], filter, v => { filter = v; render(); }, 'Filter'), h('span', { class: 'spacer' }), h('div', { class: 'field' }, icon('search', 'sm'), search)),
-      panel({ flush: true }, shown.length ? list : empty('activity', 'No operations', 'Installs, repairs and checks show up here.'))].filter(Boolean));
+      h('div', { class: 'toolbar' }, segmented([['all', 'All'], ['awaiting_approval', 'Approval'], ['running', 'Running'], ['queued', 'Queued'], ['verified', 'Verified'], ['failed', 'Failed']], filter, v => { filter = v; page = 0; render(); }, 'Filter'), h('span', { class: 'spacer' }), h('div', { class: 'field' }, icon('search', 'sm'), search)),
+      panel({ flush: true }, shown.length ? list : empty('activity', 'No operations', 'Installs, repairs and checks show up here.')),
+      pager(shown.length, page, 30, n => { page = n; render(); }, { noun: 'operations' })].filter(Boolean));
   }
   await render();
   setPoll(() => (document.querySelector('.op[open] :focus') ? null : render()), 2500);

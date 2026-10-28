@@ -48,14 +48,14 @@ const tabbed = (tabs, view) => async (...a) => {
   return page;
 };
 const ROUTES = [
-  { id: 'home', label: 'Home', icon: 'home', group: 'CURI', view: home, key: '1' },
-  { id: 'library', label: 'Library', icon: 'library', group: 'CURI', view: library, key: '2' },
-  { id: 'discover', label: 'Discover', icon: 'radar', group: 'CURI', view: discoverView, key: '3' },
-  { id: 'capabilities', label: 'Capabilities', icon: 'map', group: 'CURI', view: capabilitiesView, key: '4' },
-  { id: 'device', label: 'This device', icon: 'device', group: 'CURI', view: device, key: '5' },
-  { id: 'connections', label: 'Connections', icon: 'link', group: 'CURI', view: connections, key: '6' },
-  { id: 'operations', label: 'Activity', icon: 'activity', group: 'System', view: tabbed(ACTIVITY_TABS, operations), key: '7' },
-  { id: 'settings', label: 'Settings', icon: 'settings', group: 'System', view: tabbed(SETTINGS_TABS, settings), key: '8' },
+  { id: 'home', sub: 'Overview and next steps', label: 'Home', icon: 'home', group: 'CURI', view: home, key: '1' },
+  { id: 'library', sub: 'What you have, and the catalogue', label: 'Library', icon: 'library', group: 'CURI', view: library, key: '2' },
+  { id: 'discover', sub: 'New projects you can install', label: 'Discover', icon: 'radar', group: 'CURI', view: discoverView, key: '3' },
+  { id: 'capabilities', sub: 'What your agents can do', label: 'Capabilities', icon: 'map', group: 'CURI', view: capabilitiesView, key: '4' },
+  { id: 'device', sub: 'Agents and tools on this Mac', label: 'This device', icon: 'device', group: 'CURI', view: device, key: '5' },
+  { id: 'connections', sub: 'Accounts and keys', label: 'Connections', icon: 'link', group: 'CURI', view: connections, key: '6' },
+  { id: 'operations', sub: 'Installs and changes so far', label: 'Activity', icon: 'activity', group: 'System', view: tabbed(ACTIVITY_TABS, operations), key: '7' },
+  { id: 'settings', sub: 'Autonomy, integration, privacy', label: 'Settings', icon: 'settings', group: 'System', view: tabbed(SETTINGS_TABS, settings), key: '8' },
   { id: 'audit', hidden: true, parent: 'operations', label: 'Audit log', view: tabbed(ACTIVITY_TABS, audit) },
   { id: 'jobs', hidden: true, parent: 'operations', label: 'Searches and quotas', view: tabbed(ACTIVITY_TABS, jobs) },
   { id: 'automation', hidden: true, parent: 'settings', label: 'Autonomy', view: tabbed(SETTINGS_TABS, automation) },
@@ -67,7 +67,7 @@ const ROUTES = [
   { id: 'integrations', hidden: true, parent: 'library', label: 'Quick integrations', view: integrations },
   { id: 'skills', hidden: true, parent: 'device', label: 'Skills', view: skills },
   { id: 'mcp', hidden: true, parent: 'device', label: 'MCP servers', view: mcp },
-  { id: 'welcome', hidden: true, label: 'Boas-vindas', view: welcome },
+  { id: 'welcome', hidden: true, label: 'Welcome', view: welcome },
   { id: 'wizard', hidden: true, label: 'Setup', view: wizard },
 ];
 // Old addresses keep working.
@@ -127,7 +127,7 @@ function shell() {
   let group = null, wrap;
   for (const r of ROUTES.filter(x => !x.hidden)) {
     if (r.group !== group) { group = r.group; wrap = h('div', { class: 'nav-group' }, group === 'CURI' ? null : h('span', { class: 'micro' }, group)); nav.append(wrap); }
-    wrap.append(h('a', { href: `#/${r.id}`, 'data-route': r.id, title: r.key ? `${r.label} (⌘${r.key})` : r.label }, icon(r.icon), h('span', null, r.label), h('span', { class: 'badge-slot' })));
+    wrap.append(h('a', { href: `#/${r.id}`, 'data-route': r.id, title: r.key ? `${r.label} (⌘${r.key})` : r.label }, icon(r.icon), h('span', { class: 'nav-txt' }, h('span', null, r.label), r.sub ? h('small', null, r.sub) : null), h('span', { class: 'badge-slot' })));
   }
   nav.addEventListener('click', e => { if (e.target.closest('a') && e.detail === 0) navByKeyboard = true; });
   document.body.prepend(h('div', { class: 'titlebar', 'data-tauri-drag-region': '' }));
@@ -148,6 +148,7 @@ function placeIndicator(animate) {
   if (!animate) ind.style.transition = 'none';
   ind.style.opacity = '1';
   ind.style.transform = `translateY(${a.offsetTop}px)`;
+  ind.style.height = `${a.offsetHeight}px`;
   if (!animate) requestAnimationFrame(() => (ind.style.transition = ''));
 }
 
@@ -162,6 +163,33 @@ async function footer() {
     document.getElementById('side-foot').replaceChildren(h('div', { class: 'row' }, status(s.bootstrap.state)), h('div', { class: 'row num' }, `${s.resources} resources · schema v${s.schema_version}`));
   } catch {}
 }
+
+// ---------- back / forward ----------
+// The webview keeps its own history; we number each entry so the arrows know when there's nowhere to go.
+let histMax = Number(sessionStorage.getItem('curi-hist-max') || 0);
+function histIndex() {
+  let i = history.state?.i;
+  if (i == null) { i = (Number(sessionStorage.getItem('curi-hist-cur') ?? -1)) + 1; histMax = i; history.replaceState({ ...(history.state || {}), i }, ''); }
+  sessionStorage.setItem('curi-hist-cur', String(i)); sessionStorage.setItem('curi-hist-max', String(histMax = Math.max(histMax, i)));
+  return i;
+}
+function pagebar(route, page) {
+  const i = histIndex();
+  const back = h('button', { type: 'button', class: 'nav-arrow', 'aria-label': 'Back', title: 'Back (⌘[)', disabled: i <= 0 || null, onclick: () => history.back() }, icon('chevron'));
+  const fwd = h('button', { type: 'button', class: 'nav-arrow fwd', 'aria-label': 'Forward', title: 'Forward (⌘])', disabled: i >= histMax || null, onclick: () => history.forward() }, icon('chevron'));
+  const parent = route.parent ? byId[route.parent] : null;
+  const here = route.id === 'resource' ? page.querySelector?.('h1')?.textContent : route.label;
+  const crumbs = h('ol', { class: 'crumbs', 'aria-label': 'You are here' },
+    parent ? h('li', null, h('a', { href: `#/${parent.id}` }, parent.label)) : null,
+    h('li', { 'aria-current': 'page' }, here || route.label));
+  return h('div', { class: 'pagebar', 'data-tauri-drag-region': '' }, h('div', { class: 'arrows' }, back, fwd), crumbs);
+}
+addEventListener('keydown', e => {
+  if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return;
+  if (e.key === '[') { e.preventDefault(); history.back(); }
+  if (e.key === ']') { e.preventDefault(); history.forward(); }
+});
+addEventListener('mouseup', e => { if (e.button === 3) history.back(); if (e.button === 4) history.forward(); });
 
 // ---------- router ----------
 let navByKeyboard = false, renderSeq = 0, firstRender = true;
@@ -191,7 +219,8 @@ export async function mount() {
   if (seq !== renderSeq) return;
   const h1 = page.querySelector?.('h1');
   if (h1 && route.id === 'resource') document.title = `${h1.textContent} — CURI`;
-  const swap = () => { fill(main, page); main.scrollTop = 0; };
+  const bar = pagebar(route, page);
+  const swap = () => { fill(main, bar, page); main.scrollTop = 0; };
   // Animated page swap only for pointer navigation; keyboard navigation is instant.
   if (document.startViewTransition && !navByKeyboard && !firstRender && !reducedMotion() && currentMotion() === 'full') {
     // A newer navigation skips the running transition; that rejection is expected, not an error.
