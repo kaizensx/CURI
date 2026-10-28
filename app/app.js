@@ -49,7 +49,7 @@ const tabbed = (tabs, view) => async (...a) => {
 };
 const ROUTES = [
   { id: 'home', sub: 'Overview and next steps', label: 'Home', icon: 'home', group: 'CURI', view: home, key: '1' },
-  { id: 'library', sub: 'What you have, and the catalogue', label: 'Library', icon: 'library', group: 'CURI', view: library, key: '2' },
+  { id: 'library', sub: 'Find and install new abilities', label: 'Library', icon: 'library', group: 'CURI', view: library, key: '2' },
   { id: 'discover', sub: 'New projects you can install', label: 'Discover', icon: 'radar', group: 'CURI', view: discoverView, key: '3' },
   { id: 'capabilities', sub: 'What your agents can do', label: 'Capabilities', icon: 'map', group: 'CURI', view: capabilitiesView, key: '4' },
   { id: 'device', sub: 'Agents and tools on this Mac', label: 'This device', icon: 'device', group: 'CURI', view: device, key: '5' },
@@ -132,6 +132,7 @@ function shell() {
   nav.addEventListener('click', e => { if (e.target.closest('a') && e.detail === 0) navByKeyboard = true; });
   document.body.prepend(h('div', { class: 'titlebar', 'data-tauri-drag-region': '' }));
   document.body.append(h('div', { class: 'shell' },
+    h('div', { class: 'aurora', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')),
     h('aside', { class: 'sidebar' },
       h('div', { class: 'brand', 'data-tauri-drag-region': '' }, h('span', { class: 'brand-mark', 'aria-hidden': 'true' }, brandMark({ small: true, size: 18 })), h('div', { class: 'brand-text' }, h('div', { class: 'brand-name' }, 'CURI'), h('div', { class: 'brand-sub' }, 'Capabilities for your agents'))),
       h('button', { type: 'button', class: 'search-trigger', onclick: () => openPalette(), 'aria-label': 'Open command palette' }, icon('search', 'sm'), h('span', null, 'Search or run…'), h('kbd', null, '⌘K')),
@@ -207,6 +208,7 @@ export async function mount() {
     return;
   }
   const active = route.parent || route.id;
+  document.documentElement.dataset.route = active;
   document.querySelectorAll('.nav a').forEach(a => { if (a.dataset.route === active) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   placeIndicator(!firstRender && !navByKeyboard && !reducedMotion());
   document.title = `${route.label} — CURI`;
@@ -233,6 +235,17 @@ export async function mount() {
   renderNavBadges();
 }
 window.addEventListener('hashchange', mount);
+
+// Glass catches the light where the pointer is. One listener, cheap: a custom property per surface.
+const GLASS = '.panel, .gcard, .shelf-feature, .rcard2, .dcard, .inv-place, .cap, .reco, .door';
+document.addEventListener('pointermove', e => {
+  const el = e.target.closest?.(GLASS);
+  if (!el) return;
+  if (!el.classList.contains('spec')) el.classList.add('spec');
+  const r = el.getBoundingClientRect();
+  el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+  el.style.setProperty('--my', `${e.clientY - r.top}px`);
+}, { passive: true });
 
 // ---------- command palette (no open/close animation: used many times a day) ----------
 function openPalette() {
