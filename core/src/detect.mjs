@@ -1,5 +1,5 @@
-// Environment detection: what is actually installed, configured or connected on this device —
-// whether or not CURI put it there — matched to registry resources. Read-only probes through the
+// Environment detection: what is actually installed, configured or connected on this device,
+// whether or not CURI put it there, matched to registry resources. Read-only probes through the
 // platform layer (executables, apps, package managers) and the agents layer (Claude Code, Claude
 // Desktop and the claude.ai account mirror, Codex, Cursor, Gemini CLI, Windsurf, VS Code).
 // Registry status changes only between detection-owned states; manual decisions are never touched.
