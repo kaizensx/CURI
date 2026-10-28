@@ -3,7 +3,7 @@
 // get it here, project usage, alternatives. Compare: a decision table, not a score.
 import { h, fmtDate, relTime, compact, fill } from '../lib/dom.js';
 import { icon } from '../lib/icons.js';
-import { api, btn, toast, contextMenu, empty, notice, promptDialog } from '../lib/ui.js';
+import { api, btn, toast, contextMenu, empty, notice, promptDialog, pager } from '../lib/ui.js';
 import { go, mount, params, compareTray } from '../app.js';
 import { runOperation } from './control.js';
 import { installedView } from './installed.js';
@@ -77,7 +77,7 @@ async function catalogue(tabs) {
   // Only what CURI can act on: install, connect, add to a project, or manage what's already here.
   const actionable = r => Boolean(r.state || r.installable || r.has_project);
   const all = everything.filter(actionable);
-  const st = { view: p.get('view') || 'all', kind: p.get('kind') || '', domain: p.get('domain') || '', col: p.get('col') || '', origin: '', upkeep: '', q: p.get('q') || '', sort: lsGet('curi-lib-sort', 'smart'), layout: lsGet('curi-lib-layout', 'list'), limit: 60, sel: new Set() };
+  const st = { view: p.get('view') || 'all', kind: p.get('kind') || '', domain: p.get('domain') || '', col: p.get('col') || '', origin: '', upkeep: '', q: p.get('q') || '', sort: lsGet('curi-lib-sort', 'smart'), layout: lsGet('curi-lib-layout', 'list'), page: 0, sel: new Set() };
   const capDomain = new Map(capMap.capabilities.map(c => [c.id, c.domain]));
   const prep = list => { for (const r of list) r.domains = [...new Set(r.capabilities.map(c => capDomain.get(c)).filter(Boolean))]; };
   prep(all);
@@ -106,12 +106,12 @@ async function catalogue(tabs) {
       smart: (a, b) => (Boolean(b.mine.fav) - Boolean(a.mine.fav)) || (Boolean(b.state) - Boolean(a.state)) || (KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind)) || (b.stars ?? 0) - (a.stars ?? 0) };
     return rows.sort(cmp[st.sort] || cmp.smart);
   };
-  const set = (k, v) => { st[k] = st[k] === v ? '' : v; st.limit = 60; render(); };
+  const set = (k, v) => { st[k] = st[k] === v ? '' : v; st.page = 0; render(); };
   const renderRail = () => {
     const n = fn => all.filter(r => inView(r) && fn(r)).length;
     const myCols = [...new Set([...cols.map(c => c.name), ...all.flatMap(r => r.mine.collections || [])])];
     fill(rail,
-      h('div', { class: 'rail-group' }, h('span', { class: 'micro' }, 'Show'), VIEWS.map(([v, l]) => { const c = all.filter(r => inView(r, v)).length; return v === 'hidden' && !c ? null : railItem(l, c, st.view === v, () => { st.view = v; st.limit = 60; render(); }); })),
+      h('div', { class: 'rail-group' }, h('span', { class: 'micro' }, 'Show'), VIEWS.map(([v, l]) => { const c = all.filter(r => inView(r, v)).length; return v === 'hidden' && !c ? null : railItem(l, c, st.view === v, () => { st.view = v; st.page = 0; render(); }); })),
       h('div', { class: 'rail-group' }, h('span', { class: 'micro rail-head' }, 'Collections', btn('', async () => { const name = await promptDialog({ title: 'New collection', placeholder: 'e.g. Client project, To try', confirm: 'Create' }); if (name?.trim()) { await api('collectionAdd', { name }); cols.push({ name: name.trim() }); render(); } }, { size: 'sm', kind: 'ghost', iconName: 'plus', title: 'New collection' })),
         myCols.length ? myCols.map(c => railItem(c, all.filter(r => (r.mine.collections || []).includes(c)).length, st.col === c, () => set('col', c))) : h('p', { class: 'rail-empty' }, 'Group resources into your own collections: select them and choose "Collection".')),
       h('div', { class: 'rail-group' }, h('span', { class: 'micro' }, 'Kind'), KIND_ORDER.filter(k => k !== 'reference').map(k => [k, n(r => r.kind === k)]).filter(([, c]) => c).map(([k, c]) => railItem(KIND_PLURAL[k], c, st.kind === k, () => set('kind', k)))),
@@ -176,9 +176,10 @@ async function catalogue(tabs) {
     fill(layoutBtns, [['list', 'list', 'List'], ['grid', 'grid', 'Grid']].map(([v, ic, l]) => { const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.layout === v), title: l }, icon(ic, 'sm')); b.addEventListener('click', () => { st.layout = v; lsSet('curi-lib-layout', v); render(); }); return b; }));
     const rows = filtered();
     count.textContent = `${rows.length} resource${rows.length === 1 ? '' : 's'}`;
-    fill(list, rows.length ? h('div', { class: st.layout === 'grid' ? 'rgrid' : 'rlist', role: 'list' }, rows.slice(0, st.limit).map(item))
+    if (st.page * 48 >= rows.length) st.page = 0;
+    fill(list, rows.length ? h('div', { class: st.layout === 'grid' ? 'rgrid' : 'rlist', role: 'list' }, rows.slice(st.page * 48, (st.page + 1) * 48).map(item))
       : empty('search', 'Nothing matches these filters', ranked ? 'No catalogue resource matches. Discover searches GitHub.' : 'Try another area or kind.', ranked ? btn('Search GitHub', () => go(`discover?intent=${encodeURIComponent(st.q)}`), { iconName: 'radar' }) : null),
-      rows.length > st.limit ? h('div', { class: 'more-row' }, btn(`Show ${Math.min(60, rows.length - st.limit)} more`, () => { st.limit += 60; render(); }, { kind: 'ghost' })) : null);
+      pager(rows.length, st.page, 48, n => { st.page = n; render(); list.scrollIntoView({ block: 'start' }); }, { noun: 'resources' }));
   };
   let t, seq = 0;
   const search = async () => {
@@ -220,7 +221,7 @@ export async function resource(id) {
       btn('', e => contextMenu(e.clientX, e.clientY, resourceMenu(r)), { kind: 'ghost', iconName: 'dots', title: 'More' })));
 
   // Action bar: the one thing to do next, then management, then documentation.
-  const lead = A.primary ? null : pr.state ? 'Ready to use.' : pf.kind === 'reference' ? 'Reference material.' : null;
+  const lead = A.primary ? null : pr.state ? `Already installed${pr.found?.length ? ` in ${[...new Set(pr.found.map(f => f.agent_label || 'this computer'))].join(', ')}` : ''}. Nothing to install.` : pf.kind === 'reference' ? 'Reference material.' : null;
   const bar = h('div', { class: 'actionbar' },
     A.primary ? actionButton(A.primary, r.name, after, { kind: 'primary' }) : !pr.state && A.project.length ? btn('Add to a project', () => addToProject(r.name, A.project).then(after), { kind: 'primary', iconName: 'plus' }) : lead ? h('span', { class: 'lead' }, lead) : null,
     ...A.manage.slice(0, 4).map(a => actionButton(a, r.name, after, { kind: 'ghost' })),

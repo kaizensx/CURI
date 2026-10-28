@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Recently added: one timeline across Claude Code, your claude.ai account, the other agents and this computer, newest first, filtered by place and period. Also on Home.
+- Back and forward arrows (and ⌘[ / ⌘]) with a breadcrumb showing where you are.
+- Pages instead of endless "show more" in the Library, Discover, Activity and the audit log.
+- Things you already have are never offered as an install. Skills named after their project (and account skills that link to their repository) are now recognised, so recommendations skip them, and a resource you have says where it is.
+- Sidebar entries say what each place is for, and Home opens with three plain starting points.
 - Library › Installed: everything that's already here, grouped by where it lives: your claude.ai account, Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI and this computer (apps and packages). Search across all of it, and manage it from there.
 - This device is now an overview: the system, each agent with what it holds, base tools and package managers. Every number opens the matching list.
 - After an install, removal or toggle, CURI looks at the device again before the progress window closes, so the change shows up straight away. Discover shows what's already installed instead of offering it again.
