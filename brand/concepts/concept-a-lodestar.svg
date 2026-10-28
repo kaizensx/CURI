@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Concept A — Lodestar">
+  <title>Concept A — Lodestar</title>
+  <rect width="512" height="512" fill="#15171b"/>
+  <polygon points="256,56 294.18,217.82 492,256 294.18,294.18 256,456 217.82,294.18 56,256 217.82,217.82" fill="#f5f7fb"/>
+  <circle cx="256" cy="256" r="34" fill="#15171b"/>
+  <circle cx="492" cy="256" r="14" fill="#5c8ff0"/>
+</svg>

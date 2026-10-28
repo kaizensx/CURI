@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: Core tests (macOS)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # e2e.test.mjs needs a local Claude Code install and is skipped automatically when absent.
+      - name: Test
+        working-directory: core
+        run: npm test
+
+  desktop:
+    name: Desktop build (unsigned)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build app bundle
+        working-directory: desktop
+        run: |
+          npm ci
+          npx tauri build --bundles app
+      - name: Verify bundle identity
+        run: |
+          plutil -extract CFBundleIdentifier raw desktop/src-tauri/target/release/bundle/macos/CURI.app/Contents/Info.plist
+          test -f desktop/src-tauri/target/release/bundle/macos/CURI.app/Contents/Resources/curi/core/bin/curi.mjs
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

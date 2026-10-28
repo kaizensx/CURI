@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="CURI">
+  <title>CURI</title>
+  <defs><linearGradient id="tile" x1="0" y1="100" x2="0" y2="924" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2c2f37"/><stop offset=".55" stop-color="#191b20"/><stop offset="1" stop-color="#0f1013"/></linearGradient>
+    <linearGradient id="rim" x1="0" y1="100" x2="0" y2="924" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"/><stop offset=".35" stop-color="#ffffff" stop-opacity=".05"/><stop offset="1" stop-color="#ffffff" stop-opacity=".02"/></linearGradient>
+    <linearGradient id="sv" x1="0" y1="252" x2="0" y2="772" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f5f7fb"/><stop offset="1" stop-color="#9aa2b2"/></linearGradient>
+    <radialGradient id="glow" cx="751.0625" cy="512" r="90" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5c8ff0" stop-opacity=".45"/><stop offset="1" stop-color="#5c8ff0" stop-opacity="0"/></radialGradient>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".45"/></filter></defs>
+  <g filter="url(#sh)"><rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tile)"/></g>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="183.5" fill="none" stroke="url(#rim)" stroke-width="3"/>
+  <circle cx="751.0625" cy="512" r="90" fill="url(#glow)"/>
+  <path d="M705.41 652.52 A239.06 239.06 0 1 1 705.41 371.48" fill="none" stroke="url(#sv)" stroke-width="44.53" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M617.46 637.68 A164.06 164.06 0 1 1 617.46 386.32" fill="none" stroke="url(#sv)" stroke-width="44.53" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M545.36 594.58 A89.06 89.06 0 1 1 545.36 429.42" fill="none" stroke="url(#sv)" stroke-width="44.53" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="751.06" cy="512" r="28.13" fill="#9cbcff"/>
+</svg>

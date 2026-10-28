@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+*.curi-tmp-*
+brand/export/CURI.iconset/
+desktop/icon-source.png
+*.curi-staging-*

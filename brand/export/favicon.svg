@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="CURI">
+  <title>CURI</title>
+  <rect width="512" height="512" rx="112" fill="#15171b"/>
+  <path d="M371.07 367.12 A159.96 159.96 0 1 1 371.07 144.88" fill="none" stroke="#f5f7fb" stroke-width="55.04" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M288.42 322.47 A73.96 73.96 0 1 1 288.42 189.53" fill="none" stroke="#f5f7fb" stroke-width="55.04" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="442" cy="256" r="34.4" fill="#9cbcff"/>
+</svg>
