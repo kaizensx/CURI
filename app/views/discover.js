@@ -3,7 +3,7 @@
 // catalogued and left without a next step.
 import { h, fill, relTime, compact } from '../lib/dom.js';
 import { icon } from '../lib/icons.js';
-import { api, btn, empty, toast, notice } from '../lib/ui.js';
+import { api, btn, empty, toast, notice, pager } from '../lib/ui.js';
 import { go, params } from '../app.js';
 import { runOperation } from './control.js';
 import { runAction, kindTile } from './common.js';
@@ -38,7 +38,7 @@ export async function discoverView() {
   for (const c of cands) if (!seen.has(c.full_name)) seen.set(c.full_name, c);
   const all = [...seen.values()];
   const prefs = lsGet('curi-discover', { sort: 'score', iface: [], domain: '', emerging: false });
-  const st = { tab: p.get('tab') || 'ready', q: '', limit: 40, ...prefs };
+  const st = { tab: p.get('tab') || 'ready', q: '', page: 0, ...prefs };
   const persist = () => lsSet('curi-discover', { sort: st.sort, iface: st.iface, domain: st.domain, emerging: st.emerging });
   const connected = gh?.status === 'connected';
   const refresh = () => location.reload();
@@ -106,7 +106,7 @@ export async function discoverView() {
   const render = () => {
     fill(tabs, [['ready', 'Ready to install', installable.length], ['stars', 'From your stars', fromStars.length], ['done', 'In your library', done.length]].map(([id, l, n]) => {
       const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.tab === id) }, l, h('span', { class: 'n' }, n));
-      b.addEventListener('click', () => { st.tab = id; st.limit = 40; render(); });
+      b.addEventListener('click', () => { st.tab = id; st.page = 0; render(); });
       return b;
     }));
     const sortSel = h('select', { class: 'select', 'aria-label': 'Sort' }, SORTS.map(([v, l]) => h('option', { value: v, selected: st.sort === v || null }, l)));
@@ -122,7 +122,8 @@ export async function discoverView() {
   };
   const renderList = () => {
     const rows = (lists[st.tab] || installable).filter(passes).sort(order[st.sort] || order.score);
-    fill(listEl, rows.length ? [h('div', { class: 'dgrid' }, rows.slice(0, st.limit).map(card)), rows.length > st.limit ? h('div', { class: 'more-row' }, btn(`Show ${Math.min(40, rows.length - st.limit)} more`, () => { st.limit += 40; renderList(); }, { kind: 'ghost' })) : null]
+    if (st.page * 24 >= rows.length) st.page = 0;
+    fill(listEl, rows.length ? [h('div', { class: 'dgrid' }, rows.slice(st.page * 24, (st.page + 1) * 24).map(card)), pager(rows.length, st.page, 24, n => { st.page = n; renderList(); listEl.scrollIntoView({ block: 'start' }); }, { noun: 'projects' })]
       : empty(st.tab === 'stars' ? 'star' : 'radar', st.tab === 'stars' ? (connected ? 'Nothing installable from your stars yet' : 'Connect GitHub to read your stars') : 'Nothing ready to install yet',
         st.tab === 'stars' ? 'CURI reviews the repositories you starred and keeps only what it can install for your agents.' : 'Search for a need, or run a frontier sweep. CURI inspects what it finds and only shows what it can install here.',
         st.tab === 'stars' ? (connected ? btn('Read my stars', () => runOperation('github.stars', {}, 'Read GitHub stars', { refresh: false }).then(refresh), { kind: 'primary', iconName: 'star' }) : btn('Connect GitHub', () => go('connections'), { kind: 'primary', iconName: 'link' })) : null));

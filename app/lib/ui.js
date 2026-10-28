@@ -77,7 +77,7 @@ export function notice(kind, text, iconName) {
 }
 
 export function skeleton(rows = 4, height = 18) {
-  return h('div', { class: 'stack', 'aria-busy': 'true', 'aria-label': 'A carregar' }, Array.from({ length: rows }, (_, i) => h('div', { class: 'skel', style: { height: `${height}px`, width: `${90 - i * 9}%` } })));
+  return h('div', { class: 'stack', 'aria-busy': 'true', 'aria-label': 'Loading' }, Array.from({ length: rows }, (_, i) => h('div', { class: 'skel', style: { height: `${height}px`, width: `${90 - i * 9}%` } })));
 }
 
 export function table(cols, rows, { onRow, emptyText = 'Nothing yet.', label } = {}) {
@@ -234,3 +234,25 @@ export function externalLink(url, text) {
 }
 
 export const when = iso => h('span', { class: 'num', title: fmtDate(iso, { dateStyle: 'full', timeStyle: 'medium' }) }, fmtDate(iso));
+
+// ---------- Pagination ----------
+// "1–50 of 464" with previous/next and a short run of page numbers. onPage(n) gets a 0-based page.
+export function pager(total, page, size, onPage, { noun = 'items' } = {}) {
+  const pages = Math.ceil(total / size);
+  if (pages <= 1) return null;
+  const go = n => () => onPage(Math.max(0, Math.min(pages - 1, n)));
+  const nums = [...new Set([0, page - 1, page, page + 1, pages - 1].filter(n => n >= 0 && n < pages))].sort((a, b) => a - b);
+  const items = [];
+  nums.forEach((n, i) => {
+    if (i && n - nums[i - 1] > 1) items.push(h('span', { class: 'pg-gap', 'aria-hidden': 'true' }, '…'));
+    const b = h('button', { type: 'button', class: 'pg-n', 'aria-current': n === page ? 'page' : null, 'aria-label': `Page ${n + 1}` }, String(n + 1));
+    b.addEventListener('click', go(n));
+    items.push(b);
+  });
+  const prev = btn('', go(page - 1), { size: 'sm', kind: 'ghost', iconName: 'chevron', title: 'Previous page', disabled: page === 0 });
+  prev.classList.add('pg-prev');
+  const next = btn('', go(page + 1), { size: 'sm', kind: 'ghost', iconName: 'chevron', title: 'Next page', disabled: page >= pages - 1 });
+  return h('nav', { class: 'pager', 'aria-label': 'Pages' },
+    h('span', { class: 'pg-info num' }, `${page * size + 1}–${Math.min(total, (page + 1) * size)} of ${total} ${noun}`),
+    h('span', { class: 'pg-nums' }, prev, items, next));
+}
