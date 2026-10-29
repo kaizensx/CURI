@@ -219,8 +219,9 @@ function writeBanners() {
     const ay = 190 * scale;
     const body = `<rect width="${w}" height="${h}" fill="url(#bg)"/>
   <path d="M${270 * scale} ${ay} H${390 * scale} M${372 * scale} ${ay - 14 * scale} L${392 * scale} ${ay} L${372 * scale} ${ay + 14 * scale}" fill="none" stroke="#5a606c" stroke-width="${3 * scale}" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="${w / 2}" y="${330 * scale}" text-anchor="middle" fill="#a6aab3" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="${14 * scale}">Drag CURI to the Applications folder</text>
-  <text x="${w / 2}" y="${352 * scale}" text-anchor="middle" fill="#6c717c" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="${11.5 * scale}">On first launch, CURI sets up anything missing and shows every step.</text>`;
+  <text x="${w / 2}" y="${312 * scale}" text-anchor="middle" fill="#a6aab3" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="${14 * scale}">Drag CURI to the Applications folder</text>
+  <text x="${w / 2}" y="${338 * scale}" text-anchor="middle" fill="#8b909b" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="${11.5 * scale}">First time only: if macOS says it can't verify CURI, open System Settings ›</text>
+  <text x="${w / 2}" y="${355 * scale}" text-anchor="middle" fill="#8b909b" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="${11.5 * scale}">Privacy &amp; Security and click Open Anyway. Updates install without this.</text>`;
     fs.writeFileSync(OUT(`export/dmg-background${scale > 1 ? '@2x' : ''}.svg`), svgDoc(w, h, body, defs));
     pngExact(OUT(`export/dmg-background${scale > 1 ? '@2x' : ''}.svg`), OUT(`export/dmg-background${scale > 1 ? '@2x' : ''}.png`), w, h);
   };

@@ -166,19 +166,16 @@ jobs:
             echo
             echo "### Install"
             echo
-            echo "**macOS and Linux**"
-            echo '```bash'
-            echo "curl -fsSL https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/install.sh | sh"
-            echo '```'
+            echo "Download the file for your system below:"
+            echo "- **macOS** (Apple Silicon and Intel): the \`.dmg\`. Open it and drag CURI to Applications."
+            echo "- **Windows 10/11** (x64): the \`-setup.exe\`. Run it; no admin rights needed."
+            echo "- **Linux**: a \`.deb\` for Debian/Ubuntu (x64 or arm64), or the \`.AppImage\` (x64)."
             echo
-            echo "**Windows** (PowerShell)"
-            echo '```powershell'
-            echo "irm https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/install.ps1 | iex"
-            echo '```'
+            echo "**The first time only** ($signing): macOS says it can't verify CURI, so open *System Settings › Privacy & Security* and click **Open Anyway**; Windows says it protected your PC, so click **More info › Run anyway**. After that, CURI updates itself in one click, with no warning."
             echo
             echo "Already have CURI? It offers this update on its own; click *Install and restart*."
             echo
-            echo "Or download the file for your system below: the \`.dmg\` (macOS, Apple Silicon and Intel), the \`-setup.exe\` (Windows 10/11 x64), a \`.deb\` (Debian/Ubuntu, x64 or arm64) or the \`.AppImage\` (Linux x64). $signing; browser downloads of unsigned builds get the usual warning (macOS: *System Settings › Privacy & Security*; Windows: *More info › Run anyway*), the install commands and in-app updates don't."
+            echo "Rather use the terminal? \`curl -fsSL https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/install.sh | sh\` (macOS, Linux) or \`irm https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/install.ps1 | iex\` (Windows) installs with no warning at all."
             echo
             echo "Check a download with \`sha256sum -c SHA256SUMS\` (on macOS: \`shasum -a 256 -c SHA256SUMS\`)."
           } >> ../notes.md

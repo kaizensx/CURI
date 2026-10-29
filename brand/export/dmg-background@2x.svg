@@ -3,6 +3,7 @@
   <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="800" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1d1f25"/><stop offset="1" stop-color="#0e0f12"/></linearGradient></defs>
   <rect width="1320" height="800" fill="url(#bg)"/>
   <path d="M540 380 H780 M744 352 L784 380 L744 408" fill="none" stroke="#5a606c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="660" y="660" text-anchor="middle" fill="#a6aab3" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="28">Drag CURI to the Applications folder</text>
-  <text x="660" y="704" text-anchor="middle" fill="#6c717c" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="23">On first launch, CURI sets up anything missing and shows every step.</text>
+  <text x="660" y="624" text-anchor="middle" fill="#a6aab3" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="28">Drag CURI to the Applications folder</text>
+  <text x="660" y="676" text-anchor="middle" fill="#8b909b" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="23">First time only: if macOS says it can't verify CURI, open System Settings ›</text>
+  <text x="660" y="710" text-anchor="middle" fill="#8b909b" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="23">Privacy &amp; Security and click Open Anyway. Updates install without this.</text>
 </svg>
