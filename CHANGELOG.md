@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.6.2 - 2026-10-29
+
+- CI runs again, and for real: the test command passed a folder to `node --test`, which the Node version CI uses doesn't accept, so no test had run there for a while.
+- The engine's tests now pass on macOS, Linux and Windows, and all three are required.
+- Windows: skills install (CURI used `/usr/bin/tar`, which Windows doesn't have), and an older CURI entry in Claude Code's config is recognised with Windows paths instead of being reported as a conflict.
+- Linux: the credential vault is tested against a real Secret Service keyring.
+- The background service and the `/usr/local/bin` link are macOS-only; on other systems they show as unavailable with the reason, instead of failing halfway.
+
 ## 3.6.1 - 2026-10-29
 
 - Discover, Capabilities and Installed filters now behave as toggle buttons for screen readers, like the catalogue.

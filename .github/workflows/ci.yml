@@ -11,10 +11,9 @@ permissions:
 jobs:
   core:
     name: Core tests (${{ matrix.os }})
-    # macOS is the supported platform; Linux and Windows run so we learn where the engine still breaks
-    # there, without blocking a release on it.
+    # The engine passes on all three; macOS-only features (LaunchAgent, /usr/local/bin link) are
+    # blocked with a reason elsewhere and their tests are skipped there.
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.os != 'macos-15' }}
     strategy:
       fail-fast: false
       matrix:
@@ -26,8 +25,16 @@ jobs:
           node-version: 24
       # e2e.test.mjs needs a local Claude Code install and is skipped automatically when absent.
       - name: Test
+        if: runner.os != 'Linux'
         working-directory: core
         run: npm test
+      # On Linux the vault is the Secret Service (libsecret); run it for real inside a throwaway keyring.
+      - name: Test (with a Secret Service keyring)
+        if: runner.os == 'Linux'
+        working-directory: core
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libsecret-tools gnome-keyring dbus-x11 >/dev/null
+          dbus-run-session -- bash -c 'printf "ci" | gnome-keyring-daemon --unlock --components=secrets >/dev/null && npm test'
 
   desktop:
     name: Desktop build (unsigned)
@@ -51,6 +58,10 @@ jobs:
   secrets:
     name: Secret scan
     runs-on: ubuntu-latest
+    # gitleaks reads the pull request's commits.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
