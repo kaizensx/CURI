@@ -43,6 +43,10 @@ function append(el, kids) {
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+// Shortcut labels: ⌘ on macOS, Ctrl elsewhere (the handlers accept both).
+export const isMac = /Mac/i.test(navigator.platform || navigator.userAgent);
+export const mod = (k = '') => (isMac ? `⌘${k}` : `Ctrl+${k}`);
+
 export const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export function fmtDate(iso, opts = { dateStyle: 'short', timeStyle: 'short' }) {
