@@ -6,6 +6,7 @@ import { icon } from '../lib/icons.js';
 import { api, btn, toast, contextMenu, empty, promptDialog, pager } from '../lib/ui.js';
 import { go, params, compareTray, currentMotion } from '../app.js';
 import { STATE_HINT } from './common.js';
+import { hero, searchCapsule } from './hero.js';
 import { resourceMenu, quickAction, quickLabel } from './library.js';
 
 const KINDS = [['', 'Everything'], ['plugin', 'Plugins'], ['skill', 'Skills'], ['mcp', 'MCP servers'], ['cli', 'Command line'], ['app', 'Apps'], ['components', 'UI components'], ['library', 'Libraries'], ['framework', 'Frameworks']];
@@ -237,12 +238,9 @@ export async function catalogueView(tabs) {
   const here = visible.filter(r => HERE.includes(r.state)).length;
   const ready = visible.filter(r => !r.state && r.ready).length;
   page = h('div', { class: 'page cat' },
-    h('header', { class: 'cat-hero' },
-      h('div', { class: 'cat-top' }, h('span', { class: 'cat-eyebrow' }, 'Library'), h('div', { class: 'actions' }, btn('Add URL', () => window.__curiMenu('add-url-dialog'), { kind: 'ghost', iconName: 'plus', size: 'sm' }), tabs)),
-      h('h1', null, 'Give your agents ', h('em', null, 'new abilities.')),
-      h('p', null, `${visible.length} checked resources. ${here} are already yours, ${ready} install in one click, the rest go into your projects.`),
-      h('div', { class: 'cat-search' }, icon('search'), input, clear, h('kbd', null, '/')),
-      ideas),
+    hero({ eyebrow: 'Library', title: 'Give your agents ', em: 'new abilities.', actions: [btn('Add URL', () => window.__curiMenu('add-url-dialog'), { kind: 'ghost', iconName: 'plus', size: 'sm' }), tabs],
+      sub: `${visible.length} checked resources. ${here} are already yours, ${ready} install in one click, the rest go into your projects.`,
+      search: searchCapsule(input, clear, h('kbd', null, '/')), after: ideas }),
     areas,
     h('div', { class: 'cat-bar' }, h('div', { class: 'cat-bar-in' }, kinds, tools)),
     body, announce, bulk);

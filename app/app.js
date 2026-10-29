@@ -9,7 +9,8 @@ import { skills, mcp, bridge, security } from './views/manage.js';
 import { jobs, audit, settings, about } from './views/system.js';
 import { connections, integrations, automation, operations } from './views/control.js';
 import { home } from './views/home.js';
-import { capabilitiesView } from './views/capabilities.js';
+import { capabilitiesView, capabilityView } from './views/capabilities.js';
+import { projectView } from './views/discover.js';
 import { promptDialog } from './lib/ui.js';
 import { startWatcher, withProgress } from './lib/opmodal.js';
 
@@ -61,6 +62,8 @@ const ROUTES = [
   { id: 'about', hidden: true, parent: 'settings', label: 'About', view: tabbed(SETTINGS_TABS, about) },
   { id: 'compare', hidden: true, parent: 'library', label: 'Compare', view: compareView },
   { id: 'resource', hidden: true, parent: 'library', label: 'Resource', view: resource },
+  { id: 'project', hidden: true, parent: 'library', label: 'Project', view: projectView },
+  { id: 'capability', hidden: true, parent: 'capabilities', label: 'Capability', view: capabilityView },
   { id: 'integrations', hidden: true, parent: 'library', label: 'Quick integrations', view: integrations },
   { id: 'skills', hidden: true, parent: 'library', label: 'Skills', view: skills },
   { id: 'mcp', hidden: true, parent: 'library', label: 'MCP servers', view: mcp },
@@ -177,7 +180,7 @@ function pagebar(route, page) {
   const back = h('button', { type: 'button', class: 'nav-arrow', 'aria-label': 'Back', title: `Back (${mod('[')})`, disabled: i <= 0 || null, onclick: () => history.back() }, icon('chevron'));
   const fwd = h('button', { type: 'button', class: 'nav-arrow fwd', 'aria-label': 'Forward', title: `Forward (${mod(']')})`, disabled: i >= histMax || null, onclick: () => history.forward() }, icon('chevron'));
   const parent = route.parent ? byId[route.parent] : null;
-  const here = route.id === 'resource' ? page.querySelector?.('h1')?.textContent : route.label;
+  const here = ['resource', 'project', 'capability'].includes(route.id) ? page.querySelector?.('h1')?.textContent : route.label;
   const crumbs = h('ol', { class: 'crumbs', 'aria-label': 'You are here' },
     parent ? h('li', null, h('a', { href: `#/${parent.id}` }, parent.label)) : null,
     h('li', { 'aria-current': 'page' }, here || route.label));
@@ -218,7 +221,7 @@ export async function mount() {
   clearTimeout(pending);
   if (seq !== renderSeq) return;
   const h1 = page.querySelector?.('h1');
-  if (h1 && route.id === 'resource') document.title = `${h1.textContent} — CURI`;
+  if (h1 && ['resource', 'project', 'capability'].includes(route.id)) document.title = `${h1.textContent} — CURI`;
   const bar = pagebar(route, page);
   const swap = () => { fill(main, bar, page); main.scrollTop = 0; };
   // Animated page swap only for pointer navigation; keyboard navigation is instant.

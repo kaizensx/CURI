@@ -43,11 +43,11 @@ So I built CURI. It reads what's already on your computer and in your agents, li
   <tr>
     <td width="50%" valign="top">
       <img src="docs/screenshots/discover.jpg" alt="New on GitHub: projects CURI found and can install">
-      <p><b>New on GitHub.</b> Projects CURI finds each week (and from your stars), judged by what they'd add to an agent. It inspects each one and only shows what it can install.</p>
+      <p><b>New on GitHub.</b> Projects CURI finds each week (and from your stars), judged by what they'd add to an agent. It inspects each one and only shows what it can install. Each has its own page with why it showed up and how it would be installed.</p>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/screenshots/capabilities.jpg" alt="Capabilities grouped by area">
-      <p><b>Capabilities.</b> What your agents can already do, what's one step away, and the step that adds the most.</p>
+      <img src="docs/screenshots/capabilities.jpg" alt="Capabilities: a meter, the steps that add the most, and cards by area">
+      <p><b>Capabilities.</b> What your agents can already do, what's one step away, and the steps that add the most. Every capability opens a page with everything that provides it.</p>
     </td>
   </tr>
   <tr>

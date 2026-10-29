@@ -6,7 +6,8 @@ import { icon } from '../lib/icons.js';
 import { api, btn, empty, toast, notice, pager } from '../lib/ui.js';
 import { go, params } from '../app.js';
 import { runOperation } from './control.js';
-import { runAction, kindTile } from './common.js';
+import { runAction } from './common.js';
+import { hero, searchCapsule, art } from './hero.js';
 
 const IFACE = { mcp: 'MCP server', plugin: 'Plugin', skill: 'Skill', 'computer-use': 'Browser/screen control', cli: 'Command line', 'scriptable-app': 'Scriptable app', api: 'API/SDK', library: 'Library', ui: 'UI components' };
 const SORTS = [['score', 'Most useful to agents'], ['stars', 'Most stars'], ['recent', 'Recently active'], ['new', 'Newest']];
@@ -31,7 +32,7 @@ async function install(c, after) {
   await runAction(a, r.name, after);
 }
 
-export async function discoverView() {
+export async function discoverView(tabsNav) {
   const p = params();
   const [cands, gh, saved] = await Promise.all([api('candidatesAll', { limit: 1500 }), api('connections').then(l => l.find(x => x.provider === 'github')), api('savedSearches')]);
   const seen = new Map();
@@ -84,23 +85,25 @@ export async function discoverView() {
     const a = c.score?.agent || {}, ins = c.install || {};
     const [owner, name] = c.full_name.split('/');
     const isOpen = open(c);
-    const opt = (ins.options || [])[0];
-    return h('article', { class: 'dcard' },
-      h('div', { class: 'dc-top' }, kindTile(ins.kind || 'cli'),
-        h('div', { class: 'grow' }, h('div', { class: 'nm' }, h('strong', null, name), h('span', { class: 'own' }, owner)), h('span', { class: 'k' }, ins.kind_label || IFACE[a.interface] || '')),
-        a.score != null ? h('div', { class: 'score', title: 'Usefulness to agents (55%), momentum (20%), upkeep (15%), licence (10%)' }, Math.round(a.score * 100)) : null),
-      h('p', { class: 'd' }, c.description || '—'),
-      h('div', { class: 'how' }, (a.domains || []).slice(0, 2).map(d => h('span', { class: 'tagd' }, d)), a.emerging ? h('span', { class: 'em' }, 'emerging') : null, c.query_kind === 'stars' ? h('span', { class: 'tagd' }, 'starred by you') : null),
-      h('div', { class: 'dc-foot' },
-        h('span', { class: 'meta' }, icon('star', 'sm'), compact(c.stars), ' · ', relTime(c.gh_pushed_at)),
-        opt ? h('span', { class: 'via', title: (ins.options || []).map(o => o.label).join(' · ') }, opt.label, opt.ready ? null : ` (needs ${opt.missing.join(', ')})`) : null,
-        h('span', { class: 'grow' }),
-        btn('', () => api('openExternal', { url: c.url }), { size: 'sm', kind: 'ghost', iconName: 'external', title: 'Open on GitHub' }),
-        isOpen ? btn('', async () => { await api('reject', { id: c.id, reason: 'not relevant' }); c.decision = 'rejected'; render(); }, { size: 'sm', kind: 'ghost', iconName: 'x', title: 'Not interested' }) : null,
-        c.presence ? h('span', { class: 'state installed', title: c.presence.where.join(', ') }, `Installed · ${c.presence.where[0] || 'this device'}`) : null,
-        c.presence ? btn('Open', () => go(`resource/${encodeURIComponent(c.resource_id)}`), { size: 'sm' })
-          : isOpen || (c.resource_id && ins.installable) ? btn('Install', () => install(c, refresh), { size: 'sm', kind: 'primary', iconName: 'download' })
-          : btn('Open', () => go(c.resource_id ? `resource/${encodeURIComponent(c.resource_id)}` : 'library'), { size: 'sm' })));
+    const action = c.presence ? btn('Open', () => go(`resource/${encodeURIComponent(c.resource_id)}`), { size: 'sm', kind: 'pill' })
+      : isOpen || (c.resource_id && ins.installable) ? btn('Install', () => install(c, refresh), { size: 'sm', kind: 'pill get', iconName: 'download' })
+      : btn('Open', () => go(c.resource_id ? `resource/${encodeURIComponent(c.resource_id)}` : `project/${c.id}`), { size: 'sm', kind: 'pill' });
+    const el = h('article', { class: 'gcard dcard2', tabindex: '0', role: 'listitem', 'aria-label': `${name} by ${owner}` },
+      h('div', { class: 'g-top' }, art(c.full_name, ins.kind || 'cli'),
+        h('div', { class: 'g-id' }, h('strong', null, name), h('span', null, ins.kind_label || IFACE[a.interface] || '', h('i', null, ` · ${owner}`))),
+        a.score != null ? h('span', { class: 'g-score', title: 'Usefulness to agents (55%), momentum (20%), upkeep (15%), licence (10%)' }, Math.round(a.score * 100)) : null),
+      h('p', null, c.description || ''),
+      h('div', { class: 'g-tags' }, (a.domains || []).slice(0, 2).map(d => h('span', null, d)), a.emerging ? h('span', { class: 'em' }, 'emerging') : null, c.query_kind === 'stars' ? h('span', null, 'starred by you') : null),
+      h('div', { class: 'g-foot' },
+        h('div', { class: 'g-meta' }, h('span', null, icon('star', 'sm'), compact(c.stars)), h('span', null, relTime(c.gh_pushed_at))),
+        isOpen && !c.presence ? btn('', async () => { await api('reject', { id: c.id, reason: 'not relevant' }); c.decision = 'rejected'; render(); }, { size: 'sm', kind: 'ghost', iconName: 'x', title: 'Not interested' }) : null,
+        c.presence ? h('span', { class: 'state installed', title: c.presence.where.join(', ') }, 'Installed') : null,
+        action));
+    // The card opens the project's page: what it is, what it would add, how CURI would install it.
+    const openPage = () => go(c.resource_id ? `resource/${encodeURIComponent(c.resource_id)}` : `project/${c.id}`);
+    el.addEventListener('click', e => { if (!e.target.closest('button, a')) openPage(); });
+    el.addEventListener('keydown', e => { if (e.target === el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openPage(); } });
+    return el;
   };
   const toggle = (label, on, fn) => { const b = h('button', { type: 'button', class: `fchip ${on ? '' : 'off'}`, 'aria-pressed': String(on) }, label); b.addEventListener('click', () => { fn(); persist(); render(); }); return b; };
   const render = () => {
@@ -123,23 +126,65 @@ export async function discoverView() {
   const renderList = () => {
     const rows = (lists[st.tab] || installable).filter(passes).sort(order[st.sort] || order.score);
     if (st.page * 24 >= rows.length) st.page = 0;
-    fill(listEl, rows.length ? [h('div', { class: 'dgrid' }, rows.slice(st.page * 24, (st.page + 1) * 24).map(card)), pager(rows.length, st.page, 24, n => { st.page = n; renderList(); listEl.scrollIntoView({ block: 'start' }); }, { noun: 'projects' })]
+    fill(listEl, rows.length ? [h('div', { class: 'cat-grid', role: 'list' }, rows.slice(st.page * 24, (st.page + 1) * 24).map(card)), pager(rows.length, st.page, 24, n => { st.page = n; renderList(); listEl.scrollIntoView({ block: 'start' }); }, { noun: 'projects' })]
       : empty(st.tab === 'stars' ? 'star' : 'radar', st.tab === 'stars' ? (connected ? 'Nothing installable from your stars yet' : 'Connect GitHub to read your stars') : 'Nothing ready to install yet',
         st.tab === 'stars' ? 'CURI reviews the repositories you starred and keeps only what it can install for your agents.' : 'Search for a need, or run a frontier sweep. CURI inspects what it finds and only shows what it can install here.',
         st.tab === 'stars' ? (connected ? btn('Read my stars', () => runOperation('github.stars', {}, 'Read GitHub stars', { refresh: false }).then(refresh), { kind: 'primary', iconName: 'star' }) : btn('Connect GitHub', () => go('connections'), { kind: 'primary', iconName: 'link' })) : null));
   };
   render();
-  return h('div', { class: 'page' },
-    h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'New on GitHub'),
-      h('p', null, 'New GitHub projects that give your agents something they can\'t do yet. CURI inspects each one and only shows what it can install here, in one click.')),
-      h('div', { class: 'actions' },
-        connected ? btn('Read my stars', () => runOperation('github.stars', {}, 'Read GitHub stars', { refresh: false }).then(refresh), { kind: 'ghost', iconName: 'star' }) : null,
-        btn('Frontier sweep', () => runOperation('discover', { mode: 'frontier', maxQueries: 8 }, 'Frontier sweep', { refresh: false }).then(refresh), { kind: 'ghost', iconName: 'compass' }))),
-    h('div', { class: 'lib-top' }, h('div', { class: 'searchbox' }, icon('search', 'sm'), input),
-      btn('Save', async () => { const q = input.value.trim(); if (q.length < 3) return toast('Type the search first.', 'bad'); saved.splice(0, saved.length, ...await api('savedSearchSet', { intent: q, auto: false })); renderSaved(saved); toast('Search saved', 'good'); }, { kind: 'ghost', iconName: 'star', title: 'Save this search' }),
-      btn('Search', () => runSearch(), { kind: 'primary', iconName: 'radar' })),
-    savedBox,
+  const saveBtn = btn('Save', async () => { const q = input.value.trim(); if (q.length < 3) return toast('Type the search first.', 'bad'); saved.splice(0, saved.length, ...await api('savedSearchSet', { intent: q, auto: false })); renderSaved(saved); toast('Search saved', 'good'); }, { kind: 'ghost', size: 'sm', iconName: 'star', title: 'Save this search' });
+  const searchBtn = btn('Search GitHub', () => runSearch(), { kind: 'primary', size: 'sm', iconName: 'radar' });
+  return h('div', { class: 'page cat' },
+    hero({ eyebrow: 'Library', title: 'New abilities, ', em: 'found on GitHub.',
+      sub: `${installable.length} projects CURI inspected and can install here, from its weekly look at GitHub${connected ? ' and your stars' : ''}. Search for anything an agent should be able to do.`,
+      actions: [
+        connected ? btn('Read my stars', () => runOperation('github.stars', {}, 'Read GitHub stars', { refresh: false }).then(refresh), { kind: 'ghost', size: 'sm', iconName: 'star' }) : null,
+        btn('Look now', () => runOperation('discover', { mode: 'frontier', maxQueries: 8 }, 'Look for new projects on GitHub', { refresh: false }).then(refresh), { kind: 'ghost', size: 'sm', iconName: 'compass' }),
+        tabsNav],
+      search: searchCapsule(input, saveBtn, searchBtn), after: savedBox }),
     !connected ? notice('info', 'Without GitHub connected, searches use the anonymous limit (10 a minute). In Connections you can reuse the GitHub CLI session or store a token in the system vault.') : null,
-    pending.length ? h('div', { class: 'pending-note' }, icon('clock', 'sm'), h('span', null, `${pending.length} more discover${pending.length === 1 ? 'y hasn\'t' : 'ies haven\'t'} been inspected yet.`), btn('Inspect the next 20', () => runOperation('discover.inspect', { limit: 20 }, 'Inspect discoveries', { refresh: false }).then(refresh), { size: 'sm', kind: 'ghost' })) : null,
-    h('div', { class: 'sec' }, tabs), filters, listEl);
+    pending.length ? h('div', { class: 'pending-note' }, icon('clock', 'sm'), h('span', null, `${pending.length} more discover${pending.length === 1 ? 'y hasn\'t' : 'ies haven\'t'} been inspected yet.`), btn('Inspect the next 20', () => runOperation('discover.inspect', { limit: 20 }, 'Inspect discoveries', { refresh: false }).then(refresh), { size: 'sm' })) : null,
+    h('div', { class: 'cat-bar' }, h('div', { class: 'cat-bar-in' }, tabs, filters)), listEl);
+}
+
+// A project found on GitHub that isn't in the library yet: what it is, why CURI thinks an agent would
+// use it, and how it would be installed here. Installing catalogues it and opens its resource page.
+export async function projectView(id) {
+  const c = (await api('candidatesAll', { limit: 2000 })).find(x => String(x.id) === String(id));
+  if (!c) return h('div', { class: 'page' }, empty('alert', 'Project not found', 'It may have been cleared from the list of discoveries.', btn('Back to New on GitHub', () => go('library?tab=new'), { kind: 'primary' })));
+  if (c.resource_id) { location.replace(`#/resource/${encodeURIComponent(c.resource_id)}`); return h('div'); }
+  const a = c.score?.agent || {}, ins = c.install || {};
+  const [owner, name] = c.full_name.split('/');
+  const url = `https://github.com/${c.full_name}`;
+  const after = () => go('library?tab=new');
+  const sub = [ins.kind_label || IFACE[a.interface], owner, c.license && c.license !== 'none' ? c.license : null].filter(Boolean);
+  const head = h('header', { class: 'sheet-head' }, art(c.full_name, ins.kind || 'cli', 'lg'),
+    h('div', null, h('h1', null, name), h('div', { class: 'sub' }, sub.map(s => h('span', null, s)), a.emerging ? h('span', { class: 'state new' }, 'Emerging') : null)),
+    a.score != null ? h('div', { class: 'p-score', title: 'Usefulness to agents (55%), momentum (20%), upkeep (15%), licence (10%)' }, h('strong', null, Math.round(a.score * 100)), h('span', null, 'agent score')) : null);
+  const bar = h('div', { class: 'actionbar' },
+    ins.installable ? btn('Install', () => install(c, after), { kind: 'primary', iconName: 'download' }) : h('span', { class: 'lead' }, ins.installable === false ? 'CURI found no way to install this here yet.' : 'Not inspected yet.'),
+    c.decision === 'candidate' ? btn('Not interested', async () => { await api('reject', { id: c.id, reason: 'not relevant' }); toast('Hidden from New on GitHub'); after(); }, { kind: 'ghost', iconName: 'x' }) : null,
+    h('span', { class: 'grow' }),
+    h('a', { class: 'btn ghost', href: url, target: '_blank', rel: 'noopener' }, icon('external', 'sm'), 'GitHub'));
+  const options = ins.options?.length ? h('div', { class: 'box' }, ins.options.map(o => h('div', { class: 'opt' },
+    h('div', null, h('div', { class: 't' }, o.label), h('div', { class: 's' }, o.ready ? 'Ready on this computer' : o.missing?.length ? `needs ${o.missing.join(', ')} (CURI installs it first)` : '')),
+    o.ready ? h('span', { class: 'state installed' }, 'Ready') : null))) : null;
+  const dl = [];
+  const fact = (k, v) => { if (v != null && v !== '') dl.push(h('dt', null, k), h('dd', null, v)); };
+  fact('Stars', c.stars != null ? compact(c.stars) : null);
+  fact('Last change', c.gh_pushed_at ? relTime(c.gh_pushed_at) : null);
+  fact('Created', c.gh_created_at ? relTime(c.gh_created_at) : null);
+  fact('Licence', c.license && c.license !== 'none' ? c.license : 'None stated');
+  fact('Found by', c.query_kind === 'stars' ? 'Your GitHub stars' : c.mode === 'task' ? 'A search' : 'The weekly look at GitHub');
+  const sec = (title, meta, node) => (node ? [h('div', { class: 'sec' }, h('h2', null, title), meta ? h('span', { class: 'meta' }, meta) : null), node] : []);
+  return h('div', { class: 'page' }, head, bar,
+    h('div', { class: 'sheet' },
+      h('div', null,
+        ...sec('What it is', null, h('div', { class: 'stack' }, h('p', { class: 'prose' }, c.description || 'No description.'), ins.how || a.how ? h('p', { class: 'prose dim' }, ins.how || a.how) : null)),
+        ...sec('Why it showed up', null, a.why?.length ? h('ul', { class: 'why-list' }, a.why.map(w => h('li', null, icon('check', 'sm'), w))) : null),
+        ...sec('How CURI would install it', 'each option runs visibly, with progress and verification', options)),
+      h('div', null,
+        ...sec('Facts', null, h('div', { class: 'box pad' }, h('dl', { class: 'facts' }, dl))),
+        ...sec('Areas', null, a.domains?.length ? h('div', { class: 'capchips' }, a.domains.map(d => h('span', { class: 'capchip' }, d))) : null),
+        ...sec('Topics', null, c.topics?.length ? h('div', { class: 'capchips' }, c.topics.slice(0, 12).map(t => h('span', { class: 'capchip' }, t))) : null))));
 }

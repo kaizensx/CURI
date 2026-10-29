@@ -570,3 +570,5 @@ main > .pagebar:has(+ .page.home) { background: transparent; box-shadow: none; -
 /* Library › Installed › This computer: the system, base tools and package managers above the list. */
 .dv-computer { display: grid; gap: 18px; margin: 4px 0 26px; }
 .dv-computer .dv-cols { margin-top: 0; }
+.inv-row.link { cursor: default; }
+@media (hover: hover) and (pointer: fine) { .inv-row.link:hover strong { color: var(--signal); } }
