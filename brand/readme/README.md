@@ -7,6 +7,7 @@ The hero and the framed screenshots in `docs/screenshots` are rendered from the 
 3. Open and capture at 2x:
    - `hero.html?src=<catalogue screenshot>` at 1600×720
    - `frame.html?src=<screenshot>` at 1720×1100
+   - `platforms.html?mac=<shot>&win=<shot>&linux=<shot>` at 1720×640, with real screenshots from each system (the Windows and Linux ones come from test machines)
 4. Give the big screenshots a few seconds to decode before capturing. Scale to 2400 px wide and save as JPEG (quality ~88), e.g. `sips -s format jpeg -s formatOptions 88 --resampleWidth 2400 in.png --out out.jpg`.
 
 Keep the screenshots honest: real data from a real machine, no mock-ups.
