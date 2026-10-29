@@ -148,7 +148,7 @@ jobs:
             echo "$signing. Windows builds aren't signed yet, so SmartScreen will ask you to confirm."
             echo "Check a download with \`sha256sum -c SHA256SUMS\` (on macOS: \`shasum -a 256 -c SHA256SUMS\`)."
           } >> ../notes.md
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           draft: true
           name: CURI ${{ github.ref_name }}
