@@ -65,9 +65,9 @@ export async function capabilitiesView() {
   };
   const onlyAgent = toggle('agent-only', st.agentOnly, 'Only what the agent uses directly', 'Hides knowledge for building projects (libraries, components).');
   onlyAgent.input.addEventListener('change', e => { st.agentOnly = e.target.checked; render(); });
-  const statusTabs = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Status' }, [['', 'All'], ['ready', 'Available'], ['one-step', 'One step away'], ['gap', 'Missing']].map(([v, l]) => {
-    const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.status === v) }, l);
-    b.addEventListener('click', () => { st.status = v; statusTabs.querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', String(x === b))); render(); });
+  const statusTabs = h('div', { class: 'tabs', role: 'group', 'aria-label': 'Status' }, [['', 'All'], ['ready', 'Available'], ['one-step', 'One step away'], ['gap', 'Missing']].map(([v, l]) => {
+    const b = h('button', { type: 'button', 'aria-pressed': String(st.status === v) }, l);
+    b.addEventListener('click', () => { st.status = v; statusTabs.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); render(); });
     return b;
   }));
   render();

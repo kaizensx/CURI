@@ -51,7 +51,7 @@ export async function settings() {
       panel({ title: 'Integrations and control', flush: true }, h('div', { class: 'rows' },
         row('Connections and credentials', 'Claude Code, GitHub, Anthropic API, OpenAI, Google AI.', h('a', { class: 'btn sm', href: '#/connections' }, 'Open')),
         row('Autonomy and permissions', 'Management mode, permission matrix, trusted publishers, background work.', h('a', { class: 'btn sm', href: '#/automation' }, 'Open')),
-        row('Operations', 'Queue, approvals and install history.', h('a', { class: 'btn sm', href: '#/operations' }, 'Open')))),
+        row('Activity', 'What CURI installed or changed, and what waits for your OK.', h('a', { class: 'btn sm', href: '#/operations' }, 'Open')))),
       panel({ title: 'Discovery and installs', flush: true }, h('div', { class: 'rows' },
         row('GitHub request budget per run', 'Without a token: 60 requests/h and 10 searches/min.', budget),
         row('Install policy', 'Minimal global: only CURI\'s own skill and MCP; everything else on demand.', policy),

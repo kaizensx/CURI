@@ -2,7 +2,7 @@
 
 <p align="center">
   <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-1b1c21?style=flat-square&logo=apple&logoColor=white">
-  <img alt="Version 3.6.0" src="https://img.shields.io/badge/version-3.6.0-6e96ff?style=flat-square">
+  <img alt="Version 3.6.1" src="https://img.shields.io/badge/version-3.6.1-6e96ff?style=flat-square">
   <img alt="Runs locally" src="https://img.shields.io/badge/runs-100%25%20local-5fd39a?style=flat-square">
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-a6aab3?style=flat-square">
 </p>
@@ -89,7 +89,7 @@ Every install runs in a progress window that follows what the package manager is
 
 > Builds aren't signed with an Apple Developer ID yet. The first time, macOS asks you to confirm in *System Settings › Privacy & Security*.
 
-**Platforms.** macOS (Apple Silicon, 13 or later) is what I test on. The engine already knows Windows and Linux (their package managers, apps and credential vaults), but that hasn't been tried on real machines yet, and the app says so.
+**Platforms.** macOS (Apple Silicon, 13 or later) is what I test on. The engine already knows Windows and Linux (their package managers, apps and credential vaults), but that hasn't been tried on real machines yet, and the app says so. CI runs the engine's tests on Linux and Windows too, so the gaps are visible.
 
 ## Privacy
 
