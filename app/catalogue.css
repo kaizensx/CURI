@@ -21,7 +21,7 @@
   box-shadow: var(--glass-shadow), 0 30px 60px -30px rgba(40, 70, 200, .45); transition: box-shadow var(--d-base) ease, transform var(--d-base) var(--ease-out); }
 .cat-search::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: var(--glass-rim); pointer-events: none;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-.cat-search:focus-within { box-shadow: var(--glass-shadow), 0 0 0 4px color-mix(in srgb, var(--signal) 16%, transparent), 0 30px 70px -26px rgba(60, 100, 255, .6); }
+.cat-search:focus-within { box-shadow: var(--glass-shadow), 0 0 0 2px var(--signal), 0 30px 70px -26px rgba(60, 100, 255, .6); }
 .cat-search > svg.i { width: 20px; height: 20px; color: var(--ink-2); flex: none; }
 .cat-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; outline: none; font-size: 18px; font-weight: 450; letter-spacing: -.012em; color: var(--ink-1); }
 .cat-search input::placeholder { color: var(--ink-3); }
@@ -53,11 +53,13 @@ html:not([data-theme="light"]) .area[aria-pressed="true"] { color: #fff; }
 .area[aria-pressed="true"] .n { color: inherit; opacity: .75; }
 
 .cat-bar { position: sticky; top: var(--titlebar-h); z-index: 4; margin: 0 calc(-1 * var(--s8)) 10px; padding: 10px var(--s8);
-  background: color-mix(in srgb, var(--field) 55%, transparent); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  background: color-mix(in srgb, var(--field) 30%, transparent); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
   -webkit-mask-image: linear-gradient(#000 80%, transparent); mask-image: linear-gradient(#000 80%, transparent); padding-bottom: 18px; }
 .cat-bar-in { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 html:not(.native) .cat-bar { top: 46px; }
-.cat-kinds { flex: none; }
+.cat-kinds { flex: 0 1 auto; min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.cat-kinds::-webkit-scrollbar { display: none; }
+.cat-kinds button { flex: none; }
 .cat-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 .cat-tools[hidden] { display: none; }
 .cat-count { font-size: 13px; color: var(--ink-2); margin-right: 4px; }
@@ -138,8 +140,8 @@ html:not(.native) .cat-bar { top: 46px; }
 .btn.pill.get { color: #fff; background: linear-gradient(180deg, color-mix(in srgb, var(--signal) 70%, white), var(--signal-strong)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 4px 12px -4px color-mix(in srgb, var(--signal-strong) 80%, transparent); }
 .btn.pill.md { height: 32px; padding: 0 16px; font-size: 13px; }
 .shelf-feature .btn.pill:not(.get) { color: #fff; background: rgba(255,255,255,.2); }
-:root[data-theme="light"] .btn.pill { background: rgba(47, 98, 211, .1); }
-@media (prefers-color-scheme: light) { :root:not([data-theme]) .btn.pill { background: rgba(47, 98, 211, .1); } }
+:root[data-theme="light"] .btn.pill:not(.get) { background: rgba(47, 98, 211, .1); }
+@media (prefers-color-scheme: light) { :root:not([data-theme]) .btn.pill:not(.get) { background: rgba(47, 98, 211, .1); } }
 
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
 .cat-body > .pager { margin-top: 20px; }
@@ -161,3 +163,9 @@ html:not(.native) .cat-bar { top: 46px; }
 .cat.searching .cat-hero h1, .cat.searching .cat-hero > p { opacity: 0; max-height: 0; margin: 0; }
 .cat.searching .cat-search { margin-top: 0; }
 .cat.searching .cat-top { margin-bottom: 18px; }
+
+/* More actions: the right-click menu, reachable by keyboard and pointer alike. */
+.gcard .more { flex: none; width: 28px; height: 28px; border: 0; border-radius: 8px; background: none; color: var(--ink-3); display: grid; place-items: center; opacity: 0; transition: opacity var(--d-fast) ease, background var(--d-fast) ease; }
+.gcard:hover .more, .gcard:focus-within .more, .gcard .more:focus-visible { opacity: 1; }
+.gcard .more:hover { background: rgba(255,255,255,.08); color: var(--ink-1); }
+@media (hover: none) { .gcard .more, .gcard .fav { opacity: 1; } }

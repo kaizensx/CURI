@@ -1,4 +1,7 @@
+import fs from 'node:fs';
 import { currentVersion } from './db.mjs';
+
+const APP_VERSION = (() => { try { return JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version; } catch { return null; } })();
 
 export function statusSummary(db) {
   const count = sql => db.prepare(sql).get().n;
@@ -8,6 +11,7 @@ export function statusSummary(db) {
   const lastScan = db.prepare('SELECT id, mode, status, started_at, finished_at FROM scans ORDER BY id DESC LIMIT 1').get() || null;
   const lastVerify = db.prepare("SELECT ts, details FROM audit_log WHERE action='verify.run' ORDER BY id DESC LIMIT 1").get();
   return {
+    version: APP_VERSION,
     schema_version: currentVersion(db),
     resources: count('SELECT COUNT(*) n FROM resources'),
     source_urls: count('SELECT COUNT(*) n FROM resource_urls'),

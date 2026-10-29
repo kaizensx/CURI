@@ -200,8 +200,8 @@ test('projects: the documented command becomes the right one for the project, an
   const p = describeProject(dir);
   assert.equal(p.ecosystems[0].manager, 'pnpm');
   assert.deepEqual(planProjectCommand('npm install -D msw', p), { cmd: 'pnpm', args: ['add', '-D', 'msw'], verify: { js: ['msw'] }, ecosystem: 'js' });
-  assert.equal(planProjectCommand('npx shadcn@latest add @react-bits/<componente>', p).needs, 'component');
-  assert.deepEqual(planProjectCommand('npx shadcn@latest add @react-bits/<componente>', p, { component: 'blur-text' }).args, ['--yes', 'shadcn@latest', 'add', '@react-bits/blur-text', '--yes']);
+  assert.equal(planProjectCommand('npx shadcn@latest add @react-bits/<component>', p).needs, 'component');
+  assert.deepEqual(planProjectCommand('npx shadcn@latest add @react-bits/<component>', p, { component: 'blur-text' }).args, ['--yes', 'shadcn@latest', 'add', '@react-bits/blur-text', '--yes']);
   assert.ok(planProjectCommand('pip install librosa', p).error, 'a JS project refuses pip');
   assert.equal(verifyInProject(p, { js: ['gsap'] }), true);
   assert.equal(verifyInProject(p, { js: ['msw'] }), false);

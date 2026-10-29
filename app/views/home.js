@@ -74,7 +74,7 @@ function startHere(inv) {
 }
 
 export async function home() {
-  const [map, dev, maint, pol, cands, lib, inv] = await Promise.all([api('capabilityMap'), api('device'), api('maintenance'), api('policy'), api('candidatesAll', { limit: 200 }).catch(() => []), api('library'), api('installed').catch(() => ({ places: [] }))]);
+  const [map, dev, maint, pol, cands, lib, inv] = await Promise.all([api('capabilityMap'), api('device'), api('maintenance'), api('policy'), api('candidatesAll', { limit: 200 }), api('library'), api('installed')]);
   const agents = dev.scan?.agents || [];
   const presentAgents = agents.filter(a => a.present);
   const here = lib.filter(r => ['installed', 'configured', 'account'].includes(r.state));

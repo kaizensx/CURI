@@ -6,7 +6,7 @@ const RX = (s) => new RegExp(s, 'i');
 const INTERFACES = [
   ['mcp', 1.0, RX('\\bmcp\\b|model context protocol|mcp[-_ ]server'), 'The agent calls this MCP server\'s tools directly.'],
   ['plugin', 0.9, RX('claude[- ]code plugin|plugin marketplace|\\.claude-plugin'), 'Installs as a Claude Code plugin.'],
-  ['skill', 0.9, RX('agent[- ]skills?|claude[- ]skills?|skill\\.md|skills for (claude|codex|agents)|\\bclaude code\\b'), 'O agente carrega estas skills quando a tarefa corresponde.'],
+  ['skill', 0.9, RX('agent[- ]skills?|claude[- ]skills?|skill\\.md|skills for (claude|codex|agents)|\\bclaude code\\b'), 'The agent loads these skills when the task matches.'],
   ['computer-use', 0.85, RX('computer[- ]use|browser automation|headless browser|desktop automation|gui automation|accessibility tree'), 'Gives the agent control of the browser, the screen or apps.'],
   ['cli', 0.7, RX('\\bcli\\b|command[- ]line|terminal (tool|app|ui)|\\btui\\b'), 'The agent runs it in the terminal and reads the output.'],
   ['scriptable-app', 0.65, RX('headless|scripting api|python api|automat(e|ion) (blender|cad|kicad|freecad|ghidra|ida)|add-?on api|plugin api|rest api for'), 'An app with a programmable interface the agent can drive.'],

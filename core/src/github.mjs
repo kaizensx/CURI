@@ -1,6 +1,8 @@
 // GitHub + web source verification. Respects rate limits, uses ETag conditional requests, and never
 // persists tokens (GITHUB_TOKEN is read from env per request only).
 import { execFile } from 'node:child_process';
+import dns from 'node:dns/promises';
+import net from 'node:net';
 import { promisify } from 'node:util';
 import { now, tx } from './db.mjs';
 import { audit } from './audit-log.mjs';
@@ -16,7 +18,7 @@ export function setProvider(db, provider, status, detail = null, rateLimit = nul
     .run(provider, status, detail, rateLimit ? JSON.stringify(rateLimit) : null, now());
 }
 
-// Token from the Keychain (CURI → Ligações), cached briefly in memory; never persisted elsewhere.
+// Token from the Keychain (CURI › Connections), cached briefly in memory; never persisted elsewhere.
 let tokenCache = { value: null, at: 0 };
 async function githubToken() {
   if (Date.now() - tokenCache.at < 60000) return tokenCache.value;
@@ -76,9 +78,29 @@ export async function lsRemote(url, { timeoutMs = 20000 } = {}) {
   }
 }
 
+// Source checks only ever reach the public internet: no loopback, private, link-local or CGNAT
+// addresses, checked again on every redirect (a public URL could bounce into the local network).
+const PRIVATE = [/^127\./, /^10\./, /^192\.168\./, /^172\.(1[6-9]|2\d|3[01])\./, /^169\.254\./, /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, /^0\./, /^(22[4-9]|2[3-5]\d)\./, /^::1?$/, /^f[cd]/i, /^fe[89ab]/i, /^::ffff:(127|10|192\.168|169\.254)\./i];
+export async function isPublicUrl(u) {
+  let url;
+  try { url = new URL(u); } catch { return false; }
+  if (!['http:', 'https:'].includes(url.protocol)) return false;
+  const host = url.hostname.replace(/^\[|\]$/g, '');
+  const addrs = net.isIP(host) ? [host] : await dns.lookup(host, { all: true }).then(a => a.map(x => x.address)).catch(() => []);
+  return addrs.length > 0 && addrs.every(a => !PRIVATE.some(rx => rx.test(a)));
+}
+
 export async function webCheck(url, { timeoutMs = 15000 } = {}) {
   try {
-    const res = await fetch(url, { method: 'GET', redirect: 'follow', headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(timeoutMs) });
+    let res, at = url;
+    for (let hop = 0; ; hop++) {
+      if (!(await isPublicUrl(at))) return { ok: false, status: null, error: 'Not a public address; not checked.' };
+      res = await fetch(at, { method: 'GET', redirect: 'manual', headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(timeoutMs) });
+      const next = res.status >= 300 && res.status < 400 && res.headers.get('location');
+      if (!next || hop >= 5) break;
+      at = new URL(next, at).href;
+    }
+    Object.defineProperty(res, 'url', { value: at });
     const body = (await res.text()).slice(0, 200000);
     const title = body.match(/<title[^>]*>([^<]{1,200})<\/title>/i)?.[1]?.trim() || null;
     return { ok: res.ok, status: res.status, finalUrl: res.url, title };

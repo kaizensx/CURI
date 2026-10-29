@@ -43,7 +43,7 @@ import { allMarks, setMark, collections, addCollection, removeCollection } from 
 const S = (v, max = 500) => { if (typeof v !== 'string' || v.length > max) throw new Error('invalid text parameter'); return v; };
 const optS = (v, max) => (v == null || v === '' ? undefined : S(v, max));
 const I = (v, d, min, max) => { if (v == null) return d; const n = Number(v); if (!Number.isInteger(n) || n < min || n > max) throw new Error('invalid numeric parameter'); return n; };
-const ids = v => { if (!Array.isArray(v) || v.length < 2 || v.length > 5) throw new Error('ids: 2 a 5'); return v.map(x => S(x, 300)); };
+const ids = v => { if (!Array.isArray(v) || v.length < 2 || v.length > 5) throw new Error('ids: 2 to 5'); return v.map(x => S(x, 300)); };
 
 const running = new Map();
 
@@ -188,7 +188,7 @@ export const ACTIONS = {
   importData: (db, p) => importRegistry(db, p.data, { dryRun: p.dryRun !== false }),
   prefsGet: db => ({ discovery_areas: getPref(db, 'discovery_areas', []), github_budget: getPref(db, 'github_budget', 40), install_policy: getPref(db, 'install_policy', 'minimal-global'), telemetry: false, scheduled_scans: getPref(db, 'scheduled_scans', false), model_analysis: getPref(db, 'model_analysis', false) }),
   prefsSet: (db, p) => {
-    const allowed = { discovery_areas: v => Array.isArray(v) && v.every(x => typeof x === 'string'), github_budget: v => Number.isInteger(v) && v >= 0 && v <= 5000, install_policy: v => ['minimal-global', 'catalog-only'].includes(v), scheduled_scans: v => v === false, model_analysis: v => typeof v === 'boolean', auto_verify_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_scan_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_repair_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_package_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_discover_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_stars_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, pause_on_battery: v => typeof v === 'boolean', notify_mode: v => ['all', 'errors', 'none'].includes(v), update_repo: v => v === null || /^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/.test(v) };
+    const allowed = { discovery_areas: v => Array.isArray(v) && v.every(x => typeof x === 'string'), github_budget: v => Number.isInteger(v) && v >= 0 && v <= 5000, install_policy: v => ['minimal-global', 'catalog-only'].includes(v), scheduled_scans: v => v === false, model_analysis: v => typeof v === 'boolean', auto_verify_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_scan_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_repair_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_plugin_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_package_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_discover_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_stars_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, pause_on_battery: v => typeof v === 'boolean', notify_mode: v => ['all', 'errors', 'none'].includes(v), update_repo: v => v === null || /^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/.test(v) };
     for (const [k, v] of Object.entries(p)) { if (!allowed[k]?.(v)) throw new Error(`invalid preference: ${k}`); setPref(db, k, v); }
     return ACTIONS.prefsGet(db);
   },

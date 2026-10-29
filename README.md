@@ -2,7 +2,7 @@
 
 <p align="center">
   <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-1b1c21?style=flat-square&logo=apple&logoColor=white">
-  <img alt="Version 3.5.3" src="https://img.shields.io/badge/version-3.5.3-6e96ff?style=flat-square">
+  <img alt="Version 3.6.0" src="https://img.shields.io/badge/version-3.6.0-6e96ff?style=flat-square">
   <img alt="Runs locally" src="https://img.shields.io/badge/runs-100%25%20local-5fd39a?style=flat-square">
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-a6aab3?style=flat-square">
 </p>
@@ -73,7 +73,7 @@ So I built CURI. It reads what's already on your computer and in your agents, li
 
 Every install runs in a progress window that follows what the package manager is actually doing, and is checked afterwards.
 
-**Bends to how you work.** Favourites, collections, notes, your own kind and project commands, hidden items. Back and forward, ⌘K for everything, pages instead of endless scrolling.
+**Bends to how you work.** Favourites, collections, notes, your own kind and project commands, hidden items. Back and forward, ⌘K for everything, pages instead of endless scrolling. Works from the keyboard and with VoiceOver, and follows macOS when you ask for less motion, less transparency or more contrast.
 
 **Discovers with taste.** It reads your GitHub stars and runs saved searches on its own, but only keeps projects an agent can actually use (MCP, skill, command line, API, scriptable app) and that it can install here.
 
