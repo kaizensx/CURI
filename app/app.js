@@ -11,6 +11,7 @@ import { connections, integrations, automation, operations } from './views/contr
 import { home } from './views/home.js';
 import { capabilitiesView, capabilityView } from './views/capabilities.js';
 import { projectView } from './views/discover.js';
+import { kitView } from './views/kits.js';
 import { promptDialog } from './lib/ui.js';
 import { startWatcher, withProgress } from './lib/opmodal.js';
 
@@ -42,9 +43,11 @@ const SETTINGS_TABS = [['settings', 'General'], ['automation', 'Autonomy'], ['br
 const tabbed = (tabs, view) => async (...a) => {
   const page = await view(...a);
   const cur = location.hash.replace(/^#\//, '').split(/[/?]/)[0];
-  const nav = h('nav', { class: 'tabs hub-tabs', 'aria-label': 'Sections' }, tabs.map(([id, l]) => h('a', { href: `#/${id}`, 'aria-current': id === cur ? 'page' : null }, l)));
+  const top = page.querySelector?.('.cat-top .actions');
+  // Pages with the shared header carry their tabs at its top right, like the Library.
+  const nav = h('nav', { class: `tabs ${top ? 'lib-tabs' : 'hub-tabs'}`, 'aria-label': 'Sections' }, tabs.map(([id, l]) => h('a', { href: `#/${id}`, 'aria-current': id === cur ? 'page' : null }, l)));
   const head = page.querySelector?.('.page-head');
-  if (head) head.after(nav); else page.prepend?.(nav);
+  if (top) top.append(nav); else if (head) head.after(nav); else page.prepend?.(nav);
   return page;
 };
 const ROUTES = [
@@ -63,6 +66,7 @@ const ROUTES = [
   { id: 'compare', hidden: true, parent: 'library', label: 'Compare', view: compareView },
   { id: 'resource', hidden: true, parent: 'library', label: 'Resource', view: resource },
   { id: 'project', hidden: true, parent: 'library', label: 'Project', view: projectView },
+  { id: 'kit', hidden: true, parent: 'library', label: 'Kit', view: kitView },
   { id: 'capability', hidden: true, parent: 'capabilities', label: 'Capability', view: capabilityView },
   { id: 'integrations', hidden: true, parent: 'library', label: 'Quick integrations', view: integrations },
   { id: 'skills', hidden: true, parent: 'library', label: 'Skills', view: skills },
@@ -180,7 +184,7 @@ function pagebar(route, page) {
   const back = h('button', { type: 'button', class: 'nav-arrow', 'aria-label': 'Back', title: `Back (${mod('[')})`, disabled: i <= 0 || null, onclick: () => history.back() }, icon('chevron'));
   const fwd = h('button', { type: 'button', class: 'nav-arrow fwd', 'aria-label': 'Forward', title: `Forward (${mod(']')})`, disabled: i >= histMax || null, onclick: () => history.forward() }, icon('chevron'));
   const parent = route.parent ? byId[route.parent] : null;
-  const here = ['resource', 'project', 'capability'].includes(route.id) ? page.querySelector?.('h1')?.textContent : route.label;
+  const here = ['resource', 'project', 'capability', 'kit'].includes(route.id) ? page.querySelector?.('h1')?.textContent : route.label;
   const crumbs = h('ol', { class: 'crumbs', 'aria-label': 'You are here' },
     parent ? h('li', null, h('a', { href: `#/${parent.id}` }, parent.label)) : null,
     h('li', { 'aria-current': 'page' }, here || route.label));
@@ -221,7 +225,7 @@ export async function mount() {
   clearTimeout(pending);
   if (seq !== renderSeq) return;
   const h1 = page.querySelector?.('h1');
-  if (h1 && ['resource', 'project', 'capability'].includes(route.id)) document.title = `${h1.textContent} — CURI`;
+  if (h1 && ['resource', 'project', 'capability', 'kit'].includes(route.id)) document.title = `${h1.textContent} — CURI`;
   const bar = pagebar(route, page);
   const swap = () => { fill(main, bar, page); main.scrollTop = 0; };
   // Animated page swap only for pointer navigation; keyboard navigation is instant.

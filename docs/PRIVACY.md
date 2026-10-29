@@ -9,6 +9,7 @@ Everything CURI knows stays on your computer, in its data folder. There's no CUR
 | `api.github.com`, `github.com`, `codeload.github.com`, `raw.githubusercontent.com` | Checking sources, Discover, inspecting a project, installing skills | Search terms and repository names; your token if you connected one | Don't use Discover; without a token you're anonymous |
 | `registry.npmjs.org`, `pypi.org`, `crates.io`, `formulae.brew.sh` | Confirming that a package exists and belongs to the project | Package names | Yes (the starter catalogue's data ships with the app) |
 | Package managers (Homebrew, npm, uv, WinGet…) | When you install, update or remove something | Whatever the manager normally asks its own registry | Yes |
+| `github.com`, `raw.githubusercontent.com`, npm and Homebrew | Checking for updates to what CURI installed, once a day or when you click *Check now* | Repository names, plugin marketplace names, package names | Yes (set the update tasks to 0 in Autonomy) |
 | `api.github.com/user/starred` | When you ask CURI to read your stars, or you turn that task on | Your GitHub token | Yes |
 | `api.anthropic.com` | Checking connectivity; testing your API key if you saved one | A HEAD request; `GET /v1/models` with the key | Yes |
 | Claude (through Claude Code) | Only when you click "Verify with a real request" | A fixed test prompt; uses your account's quota | Yes (never automatic) |

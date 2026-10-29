@@ -3,6 +3,8 @@ import { icon } from '../lib/icons.js';
 import { api, btn, status, badge, panel, pageHead, empty, notice, kv, table, toast, confirmDialog, externalLink, segmented, meter, when, pager } from '../lib/ui.js';
 import { go, mount, setPoll, params } from '../app.js';
 import { showOperation, withProgress } from '../lib/opmodal.js';
+import { describeOp } from '../lib/optext.js';
+import { hero } from './hero.js';
 
 // ---------- shared: preview the policy decision, confirm, enqueue as explicitly approved ----------
 const DECISION = { auto: ['good', 'Automatic by policy'], ask: ['warn', 'Needs your approval'], block: ['bad', 'Blocked'] };
@@ -84,6 +86,7 @@ function providerCard(c, refresh) {
     h('ul', { class: 'plain caps' }, c.capabilities.map(x => h('li', null, icon('check', 'sm'), x))),
     c.keychain ? h('div', { class: 'row nowrap' }, h('div', { class: 'field grow' }, icon('lock', 'sm'), input), btn(c.has_secret ? 'Replace' : 'Save and test', save, { kind: c.has_secret ? '' : 'primary' })) : notice('warn', 'Secure storage isn\'t available on this system.'),
     h('div', { class: 'row' },
+      c.provider === 'github' && c.status === 'connected' ? btn('Read my stars', () => runOperation('github.stars', {}, 'Read GitHub stars', { refresh: false }), { kind: 'primary sm', iconName: 'star' }) : null,
       c.has_secret ? btn('Test', async () => { await withProgress(`Testing ${c.name}`, async () => { const r = await api('connectionTest', { provider: c.provider }); return r.ok ? r.detail : { ok: false, message: r.detail || r.status }; }, { stage: `Contacting ${c.name}…` }).catch(() => {}); refresh(); }, { kind: 'ghost sm', iconName: 'refresh' }) : null,
       c.has_secret ? btn('Remove local access', async () => { if (await confirmDialog({ title: `Remove ${c.name}?`, body: 'Deletes the credential from the system vault. To invalidate it for good, revoke it on the provider\'s website too.', confirm: 'Remove', danger: true })) { await withProgress(`Removing ${c.name}`, () => api('connectionRemove', { provider: c.provider }).then(r => (r.removed ? 'Credential deleted from the system vault.' : 'There was no credential in the system vault.'))); refresh(); } }, { kind: 'ghost sm danger', iconName: 'trash' }) : null,
       h('span', { class: 'spacer' }), externalLink(c.docs, 'How to get one'),
@@ -98,8 +101,8 @@ function githubReuse(list, refresh) {
   // Drawn straight away from the last answer, so the 4-second refresh never blanks the card; the
   // background check only redraws when something actually changed.
   const paint = x => {
-    if (gh?.status === 'connected') fill(box, panel({ title: 'GitHub connected', meta: gh.account || '' }, h('div', { class: 'row' }, h('p', { class: 'muted', style: { margin: 0, flex: 1 } }, 'Searches use authenticated limits. CURI can review the repositories you starred and pick out what\'s useful to your agents.'),
-      btn('Read my stars', () => runOperation('github.stars', {}, 'Read GitHub stars', { refresh: false }), { kind: 'primary', iconName: 'star' }))));
+    // Once connected, GitHub has one card (with Read my stars); this banner only offers to connect.
+    if (gh?.status === 'connected') fill(box);
     else if (x.gh_logged_in) fill(box, panel({ title: 'GitHub session found', meta: x.gh_user || 'GitHub CLI' }, h('div', { class: 'row' }, h('p', { class: 'muted', style: { margin: 0, flex: 1 } }, 'The GitHub CLI (gh) is already signed in on this device. With your permission, CURI asks it for the token the official way (gh auth token), tests it and stores it in the system vault.'),
       btn('Reuse this session', () => withProgress('Connecting GitHub with the gh session', async () => { const r = await api('githubAdoptCli'); refresh(); return r.saved ? `Connected as ${r.account || 'GitHub'}.` : `Not connected: ${r.detail || 'test failed'}`; }), { kind: 'primary', iconName: 'link' }))));
     else fill(box);
@@ -112,14 +115,14 @@ function githubReuse(list, refresh) {
 }
 
 export async function connections() {
-  const root = h('div', { class: 'page' });
+  const root = h('div', { class: 'page cat' });
   let first = true; // entrance motion only on first paint, never on live refresh
   async function render() {
     const [s, list, defs] = await Promise.all([api('claudeStatus'), api('connections'), api('mcpDefs')]);
     const secretRefs = [...new Set(defs.flatMap(d => Object.values(d.secret_env)).filter(r => r.startsWith('secret:')))];
     const secrets = await Promise.all(secretRefs.map(async ref => ({ ref, users: defs.filter(d => Object.values(d.secret_env).includes(ref)).map(d => d.name) })));
     fill(root, 
-      pageHead({ title: 'Connections', sub: 'Accounts and credentials. Keys and tokens live in your operating system\'s vault: CURI never shows, logs or exports them.' }),
+      pageHead({ eyebrow: 'Connections', title: 'Your accounts ', em: 'and keys.', sub: 'Accounts and credentials. Keys and tokens live in your operating system\'s vault: CURI never shows, logs or exports them.' }),
       h('div', { class: first ? 'stack-lg reveal' : 'stack-lg' },
         claudeCard(s, render),
         githubReuse(list, render),
@@ -146,7 +149,7 @@ export async function integrations() {
   const custom = defs.filter(d => !pr.mcp.some(m => m.name === d.name));
   const form = customMcpForm();
   return h('div', { class: 'page' },
-    pageHead({ eyebrow: 'Integrations', title: 'Integration catalogue', sub: 'Pinned versions, static analysis before writing and verification afterwards. Nothing is installed just because it\'s in the catalogue.' }),
+    pageHead({ eyebrow: 'Library', title: 'Quick integrations', sub: 'Pinned versions, static analysis before writing and verification afterwards. Nothing is installed just because it\'s in the catalogue.' }),
     h('div', { class: 'stack-lg reveal' },
       panel({ title: 'MCP servers', meta: 'started by Claude through the CURI launcher', flush: true }, h('div', { class: 'rows' }, pr.mcp.map(m => h('div', { class: 'r' },
         h('span', { class: 'itile' }, icon('mcp')), h('div', { class: 'grow' }, h('div', { class: 't1' }, m.title, ' ', h('span', { class: 'muted mono small' }, m.args.at(-1))), h('div', { class: 't2' }, m.purpose)),
@@ -245,7 +248,7 @@ export async function automation() {
   const battery = h('input', { type: 'checkbox', role: 'switch', id: 'bat', checked: prefs.pause_on_battery !== false || null });
   const modes = ['standard', 'automatic', 'maximum'];
   return h('div', { class: 'page' },
-    pageHead({ title: 'Autonomy', sub: 'What CURI does on its own and what it asks you first. Consent covers defined categories, not unlimited access; your operating system still asks for your password for admin actions.' }),
+    pageHead({ eyebrow: 'Settings', title: 'What CURI does ', em: 'on its own.', sub: 'What CURI does on its own and what it asks you first. Consent covers defined categories, not unlimited access; your operating system still asks for your password for admin actions.' }),
     h('div', { class: 'stack-lg reveal' },
       pol.consent.implicit ? notice('info', 'You haven\'t picked a mode yet: you\'re on Standard (approve everything).') : notice('info', `Current mode: ${MODE_COPY[pol.consent.mode][0]}, granted ${relTime(pol.consent.granted_at)} (policy ${pol.version}).`),
       modePicker(pol, () => mount()),
@@ -279,10 +282,14 @@ function opDetail(o) {
 }
 
 export async function operations() {
-  const root = h('div', { class: 'page' });
+  const body = h('div');
+  // The header is built once, so the tabs the router adds to it survive the live refresh of the list.
+  const root = h('div', { class: 'page cat' }, hero({ eyebrow: 'Activity', title: 'Everything CURI ', em: 'did for you.', sub: 'What it installed, changed or checked, and what is waiting for your OK. Work survives restarts and is never done twice; cancelling stops at the next safe point.' }), body);
   let filter = params().get('status') || 'all', q = '', open = params().get('id'), page = 0;
-  const search = h('input', { type: 'search', maxlength: '100', placeholder: 'Search by kind or resource', 'aria-label': 'Search operations' });
+  const search = h('input', { type: 'search', maxlength: '100', placeholder: 'Search activity', 'aria-label': 'Search operations' });
   search.addEventListener('input', () => { q = search.value; page = 0; render(); });
+  const memo = new Map();
+  const d = o => { const k = `${o.id}:${o.status}`; if (!memo.has(k)) memo.set(k, describeOp(o)); return memo.get(k); };
   async function render() {
     const all = await api('ops', { limit: 500, q });
     const pending = all.filter(o => o.status === 'awaiting_approval');
@@ -291,7 +298,9 @@ export async function operations() {
     if (page * 30 >= shown.length) page = 0;
     const list = h('div', { class: 'rows' }, shown.slice(page * 30, (page + 1) * 30).map(o => {
       const row = h('details', { class: 'r op', open: o.id === open || null },
-        h('summary', { class: 'row nowrap' }, opBadge(o.status), h('div', { class: 'grow' }, h('div', { class: 't1' }, o.resource || o.kind), h('div', { class: 't2' }, `${o.kind} · ${o.stage || ''} · ${relTime(o.updated_at)}`)),
+        h('summary', { class: 'row nowrap' }, h('span', { class: 'op-ic', 'aria-hidden': 'true' }, icon(d(o).icon, 'sm')), h('div', { class: 'grow' }, h('div', { class: 't1' }, d(o).title), h('div', { class: 't2' }, [d(o).who, o.status === 'running' && o.stage ? o.stage : null, relTime(o.updated_at)].filter(Boolean).join(' · '))),
+          opBadge(o.status),
+          d(o).resourceId ? h('a', { class: 'btn sm ghost', href: `#/resource/${encodeURIComponent(d(o).resourceId)}`, onclick: e => e.stopPropagation() }, h('span', { class: 'btn-content' }, 'Details', icon('chevron', 'sm'))) : null,
           o.status === 'running' && o.progress != null ? h('div', { style: { width: '120px' } }, meter(o.progress)) : null,
           o.status === 'awaiting_approval' ? [btn('Approve', async () => { await api('opApprove', { id: o.id }); render(); }, { kind: 'primary sm' }), btn('Reject', async () => { await api('opReject', { id: o.id }); render(); }, { kind: 'ghost sm' })] : null,
           ['queued', 'running'].includes(o.status) ? btn('Cancel', async () => { await api('opCancel', { id: o.id }); render(); }, { kind: 'ghost sm' }) : null,
@@ -300,8 +309,7 @@ export async function operations() {
       row.addEventListener('toggle', () => { open = row.open ? o.id : open === o.id ? null : open; });
       return row;
     }));
-    fill(root, ...[
-      pageHead({ eyebrow: 'Control', title: 'Activity', sub: 'Everything CURI installed, changed or checked, and what is waiting for your OK. Work survives restarts and is never done twice; cancelling stops at the next safe point.' }),
+    fill(body, ...[
       h('section', { class: 'panel kpis small' }, kpi('Awaiting approval', pending.length), kpi('Active', active.length), kpi('Verified', all.filter(o => o.status === 'verified').length), kpi('Failed', all.filter(o => o.status === 'failed').length), kpi('Total', all.length)),
       pending.length ? notice('warn', `${pending.length} operation(s) waiting for your decision.`) : null,
       h('div', { class: 'toolbar' }, segmented([['all', 'All'], ['awaiting_approval', 'Approval'], ['running', 'Running'], ['queued', 'Queued'], ['verified', 'Verified'], ['failed', 'Failed']], filter, v => { filter = v; page = 0; render(); }, 'Filter'), h('span', { class: 'spacer' }), h('div', { class: 'field' }, icon('search', 'sm'), search)),

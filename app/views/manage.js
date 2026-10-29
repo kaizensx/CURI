@@ -25,7 +25,7 @@ export async function skills() {
   const byScope = inv.skills.reduce((m, s) => (m[s.scope] = (m[s.scope] || 0) + 1, m), {});
   const flagged = inv.skills.filter(s => s.security.high || s.security.medium).length;
   return h('div', { class: 'page' },
-    pageHead({ eyebrow: 'Manage', title: 'Skills', sub: `Skills found in ${inv.claude_home}. CURI only changes its own skill; the others are inspected, never modified.` }),
+    pageHead({ eyebrow: 'Library', title: 'Skills', sub: `Skills found in ${inv.claude_home}. CURI only changes its own skill; the others are inspected, never modified.` }),
     h('section', { class: 'panel kpis small' },
       kpiMini('On disk', inv.skills.length), kpiMini('User scope', byScope.user || 0), kpiMini('Via plugins', byScope.plugin || 0), kpiMini('Managed by CURI', inv.skills.filter(s => s.managed_by_curi).length), kpiMini('With findings', flagged)),
     h('div', { class: 'stack-lg reveal' },
@@ -60,7 +60,7 @@ export async function mcp() {
   }) : [panel({}, empty('mcp', 'No MCP servers configured'))]));
   draw();
   return h('div', { class: 'page' },
-    pageHead({ eyebrow: 'Manage', title: 'MCP servers', sub: 'Configured isn\'t the same as working. The test starts each server the way a Claude session would. Environment variable values are never read, only their names.', actions: [
+    pageHead({ eyebrow: 'Library', title: 'MCP servers', sub: 'Configured isn\'t the same as working. The test starts each server the way a Claude session would. Environment variable values are never read, only their names.', actions: [
       btn('Test connections', async () => { await withProgress('Testing MCP servers', async () => { const r = await api('mcpHealth'); if (!r.available) return { ok: false, message: 'Claude Code isn\'t installed.' }; tested = new Date().toISOString(); health.clear(); r.servers.forEach(s => health.set(s.name, s)); draw(); return `${r.servers.filter(s => s.healthy).length} of ${r.servers.length} connected.`; }, { stage: 'Claude Code is starting each configured server…' }).catch(() => {}); }, { kind: 'primary', iconName: 'refresh' })] }),
     inv.mcp_duplicates.length ? notice('warn', `Possible duplicates: ${inv.mcp_duplicates.map(d => d.entries.join(' = ')).join(' · ')}`) : null,
     grid);
@@ -88,7 +88,7 @@ export async function bridge() {
   };
 
   return h('div', { class: 'page' },
-    pageHead({ eyebrow: 'Manage', title: 'Claude integration', sub: 'A compact skill and a read-only stdio MCP server. They work without the app open: Claude Code starts the MCP directly.' }),
+    pageHead({ eyebrow: 'Settings', title: 'Claude integration', sub: 'A compact skill and a read-only stdio MCP server. They work without the app open: Claude Code starts the MCP directly.' }),
     h('section', { class: `panel bridge-hero ${healthy ? 'ok' : integ.length ? 'warn' : ''}` }, h('div', { class: 'panel-body' },
       h('div', { class: 'bh-status' }, h('span', { class: `result-ic ${healthy ? 'good' : integ.length ? 'warn' : ''}` }, icon(healthy ? 'check' : integ.length ? 'alert' : 'bridge', 'lg')),
         h('div', null, h('h3', null, healthy ? 'Integration active' : integ.length ? 'Integration needs attention' : 'Integration not applied'),
@@ -121,7 +121,7 @@ export async function security() {
   const area = h('textarea', { class: 'area', 'aria-label': 'Text to scan', placeholder: 'Paste a README, SKILL.md, MCP description or hooks configuration…' });
   const out = h('div');
   return h('div', { class: 'page' },
-    pageHead({ eyebrow: 'Manage', title: 'Security', sub: 'External content is treated as untrusted data. Static analysis runs nothing and never grants authority.' }),
+    pageHead({ eyebrow: 'Settings', title: 'Security', sub: 'External content is treated as untrusted data. Static analysis runs nothing and never grants authority.' }),
     h('div', { class: 'grid cols-main reveal' },
       panel({ title: 'Scan content' }, area, h('div', { class: 'row', style: { marginTop: '10px' } }, h('span', { class: 'muted' }, '12 rules: prompt injection, pipe-to-shell, credentials, hooks, persistence, hidden unicode…'), h('span', { class: 'spacer' }),
         btn('Scan', async () => { if (!area.value.trim()) return; fill(out, scanResult(await api('scanText', { text: area.value }), 'pasted text')); }, { kind: 'primary', iconName: 'shield' })), out),

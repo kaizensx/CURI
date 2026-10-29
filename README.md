@@ -4,7 +4,7 @@
   <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-1b1c21?style=flat-square&logo=apple&logoColor=white">
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%2F%2011-1b1c21?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Linux x64 and ARM64" src="https://img.shields.io/badge/Linux-x64%20%C2%B7%20ARM64-1b1c21?style=flat-square&logo=linux&logoColor=white">
-  <img alt="Version 3.8.0" src="https://img.shields.io/badge/version-3.8.0-6e96ff?style=flat-square">
+  <img alt="Version 3.9.0" src="https://img.shields.io/badge/version-3.9.0-6e96ff?style=flat-square">
   <img alt="Runs locally" src="https://img.shields.io/badge/runs-100%25%20local-5fd39a?style=flat-square">
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-a6aab3?style=flat-square">
 </p>
@@ -60,6 +60,16 @@ So I built CURI. It reads what's already on your computer and in your agents, li
       <p><b>Every resource.</b> What it is, where you already have it, every way to get it here, and the alternatives.</p>
     </td>
   </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/home.jpg" alt="Home: capabilities at a glance, the next install, updates and what needs you">
+      <p><b>Home.</b> What your agents can do at a glance, the next install that adds the most, updates waiting, and anything that needs you.</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/kits.jpg" alt="Kits: a few tools that work well together, installed in one go">
+      <p><b>Kits.</b> Web testing, design taste, security review, video and more: a few tools that work well together, installed in one go.</p>
+    </td>
+  </tr>
 </table>
 
 ## What it does
@@ -73,7 +83,7 @@ So I built CURI. It reads what's already on your computer and in your agents, li
 - a library goes straight into one of your projects, with the package manager that project already uses;
 - a component catalogue becomes available to your agent through the shadcn MCP server.
 
-Every install runs in a progress window that follows what the package manager is actually doing, and is checked afterwards.
+Every install runs in a progress window that follows what the package manager is actually doing, and is checked afterwards. *Library › Installed › Updates* lists what has a newer version, and *Uninstall…* sits in every card's menu.
 
 **Bends to how you work.** Favourites, collections, notes, your own kind and project commands, hidden items. Back and forward, ⌘K for everything, pages instead of endless scrolling. Works from the keyboard and with VoiceOver, and follows macOS when you ask for less motion, less transparency or more contrast.
 
@@ -155,7 +165,7 @@ brand/      visual identity, generated from a single geometry; README art in bra
 
 The CLI (`node core/bin/curi.mjs help`) does everything the app does, if you'd rather stay in the terminal.
 
-**Releases.** Pushing a version tag (`git tag v3.8.0 && git push origin v3.8.0`) builds macOS, Windows and Linux, signs the in-app updates, and puts everything in a draft release with checksums and the notes from the CHANGELOG. Once the draft is published, installed copies offer the update by themselves. Publishing the draft is a manual step. For a test build without a release, run the *Cross-platform build* workflow from the Actions tab.
+**Releases.** Pushing a version tag (`git tag v3.9.0 && git push origin v3.9.0`) builds macOS, Windows and Linux, signs the in-app updates, and puts everything in a draft release with checksums and the notes from the CHANGELOG. Once the draft is published, installed copies offer the update by themselves. Publishing the draft is a manual step. For a test build without a release, run the *Cross-platform build* workflow from the Actions tab.
 
 [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Design](docs/DESIGN.md) · [Internal contracts](docs/CONTRACTS.md)
 

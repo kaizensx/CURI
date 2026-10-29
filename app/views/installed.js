@@ -10,7 +10,8 @@ import { runOperation } from './control.js';
 import { runAction } from './common.js';
 import { noun, computerOverview } from './device.js';
 
-const PLACE_ICON = { account: 'cloud', agent: 'agent', computer: 'device', recent: 'clock', all: 'layers' };
+const PLACE_ICON = { account: 'cloud', agent: 'agent', computer: 'device', recent: 'clock', all: 'layers', updates: 'refresh' };
+const UPD_WORD = { skill: 'Skill', plugin: 'Claude Code plugin', package: 'Tool' };
 const TYPE_ICON = { 'account-skill': 'skills', skill: 'skills', plugin: 'layers', mcp: 'mcp', app: 'grid' };
 const TYPE_WORD = { 'account-skill': 'skill', skill: 'skill', plugin: 'plugin', mcp: 'MCP server', app: 'app' };
 const PERIODS = [[7, '7 days'], [30, '30 days'], [90, '3 months']];
@@ -21,7 +22,7 @@ const SIZE = 40;
 
 // `input` is the search box the Library header shows above every tab.
 export async function installedView(onCount, { input } = {}) {
-  let [inv, dev] = await Promise.all([api('installed'), api('device')]);
+  let [inv, dev, upd] = await Promise.all([api('installed'), api('device'), api('updates')]);
   const st = { place: params().get('place') ?? lsGet('curi-inst-place', 'recent'), group: '', q: '', page: 0,
     sort: lsGet('curi-inst-sort', 'name'), days: Number(lsGet('curi-inst-days', '30')), who: lsGet('curi-inst-who', 'claude') };
   const side = h('nav', { class: 'inv-places', 'aria-label': 'Where things are installed' });
@@ -51,7 +52,7 @@ export async function installedView(onCount, { input } = {}) {
     const rowEl = h('div', { class: `inv-row ${it.resource ? 'link' : ''}`, role: 'listitem', tabindex: it.resource ? '0' : null },
       h('span', { class: `inv-ic ${it.enabled === false ? 'off' : ''}`, 'aria-hidden': 'true' }, icon(TYPE_ICON[it.type] || 'terminal', 'sm')),
       h('div', { class: 'inv-what' },
-        h('div', { class: 'inv-name' }, h('strong', null, it.name), tags),
+        h('div', { class: 'inv-name' }, h('strong', { title: it.name }, it.type === 'plugin' ? it.name.split('@')[0] : it.name), tags),
         it.description || it.detail ? h('div', { class: `inv-desc ${it.detail && !it.description ? 'mono' : ''}` }, it.description || it.detail) : null,
         showPlace || it.added_at ? h('div', { class: 'inv-where' },
           showPlace ? [icon(PLACE_ICON[place.kind], 'sm'), h('span', null, `${TYPE_WORD[it.type] || it.type} in ${place.label}`)] : null,
@@ -80,6 +81,7 @@ export async function installedView(onCount, { input } = {}) {
     const week = inv.places.flatMap(p => p.groups.flatMap(g => g.items)).filter(it => it.added_at && Date.now() - new Date(it.added_at) < 7 * 864e5).length;
     fill(side,
       placeBtn({ id: 'recent', label: 'Recently added', kind: 'recent', count: week, sub: 'newest first, every place' }),
+      placeBtn({ id: 'updates', label: 'Updates', kind: 'updates', count: upd?.items.length ?? 0, sub: upd ? `checked ${relTime(upd.checked_at)}` : 'not checked yet' }),
       placeBtn({ id: '', label: 'Everywhere', kind: 'all', count: total(), sub: `${inv.places.length} places` }),
       h('span', { class: 'micro inv-side-head' }, 'Places'),
       inv.places.map(placeBtn),
@@ -110,8 +112,29 @@ export async function installedView(onCount, { input } = {}) {
           btn('Show everything', () => pick(''), { kind: 'primary' })));
   };
 
+  // Newer versions of what CURI installed. Each update runs as a normal operation, with progress.
+  const checkUpdates = async () => { fill(main, h('div', { class: 'inv-head' }, h('p', null, 'Looking for newer versions…'))); upd = await api('updatesCheck'); render(); };
+  const updateOne = async it => { await runOperation(it.op.kind, it.op.params, `Update ${it.name}`, { refresh: false }); upd = await api('updatesCheck'); await reload(); };
+  const updateAll = async () => { for (const it of [...upd.items]) await runOperation(it.op.kind, it.op.params, `Update ${it.name}`, { refresh: false }); upd = await api('updatesCheck'); await reload(); };
+  const renderUpdates = () => {
+    const items = (upd?.items || []).filter(it => !st.q || it.name.toLowerCase().includes(st.q));
+    fill(main,
+      h('header', { class: 'inv-head' }, h('div', { class: 'grow' }, h('h2', null, 'Updates'),
+        h('p', null, `Newer versions of the skills, plugins and tools CURI installed.${upd ? ` Last checked ${relTime(upd.checked_at)}.` : ''} CURI checks once a day; the ones your autonomy mode covers update on their own.`)),
+        h('div', { class: 'inv-head-act' }, btn('Check now', checkUpdates, { size: 'sm', kind: 'ghost', iconName: 'refresh' }),
+          items.length > 1 ? btn(`Update all (${items.length})`, updateAll, { size: 'sm', kind: 'primary', iconName: 'download' }) : null)),
+      items.length ? h('div', { class: 'inv-list', role: 'list' }, items.map(it => h('div', { class: `inv-row ${it.resource_id ? 'link' : ''}`, role: 'listitem', onclick: e => { if (it.resource_id && !e.target.closest('button')) go(`resource/${encodeURIComponent(it.resource_id)}`); } },
+        h('span', { class: 'inv-ic', 'aria-hidden': 'true' }, icon(TYPE_ICON[it.kind] || 'terminal', 'sm')),
+        h('div', { class: 'inv-what' }, h('div', { class: 'inv-name' }, h('strong', null, it.name), h('span', { class: 'tg' }, UPD_WORD[it.kind] || it.kind)),
+          h('div', { class: 'inv-desc mono' }, `${it.current} → ${it.latest}`)),
+        h('div', { class: 'inv-act' }, btn('Update', () => updateOne(it), { size: 'sm', kind: 'pill get', iconName: 'download' })))))
+        : empty('check', upd ? 'Everything is up to date' : 'Not checked yet', upd ? 'Every skill, plugin and tool CURI installed is on its latest version.' : 'CURI compares what it installed with the latest versions on GitHub, npm and Homebrew.',
+          upd ? null : btn('Check now', checkUpdates, { kind: 'primary', iconName: 'refresh' })));
+  };
+
   const renderMain = () => {
     if (st.place === 'recent') return renderRecent();
+    if (st.place === 'updates') return renderUpdates();
     const places = st.place ? inv.places.filter(p => p.id === st.place) : inv.places;
     const place = st.place ? places[0] : null;
     if (st.place && !place) { st.place = ''; return renderMain(); }

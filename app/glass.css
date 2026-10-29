@@ -80,17 +80,17 @@ html:not(.native) .aurora { inset: 0 0 0 var(--sidebar-w); }
 @media (max-width: 860px) { .aurora { left: 64px; } }
 
 /* ---------- glass surfaces ---------- */
-.panel, .glass, .rlist, .inv-list, .inv-place, .dcard, .rcard2, .cap, .agent, .reco, .capsec, .conn, .provider, .kpis, .dv-card, .sheet .box, .cand, .start .door, .recent-box {
+.panel, .glass, .rlist, .inv-list, .inv-place, .rcard2, .cap, .agent, .reco, .conn, .provider, .kpis, .dv-card, .sheet .box, .cand, .start .door, .recent-box {
   background: var(--glass-fill);
   -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
   border-color: transparent;
 }
-.panel::before, .glass::before, .rlist::before, .inv-list::before, .rcard2::before, .dcard::before, .gcard::before, .shelf-feature::before, .inv-place::before {
+.panel::before, .glass::before, .rlist::before, .inv-list::before, .rcard2::before, .gcard::before, .shelf-feature::before, .inv-place::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: var(--glass-rim); pointer-events: none; z-index: 2;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
 }
-.rlist, .inv-list, .rcard2, .dcard, .inv-place { position: relative; }
+.rlist, .inv-list, .rcard2, .inv-place { position: relative; }
 /* Pointer highlight: app.js sets --mx/--my on whatever glass the pointer is over. */
 .spec { position: relative; }
 .spec::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1; opacity: 0; transition: opacity 260ms ease;

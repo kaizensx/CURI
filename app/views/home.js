@@ -7,6 +7,8 @@ import { go } from '../app.js';
 import { runOperation } from './control.js';
 import { runAction } from './common.js';
 import { ambient } from '../lib/ambient.js';
+import { describeOp } from '../lib/optext.js';
+import { hero } from './hero.js';
 
 const MODE = { standard: 'Standard', automatic: 'Automatic', maximum: 'Maximum autonomy' };
 
@@ -56,25 +58,40 @@ function constellation(map, agents) {
     ...groups);
 }
 
-// Three plain doors into the app, then what arrived lately from any agent or account.
-function startHere(inv) {
+// Plugins are listed as name@marketplace; people know them by the name.
+export const displayName = (it, place) => it.resource?.name || (it.type === 'plugin' ? it.name.split('@')[0] : it.name);
+
+// Three cards that each answer "is there something for me to do?", then what arrived lately.
+function startHere(inv, { reco, updates, attention }, getVia) {
   const items = inv.places.flatMap(p => p.groups.flatMap(g => g.items.filter(it => it.added_at).map(it => ({ it, p }))))
     .sort((a, b) => b.it.added_at.localeCompare(a.it.added_at)).slice(0, 5);
-  const door = (ic, title, text, to) => { const b = h('button', { type: 'button', class: 'door' }, h('span', { class: 'ic' }, icon(ic)), h('strong', null, title), h('span', null, text), h('span', { class: 'go' }, icon('chevron', 'sm'))); b.addEventListener('click', () => go(to)); return b; };
-  const total = inv.places.reduce((n, p) => n + p.count, 0);
+  const card = (ic, tone, eyebrow, title, text, action, to) => {
+    const el = h('article', { class: `door ${tone}`, tabindex: to ? '0' : null },
+      h('span', { class: 'ic' }, icon(ic)), h('span', { class: 'eb' }, eyebrow), h('strong', null, title), h('span', null, text), action ? h('div', { class: 'door-act' }, action) : null);
+    if (to) {
+      el.addEventListener('click', e => { if (!e.target.closest('button, a')) go(to); });
+      el.addEventListener('keydown', e => { if (e.target === el && e.key === 'Enter') go(to); });
+    }
+    return el;
+  };
+  const rec = reco[0];
   return h('section', { class: 'start' },
     h('div', { class: 'doors' },
-      door('check', 'See what I have', `${total} things across your agents, your claude.ai account and this computer.`, 'library?tab=installed&place='),
-      door('download', 'Get something new', 'Browse the catalogue and install in one click, with progress.', 'library?tab=catalogue'),
-      door('map', 'What can my agents do?', 'Capabilities in plain words, and the one step that adds each missing one.', 'capabilities')),
+      rec ? card('download', 'b', 'Next install', `${rec.label}`, `${rec.resource.name} adds it: ${rec.can.toLowerCase()}.`, btn('Get', () => getVia(rec.resource), { size: 'sm', kind: 'pill get', iconName: 'download' }), `capability/${encodeURIComponent(rec.capability)}`)
+        : card('check', 'g', 'Next install', 'Nothing missing', 'Every agent capability with a provider in the catalogue is already here.', null, 'capabilities'),
+      updates == null ? card('refresh', 'n', 'Updates', 'Not checked yet', 'CURI compares what it installed with the latest versions.', null, 'library?tab=installed&place=updates')
+        : card('refresh', updates.items.length ? 'b' : 'g', 'Updates', updates.items.length ? `${updates.items.length} update${updates.items.length === 1 ? '' : 's'} ready` : 'All up to date',
+          updates.items.length ? updates.items.slice(0, 3).map(x => x.name).join(', ') : `Checked ${relTime(updates.checked_at)}.`, null, 'library?tab=installed&place=updates'),
+      attention.length ? card('alert', 'w', 'Needs you', `${attention.length} thing${attention.length === 1 ? '' : 's'} to look at`, attention[0], null, 'operations')
+        : card('check', 'g', 'Needs you', 'Nothing right now', 'No failed work and nothing waiting for your OK.', null, 'operations')),
     items.length ? h('div', { class: 'recent-box' },
       h('div', { class: 'sec' }, h('h2', null, 'Recently added'), h('span', { class: 'end' }, btn('See all', () => go('library?tab=installed&place=recent'), { kind: 'ghost', size: 'sm', iconName: 'arrow' }))),
-      h('ul', { class: 'plain-list' }, items.map(({ it, p }) => h('li', null, icon(p.kind === 'account' ? 'cloud' : p.kind === 'computer' ? 'device' : 'agent', 'sm'),
-        h('div', { class: 'grow' }, h('div', null, it.name), h('div', { class: 't2' }, `${p.label} · ${relTime(it.added_at)}`)))))) : null);
+      h('ul', { class: 'plain-list' }, items.map(({ it, p }) => h('li', { class: it.resource ? 'link' : null, onclick: it.resource ? () => go(`resource/${encodeURIComponent(it.resource.id)}`) : null }, icon(p.kind === 'account' ? 'cloud' : p.kind === 'computer' ? 'device' : 'agent', 'sm'),
+        h('div', { class: 'grow' }, h('div', null, displayName(it)), h('div', { class: 't2' }, `${p.label} · ${relTime(it.added_at)}`)))))) : null);
 }
 
 export async function home() {
-  const [map, dev, maint, pol, cands, lib, inv] = await Promise.all([api('capabilityMap'), api('device'), api('maintenance'), api('policy'), api('candidatesAll', { limit: 200 }), api('library'), api('installed')]);
+  const [map, dev, maint, pol, cands, lib, inv, updates, failed] = await Promise.all([api('capabilityMap'), api('device'), api('maintenance'), api('policy'), api('candidatesAll', { limit: 200 }), api('library'), api('installed'), api('updates'), api('ops', { status: 'failed', limit: 20 })]);
   const agents = dev.scan?.agents || [];
   const presentAgents = agents.filter(a => a.present);
   const here = lib.filter(r => ['installed', 'configured', 'account'].includes(r.state));
@@ -87,18 +104,21 @@ export async function home() {
   const getVia = async res => { const v = await api('resourceView', { id: res.id }); const a = v.actions.primary || v.actions.install.find(x => !x.disabled); if (!a) return go(`resource/${encodeURIComponent(res.id)}`); await runAction(a, res.name, () => location.reload()); };
 
   if (!dev.scan?.agents) {
-    return h('div', { class: 'page' }, h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'Your agent environment'), h('p', null, 'CURI starts by looking at what you already have: agents, MCP servers, skills, plugins and tools. It only reads; nothing changes.'))),
+    return h('div', { class: 'page cat' }, hero({ eyebrow: 'Home', title: 'Your agents, ', em: 'at a glance.', sub: 'CURI starts by looking at what you already have: agents, MCP servers, skills, plugins and tools. It only reads; nothing changes.' }),
       empty('device', 'We don\'t know what\'s on this device yet', null, btn('Scan now', () => runOperation('system.scan', {}, 'Detect what\'s installed'), { kind: 'primary', iconName: 'refresh' })));
   }
   const last = maint.last;
   // The one authored moment: a slow ambient field behind the header (HorizonX "Phosphor Flow").
   const canvas = h('canvas', { class: 'ambient', 'aria-hidden': 'true' });
   setTimeout(() => ambient(canvas), 0);
-  return h('div', { class: 'page home' },
+  // Failed work from the last week, and anything maintenance couldn't do without permission.
+  const week = Date.now() - 7 * 864e5;
+  const attention = [...failed.filter(o => new Date(o.updated_at) > week).map(o => describeOp(o).title), ...(maint.suggestions || []).map(sg => `${sg.label}: waiting for your OK`)];
+  return h('div', { class: 'page cat home' },
     h('div', { class: 'ambient-wrap', 'aria-hidden': 'true' }, canvas),
-    h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'Your agent environment'),
-      h('p', null, 'What your agents can do on this device, what\'s missing, and what CURI is taking care of for you.')),
-      h('div', { class: 'actions' }, btn('Scan now', () => runOperation('system.scan', {}, 'Detect what\'s installed'), { kind: 'ghost', iconName: 'refresh' }))),
+    hero({ eyebrow: 'Home', title: 'Your agents, ', em: 'at a glance.',
+      sub: 'What your agents can do on this computer, what\'s missing, and what CURI is taking care of for you.',
+      actions: [btn('Scan now', () => runOperation('system.scan', {}, 'Detect what\'s installed'), { kind: 'ghost', size: 'sm', iconName: 'refresh' })] }),
     h('section', { class: 'home-hero' },
       h('div', { class: 'statements' },
         stmt('check', 'g', h('b', null, `${s0.agent_ready} of ${s0.agent_total}`), ' agent capabilities are available through ', h('b', null, String(presentAgents.length)), ` agent${presentAgents.length === 1 ? '' : 's'}: ${presentAgents.map(a => a.label).join(', ')}.`),
@@ -107,7 +127,7 @@ export async function home() {
         stmt('bolt', 'n', 'Mode ', h('b', null, MODE[pol.consent.mode] || pol.consent.mode), last ? `: last maintenance ${relTime(last.at)}, ${last.queued} task(s) done on its own${last.suggestions ? `, ${last.suggestions} waiting for permission` : ''}.` : ': automatic maintenance hasn\'t run yet.',
           ' ', h('a', { href: '#/automation', class: 'link' }, 'Adjust'))),
       h('figure', { style: { margin: 0 } }, constellation(map, agents), h('figcaption', { class: 'legend-inline' }, h('span', null, h('i', { style: { background: 'var(--presence)' } }), 'available'), h('span', null, h('i', { style: { background: 'var(--one-step)', opacity: '.6' } }), 'one step away'), h('span', null, h('i', { style: { background: 'var(--surface-4)' } }), 'not yet available')))),
-    startHere(inv),
+    startHere(inv, { reco: map.recommendations, updates, attention }, getVia),
     h('div', { class: 'cols-home' },
       h('section', null,
         h('div', { class: 'sec' }, h('h2', null, 'Next steps'), h('span', { class: 'meta' }, 'what adds the most to your agents'), h('span', { class: 'end' }, btn('All capabilities', () => go('capabilities'), { kind: 'ghost', size: 'sm', iconName: 'arrow' }))),

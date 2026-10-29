@@ -35,6 +35,8 @@ import { profileFor, deviceContext, getFacts } from './facts.mjs';
 import { lastScan } from './detect.mjs';
 import { capabilityMap, compareDecision, capLabel } from './capabilities.mjs';
 import { maintenancePass, maintenanceStatus } from './maintenance.mjs';
+import { checkUpdates, lastUpdates } from './updates.mjs';
+import { notifyUser } from './notify.mjs';
 import { agentRelevance } from './relevance.mjs';
 import { listProjects, addProject, hideProject } from './projects.mjs';
 import { adoptCandidate, installSummary } from './candidates.mjs';
@@ -81,6 +83,7 @@ export const ACTIONS = {
   },
   mark: (db, p) => setMark(db, S(p.id, 300), p.patch || {}),
   collections: db => collections(db),
+  kits: () => JSON.parse(fs.readFileSync(path.join(CORE_ROOT, 'data', 'kits.json'), 'utf8')).kits,
   collectionAdd: (db, p) => addCollection(db, S(p.name, 40)),
   collectionRemove: (db, p) => removeCollection(db, S(p.name, 40)),
   device: db => ({ ...deviceInfo(), scan: lastScan(db) }),
@@ -100,6 +103,8 @@ export const ACTIONS = {
   projectHide: (db, p) => (hideProject(db, S(p.path, 1000)), { ok: true }),
   capabilityMap: db => capabilityMap(db),
   maintenance: db => maintenanceStatus(db),
+  updates: db => lastUpdates(db),
+  updatesCheck: db => checkUpdates(db),
   maintenanceRun: async db => { const r = await maintenancePass(db, { actor: 'user', force: true }); kickWorker(db); return r; },
   compareDecision: (db, p) => compareDecision(db, ids(p.ids), { useCase: optS(p.useCase, 300) || '' }),
   githubExisting: () => conns.githubExisting(),
@@ -142,11 +147,7 @@ export const ACTIONS = {
       return row;
     }),
   // macOS notification for long-running work that finished while the user was elsewhere.
-  notify: (db, p) => {
-    const title = S(p.title, 120).replace(/["\\]/g, ''), body = S(p.body ?? '', 300).replace(/["\\]/g, '');
-    if (process.platform === 'darwin') spawn('osascript', ['-e', `display notification "${body}" with title "${title}"`], { stdio: 'ignore' });
-    return { ok: true };
-  },
+  notify: (db, p) => ({ ok: notifyUser(S(p.title, 120), S(p.body ?? '', 300)) }),
   candidates: (db, p) => listCandidates(db, I(p.scanId, 0, 0, 1e9), { onlyNew: Boolean(p.onlyNew) }),
   promote: (db, p) => promoteCandidate(db, I(p.id, 0, 1, 1e12)),
   reject: (db, p) => (rejectCandidate(db, I(p.id, 0, 1, 1e12), optS(p.reason, 500)), { ok: true }),
@@ -186,9 +187,9 @@ export const ACTIONS = {
     return { opened: u.toString() };
   },
   importData: (db, p) => importRegistry(db, p.data, { dryRun: p.dryRun !== false }),
-  prefsGet: db => ({ discovery_areas: getPref(db, 'discovery_areas', []), github_budget: getPref(db, 'github_budget', 40), install_policy: getPref(db, 'install_policy', 'minimal-global'), telemetry: false, scheduled_scans: getPref(db, 'scheduled_scans', false), model_analysis: getPref(db, 'model_analysis', false) }),
+  prefsGet: db => ({ notify_discoveries: getPref(db, 'notify_discoveries', true), discovery_areas: getPref(db, 'discovery_areas', []), github_budget: getPref(db, 'github_budget', 40), install_policy: getPref(db, 'install_policy', 'minimal-global'), telemetry: false, scheduled_scans: getPref(db, 'scheduled_scans', false), model_analysis: getPref(db, 'model_analysis', false) }),
   prefsSet: (db, p) => {
-    const allowed = { discovery_areas: v => Array.isArray(v) && v.every(x => typeof x === 'string'), github_budget: v => Number.isInteger(v) && v >= 0 && v <= 5000, install_policy: v => ['minimal-global', 'catalog-only'].includes(v), scheduled_scans: v => v === false, model_analysis: v => typeof v === 'boolean', auto_verify_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_scan_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_repair_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_plugin_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_package_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_discover_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_stars_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, pause_on_battery: v => typeof v === 'boolean', notify_mode: v => ['all', 'errors', 'none'].includes(v), update_repo: v => v === null || /^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/.test(v) };
+    const allowed = { notify_discoveries: v => typeof v === 'boolean', discovery_areas: v => Array.isArray(v) && v.every(x => typeof x === 'string'), github_budget: v => Number.isInteger(v) && v >= 0 && v <= 5000, install_policy: v => ['minimal-global', 'catalog-only'].includes(v), scheduled_scans: v => v === false, model_analysis: v => typeof v === 'boolean', auto_verify_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_scan_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_repair_hours: v => Number.isInteger(v) && v >= 0 && v <= 168, auto_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_plugin_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_package_update_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_discover_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, auto_stars_hours: v => Number.isInteger(v) && v >= 0 && v <= 720, pause_on_battery: v => typeof v === 'boolean', notify_mode: v => ['all', 'errors', 'none'].includes(v), update_repo: v => v === null || /^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/.test(v) };
     for (const [k, v] of Object.entries(p)) { if (!allowed[k]?.(v)) throw new Error(`invalid preference: ${k}`); setPref(db, k, v); }
     return ACTIONS.prefsGet(db);
   },

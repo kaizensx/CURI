@@ -225,3 +225,32 @@ html:not(.native) .cat-bar { top: 46px; }
 a.capchip.on { color: var(--presence); background: var(--presence-wash); }
 .sheet-head .sub a { color: var(--ink-2); }
 .sheet-head:has(> .art.lg) { grid-template-columns: 64px minmax(0, 1fr) auto; }
+
+/* ---------- Home: three cards that say whether there's something to do ---------- */
+.door { cursor: default; }
+.door .eb { font: 600 11px/1 var(--font); letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3) !important; }
+.door strong { font: 650 16px/1.25 var(--font-display); letter-spacing: -.016em; }
+.door.g .ic { background: var(--presence-wash); color: var(--presence); }
+.door.w .ic { background: var(--warn-wash); color: var(--warn); }
+.door.n .ic { background: var(--surface-2); color: var(--ink-2); }
+.door-act { margin-top: auto; padding-top: 8px; display: flex; }
+.door:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.recent-box li.link { cursor: default; border-radius: 10px; }
+@media (hover: hover) { .recent-box li.link:hover { background: var(--surface-2); } }
+
+/* ---------- Activity rows: what happened, in words ---------- */
+.op-ic { flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); }
+.op summary .t1 { font-weight: 560; }
+
+/* ---------- Installed › Updates ---------- */
+.inv-place.updates .pi { color: var(--one-step); background: color-mix(in srgb, var(--one-step) 14%, transparent); }
+
+/* ---------- kits ---------- */
+.kit-members { display: flex; flex-wrap: wrap; gap: 5px; max-height: 50px; overflow: hidden; }
+.kit-members span { height: 22px; padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; font-size: 11.5px; color: var(--ink-3); background: var(--surface-2); }
+.kit-members span.on { color: var(--presence); background: var(--presence-wash); }
+.kitcard > p { margin: 0; }
+.home .cat-hero { padding-bottom: 0; }
+.home .home-hero { align-items: start; }
+.home .statements { padding-top: 34px; }
+.home .home-hero figure { margin-top: -40px !important; }

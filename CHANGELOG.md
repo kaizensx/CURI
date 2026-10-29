@@ -1,5 +1,32 @@
 # Changelog
 
+## 3.9.0 - 2026-10-30
+
+**Every page looks like the Library**
+- Home, Activity, Connections, Settings and their sub-pages open with the same header as the Library: section name and tabs on one line, then the headline. Settings is as wide as every other page.
+- Home's three cards now say whether there's something to do: the next install that adds the most (with *Get*), updates waiting, and anything that failed or needs your OK. They used to repeat the sidebar.
+- *Recently added* shows names people know (*taste-skill*, not *taste-skill@taste-skill*) and opens the resource.
+
+**Activity in plain words**
+- Each entry is a sentence, such as *Installed taste-skill in Claude Code* or *Couldn't update caveman in Claude Code*, with who did it (you, or CURI on its own) and a link to the resource.
+
+**Updates**
+- New *Library › Installed › Updates*: the skills, plugins and npm/Homebrew tools CURI installed that have a newer version, with *Update* per item and *Update all*. CURI checks once a day, and *Check now* looks right away.
+- Plugin versions come from the plugin's marketplace; skills compare the installed commit with the repository.
+
+**Uninstall where you see it**
+- *Uninstall…* is in every card's ⋯ menu (and the right-click menu) for anything installed. The resource page always shows its remove button, no longer pushed off by other actions. Removals still ask first.
+
+**Kits**
+- Eight kits in the catalogue, such as Web testing, Design taste, Security review, Video, Reverse engineering, Research and docs, Memory and context, and 3D and CAD. Each installs the members that aren't here yet, one visible step at a time, and says which ones need a manual install.
+
+**Notifications for strong new projects**
+- When CURI finds a project on GitHub with a high agent score that it can install here, it sends a system notification, once per project. Turn it off in Settings.
+
+**Clean-up**
+- Connections shows GitHub once, with *Read my stars* on its card. A connection tested by an old version no longer shows Portuguese text.
+- Removed the *Open* shortcuts from Settings › General (they repeated the sidebar) and the styles left over from the old Capabilities and Discover layouts.
+
 ## 3.8.0 - 2026-10-29
 
 **Updates arrive on their own**
