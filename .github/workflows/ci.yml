@@ -20,7 +20,7 @@ jobs:
         os: [macos-15, ubuntu-24.04, windows-2025]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
       # e2e.test.mjs needs a local Claude Code install and is skipped automatically when absent.
@@ -41,7 +41,7 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
       - uses: dtolnay/rust-toolchain@stable

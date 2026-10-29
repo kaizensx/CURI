@@ -34,7 +34,7 @@ jobs:
               desktop/src-tauri/target/release/bundle/appimage/*.AppImage
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
       - uses: dtolnay/rust-toolchain@stable
