@@ -66,8 +66,12 @@ function recordPackage(db, p, version, managed) {
 registerHandler('package.install', {
   async plan(db, p) {
     const { m } = await managerFor(p);
-    const owner = p.publisher || ownerOf(db, p.resource_id);
-    return { category: 'package_trusted', publisher: owner, verifiedSource: Boolean(p.resource_id && p.evidence && p.evidence !== 'documented'), resource: `${p.manager}:${p.name}`, lockKey: `pkg:${p.manager}:${p.name}`, source: `${m.label} · ${p.name}${p.version ? ` ${p.version}` : ''}` };
+    // Publisher and provenance come from what CURI stored for this resource, never from the request.
+    // A registry match only counts as verified with signed build provenance; a "repository" field alone
+    // is set by whoever publishes, so a squatted name could claim any repo.
+    const opt = p.resource_id ? profileFor(db, p.resource_id)?.options?.find(o => o.method === 'package' && o.manager === p.manager && o.name === p.name) : null;
+    const verifiedSource = Boolean(opt && (opt.evidence === 'curated' || (opt.evidence === 'registry' && opt.provenance)));
+    return { category: 'package_trusted', publisher: ownerOf(db, p.resource_id), verifiedSource, resource: `${p.manager}:${p.name}`, lockKey: `pkg:${p.manager}:${p.name}`, source: `${m.label} · ${p.name}${p.version ? ` ${p.version}` : ''}` };
   },
   async run(db, p, ctx) {
     const { m, bin } = await managerFor(p);
@@ -91,7 +95,7 @@ registerHandler('package.install', {
 });
 
 registerHandler('package.upgrade', {
-  async plan(db, p) { await managerFor(p); return { category: 'maintenance', publisher: p.publisher || ownerOf(db, p.resource_id), resource: `${p.manager}:${p.name}`, lockKey: `pkg:${p.manager}:${p.name}`, source: MANAGERS[p.manager].label }; },
+  async plan(db, p) { await managerFor(p); return { category: 'maintenance', publisher: ownerOf(db, p.resource_id), resource: `${p.manager}:${p.name}`, lockKey: `pkg:${p.manager}:${p.name}`, source: MANAGERS[p.manager].label }; },
   async run(db, p, ctx) {
     const { m, bin } = await managerFor(p);
     if (!bin) throw permanent(`${m.label} isn't installed.`);
@@ -253,7 +257,7 @@ registerHandler('mcp.remove', {
 });
 
 registerHandler('mcp.check', {
-  async plan() { return { category: 'observe', resource: 'servidores MCP', lockKey: 'mcp.check', source: 'claude mcp list', maxAttempts: 1 }; },
+  async plan() { return { category: 'observe', resource: 'MCP servers', lockKey: 'mcp.check', source: 'claude mcp list', maxAttempts: 1 }; },
   async run(db, p, ctx) {
     ctx.stage('Testing every MCP server (claude mcp list)', null);
     const h = await mcpHealth(findClaudeBinary());

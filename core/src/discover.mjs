@@ -110,7 +110,7 @@ export async function discover(db, { mode = 'task', intent = '', windows, maxQue
     throw e;
   }
   const status = r.errors && !r.total ? 'failed' : r.errors ? 'partial' : 'completed';
-  db.prepare('UPDATE scans SET status=?, error=?, finished_at=? WHERE id=?').run(status, r.errors ? `${r.errors} consulta(s) falharam` : null, now(), scanId);
+  db.prepare('UPDATE scans SET status=?, error=?, finished_at=? WHERE id=?').run(status, r.errors ? `${r.errors} queries failed` : null, now(), scanId);
   const kinds = queries.reduce((m, q) => (m[q.kind] = (m[q.kind] || 0) + 1, m), {});
   audit(db, actor, 'discover.finish', `scan:${scanId}`, { status, total: r.total, kinds });
   return { scanId, status, queries, independentShare: (kinds.independent || 0) / queries.length, ...r, candidates: listCandidates(db, scanId) };

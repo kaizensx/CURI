@@ -68,16 +68,16 @@ export async function wizard() {
     const sections = [];
     const pf = b.data?.preflight;
     if (pf) sections.push(panel({ title: 'Your computer', meta: relTime(pf.checked_at) }, kv([
-      ['System', `macOS ${pf.os.macos || pf.os.release} · ${pf.os.arch} · ${pf.disk_free_gb} GB livres`],
+      ['System', `macOS ${pf.os.macos || pf.os.release} · ${pf.os.arch} · ${pf.disk_free_gb} GB free`],
       ['Tools', `Node ${pf.toolchain.node} · ${pf.toolchain.git || 'no git'} · Rust ${pf.toolchain.rust ? 'installed' : 'missing'}`],
       ['GitHub', pf.network.github ? status('ok', 'reachable') : status('unreachable')],
       ['Claude Code', pf.claude.binary ? `${pf.claude.version}${pf.claude.on_path ? '' : ' (bundled with the Claude app)'}` : status('fail', 'not found')],
       ['Claude connection', pf.claude.auth?.loggedIn === true ? status('ok', 'connected') : h('span', null, status('blocked', 'not connected'), ' ', h('a', { href: '#/connections', class: 'ext' }, 'Connect Claude'))],
-      ['Already installed', `${b.data.inventory?.skills?.length ?? 0} skills · ${b.data.inventory?.mcp?.length ?? 0} servidores MCP · CLAUDE.md ${b.data.inventory?.claude_md?.exists ? 'exists (won\'t be touched)' : 'inexistente'}`]])));
+      ['Already installed', `${b.data.inventory?.skills?.length ?? 0} skills · ${b.data.inventory?.mcp?.length ?? 0} MCP servers · CLAUDE.md ${b.data.inventory?.claude_md?.exists ? 'exists (won\'t be touched)' : 'none'}`]])));
     if (done['WP2-snapshot']) sections.push(panel({ title: 'Backup', meta: `${done['WP2-snapshot'].evidence.files.filter(f => f.existed).length} files`, flush: true },
       h('div', { class: 'rows' }, done['WP2-snapshot'].evidence.files.map(f => h('div', { class: 'r' }, icon(f.existed ? 'check' : 'x', 'sm'), h('div', { class: 'grow' }, h('div', { class: 't1 mono' }, f.path), h('div', { class: 't2 mono' }, f.sha256 ? `sha256 ${f.sha256.slice(0, 24)}…` : 'didn\'t exist')))))));
     if (done['WP3-import']) { const e = done['WP3-import'].evidence; sections.push(panel({ title: 'Catalogue' }, h('div', { class: 'flow' },
-      flowStep(fmtInt(e.occurrences), 'URL occurrences'), icon('chevron'), flowStep(fmtInt(e.unique_urls), 'URLs originais'), icon('chevron'), flowStep(fmtInt(e.after), 'canonical resources')),
+      flowStep(fmtInt(e.occurrences), 'URL occurrences'), icon('chevron'), flowStep(fmtInt(e.unique_urls), 'unique URLs'), icon('chevron'), flowStep(fmtInt(e.after), 'canonical resources')),
       h('p', { class: 'muted', style: { margin: '12px 0 0' } }, `${e.created} created now · ${e.linked} sightings linked · ${e.invalid} invalid. All start as catalogued, not verified.`))); }
 
     if (b.state === 'APPROVAL_REQUIRED' && b.data.plan) {
@@ -125,7 +125,7 @@ export async function wizard() {
     fill(root, 
       pageHead({ eyebrow: 'Setup', title: terminal ? 'Setup complete' : 'Guided setup', sub: 'Each step saves a durable checkpoint. You can close the app: when you reopen it, it resumes at the first unverified step and nothing is applied twice.', actions: [status(b.state), controls] }),
       h('div', { class: 'wizard-grid' },
-        h('aside', { class: 'panel wizard-steps' }, h('div', { class: 'panel-body' }, h('div', { class: 'row', style: { marginBottom: '14px' } }, h('span', { class: 'micro' }, 'Progress'), h('span', { class: 'spacer' }), h('span', { class: 'num' }, `${doneCount}/${WPS.length} verificados`)), stepper)),
+        h('aside', { class: 'panel wizard-steps' }, h('div', { class: 'panel-body' }, h('div', { class: 'row', style: { marginBottom: '14px' } }, h('span', { class: 'micro' }, 'Progress'), h('span', { class: 'spacer' }), h('span', { class: 'num' }, `${doneCount}/${WPS.length} verified`)), stepper)),
         h('div', { class: 'stack' }, ...sections,
           h('details', { class: 'panel log-panel' }, h('summary', { class: 'panel-head' }, h('h2', null, 'Event log'), h('span', { class: 'micro' }, `${log.length}`)),
             h('div', { class: 'panel-body' }, h('div', { class: 'log', role: 'log' }, log.map(j => h('div', { class: j.level }, h('span', { class: 'muted' }, fmtDate(j.ts)), ' ', j.step || '', ' — ', j.message))))))));

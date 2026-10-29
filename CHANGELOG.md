@@ -1,5 +1,31 @@
 # Changelog
 
+## 3.6.0 - 2026-10-29
+
+A full pass over security, reliability and accessibility before more people use CURI.
+
+**Security**
+- Packages from npm or PyPI no longer count as "verified" just because their registry entry names the project's repository: anyone publishing can write that. Only curated entries and npm packages with signed build provenance do. The publisher and provenance are now worked out by CURI from its own data, never taken from the install request. In practice, a look-alike package can no longer install without asking.
+- After you approve a skill that contains scripts, CURI installs exactly the commit it scanned and showed you. If the publisher pushes something new in between, the install stops instead of installing unreviewed code.
+- Source checks only reach public addresses, re-checked on every redirect, and skip resources an agent suggested until you review them.
+- Component names taken from a project's README must be plain registry names before CURI adds them to a project.
+
+**Fixes**
+- Catalogue search shows an error with "Try again" when it fails, instead of quietly listing the whole catalogue as results.
+- Automatic maintenance: the skills and plugins update intervals were one setting, so one silently overwrote the other; they're now separate. Values out of range are clamped instead of making Save fail.
+- Home, Discover and the command palette show a real error when something fails, instead of "nothing found".
+- Long text in search and comparison fields can no longer break those pages; notes that fail to save now say so.
+- Every remaining Portuguese string is now in English, including progress steps, badges and first-launch messages.
+- The Activity page is called Activity, About shows the real version, and the Compare and "Hidden" hints describe how the app works today.
+
+**Accessibility**
+- Text and buttons meet WCAG AA contrast in both themes, including white labels on blue buttons.
+- Every catalogue card has a ⋯ button with the actions that used to be right-click only, and cards open with Enter or Space.
+- Filters behave as toggle buttons for screen readers; result counts are announced once, and errors are announced right away.
+- The command palette, menus, dialogs and the install window keep focus where it belongs and give it back when they close.
+- Reduced motion now stops transitions too, and "Reduce transparency" or "Increase contrast" in macOS give solid, high-contrast surfaces.
+- The kind filter scrolls instead of being cut off in narrow windows; the catalogue search has a clear focus ring.
+
 ## 3.5.3 - 2026-10-29
 
 - Fixed: the back and forward arrows didn't respond. The invisible strip that lets you drag the window was sitting on top of them since the glass update; it now sits underneath, so empty space still drags the window and the arrows work.

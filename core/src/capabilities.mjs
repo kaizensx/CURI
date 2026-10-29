@@ -104,7 +104,7 @@ export function compareDecision(db, ids, { useCase = '' } = {}) {
       install, install_method: best ? best.label || best.method : null, steps, deps,
       security, publisher: owner ? { name: owner, trusted: trusted.has(owner.toLowerCase()) } : null,
       maintenance: facts ? { stars: facts.stars, pushed_days: pushedDays, archived: facts.archived, release: facts.latest_release?.tag || null, state: facts.archived ? 'Archived' : pushedDays == null ? '—' : pushedDays < 30 ? 'Active' : pushedDays < 180 ? 'Steady' : pushedDays < 365 ? 'Slow' : 'Stalled' } : null,
-      license: facts?.license || r.license || 'desconhecida', platforms: [...new Set(prof.options.flatMap(o => o.os || ['macos', 'windows', 'linux']))],
+      license: facts?.license || r.license || 'unknown', platforms: [...new Set(prof.options.flatMap(o => o.os || ['macos', 'windows', 'linux']))],
       use_when: r.use_when || null, avoid_when: r.avoid_when || null,
     };
   }).filter(Boolean);

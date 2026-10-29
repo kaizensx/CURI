@@ -1417,7 +1417,7 @@
    "project": [
     {
      "manager": "shadcn",
-     "command": "npx shadcn@latest add @magicui/<componente>"
+     "command": "npx shadcn@latest add @magicui/<component>"
     }
    ]
   },
@@ -1468,7 +1468,7 @@
    "project": [
     {
      "manager": "shadcn",
-     "command": "npx shadcn@latest add @react-bits/<componente>"
+     "command": "npx shadcn@latest add @react-bits/<component>"
     }
    ],
    "install": [
@@ -1498,7 +1498,7 @@
    "project": [
     {
      "manager": "shadcn",
-     "command": "npx shadcn@latest add @aceternity/<componente>"
+     "command": "npx shadcn@latest add @aceternity/<component>"
     }
    ],
    "install": [
@@ -1528,7 +1528,7 @@
    "project": [
     {
      "manager": "shadcn",
-     "command": "npx shadcn@latest add @motion-primitives/<componente>"
+     "command": "npx shadcn@latest add @motion-primitives/<component>"
     }
    ],
    "install": [
@@ -1558,7 +1558,7 @@
    "project": [
     {
      "manager": "shadcn",
-     "command": "npx shadcn@latest add @animate-ui/<componente>"
+     "command": "npx shadcn@latest add @animate-ui/<component>"
     }
    ],
    "install": [
@@ -1588,7 +1588,7 @@
    "project": [
     {
      "manager": "shadcn",
-     "command": "npx shadcn@latest add @cult-ui/<componente>"
+     "command": "npx shadcn@latest add @cult-ui/<component>"
     }
    ],
    "install": [
@@ -1618,7 +1618,7 @@
    "project": [
     {
      "manager": "shadcn",
-     "command": "npx shadcn@latest add @kokonutui/<componente>"
+     "command": "npx shadcn@latest add @kokonutui/<component>"
     }
    ],
    "install": [
@@ -1648,7 +1648,7 @@
    "project": [
     {
      "manager": "shadcn",
-     "command": "npx shadcn@latest add @shadcnblocks/<componente>"
+     "command": "npx shadcn@latest add @shadcnblocks/<component>"
     }
    ],
    "install": [
@@ -1705,7 +1705,7 @@
    "project": [
     {
      "manager": "shadcn",
-     "command": "npx shadcn@latest add @ui-layouts/<componente>"
+     "command": "npx shadcn@latest add @ui-layouts/<component>"
     }
    ],
    "install": [

@@ -114,7 +114,7 @@ async function registerMcp(spec = mcpSpec()) {
       await pexec(bin, ['mcp', 'add', '--scope', 'user', MCP_NAME, '--', spec.command, ...spec.args], { timeout: 60000 });
       return { method: 'claude-cli' };
     } catch (e) {
-      throw new Error(`claude mcp add falhou: ${String(e.stderr || e.message).slice(0, 300)}`);
+      throw new Error(`claude mcp add failed: ${String(e.stderr || e.message).slice(0, 300)}`);
     }
   }
   const cj = readClaudeJson() || {};
@@ -127,7 +127,7 @@ async function unregisterMcp() {
   const bin = findClaudeBinary();
   if (bin) {
     try { await pexec(bin, ['mcp', 'remove', '--scope', 'user', MCP_NAME], { timeout: 60000 }); return { method: 'claude-cli' }; }
-    catch (e) { if (!/not found|No MCP server/i.test(String(e.stderr))) throw new Error(`claude mcp remove falhou: ${String(e.stderr || e.message).slice(0, 300)}`); return { method: 'claude-cli', note: 'already absent' }; }
+    catch (e) { if (!/not found|No MCP server/i.test(String(e.stderr))) throw new Error(`claude mcp remove failed: ${String(e.stderr || e.message).slice(0, 300)}`); return { method: 'claude-cli', note: 'already absent' }; }
   }
   const cj = readClaudeJson();
   if (cj?.mcpServers?.[MCP_NAME]) { delete cj.mcpServers[MCP_NAME]; writeAtomic(claudeJsonPath(), JSON.stringify(cj, null, 2), 0o600); }

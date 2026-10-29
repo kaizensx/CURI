@@ -2,7 +2,7 @@
 // live, until it finishes. It cannot be dismissed while work is running; Cancel stops at a safe boundary.
 import { h, fmtDate, fill } from './dom.js';
 import { icon } from './icons.js';
-import { api, toast } from './ui.js';
+import { api, toast, focusables } from './ui.js';
 
 const STATUS = {
   queued: ['info', 'Queued'], running: ['info', 'Running'], awaiting_approval: ['warn', 'Needs your approval'],
@@ -19,19 +19,24 @@ const seen = new Set();       // ids already shown (the watcher never re-opens t
 function mountShell() {
   const scrim = h('div', { class: 'scrim op-scrim' });
   const box = h('div', { class: 'dialog op-modal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'op-title', 'aria-describedby': 'op-stage' });
-  document.body.append(scrim, box);
+  // The box is redrawn on every refresh; a separate, persistent node announces stage changes once each.
+  const announcer = h('div', { class: 'sr-only', role: 'status' });
+  const opener = document.activeElement;
+  document.body.append(scrim, box, announcer);
+  const observer = new MutationObserver(() => { const t = box.querySelector('#op-stage')?.textContent || ''; if (t && t !== announcer.textContent) announcer.textContent = t; });
+  observer.observe(box, { childList: true, subtree: true, characterData: true });
   // Focus stays inside; Escape does nothing while running (the work is not hidden).
   const trap = e => {
     if (e.key === 'Escape' && current?.terminal) { e.preventDefault(); current.close(); }
     if (e.key === 'Tab') {
-      const f = [...box.querySelectorAll('button, a[href]')];
+      const f = focusables(box);
       if (!f.length) { e.preventDefault(); return; }
       if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f.at(-1).focus(); }
       else if (!e.shiftKey && document.activeElement === f.at(-1)) { e.preventDefault(); f[0].focus(); }
     }
   };
   document.addEventListener('keydown', trap, true);
-  return { scrim, box, remove: () => { document.removeEventListener('keydown', trap, true); scrim.remove(); box.remove(); } };
+  return { scrim, box, remove: () => { document.removeEventListener('keydown', trap, true); observer.disconnect(); scrim.remove(); box.remove(); announcer.remove(); if (opener?.isConnected) opener.focus?.({ preventScroll: true }); } };
 }
 
 function elapsed(from, to) {
@@ -166,7 +171,7 @@ export function startWatcher() {
 }
 
 // Same visibility for actions that are not queue operations (connection tests, health checks, exports).
-export async function withProgress(title, fn, { stage = 'A trabalhar…' } = {}) {
+export async function withProgress(title, fn, { stage = 'Working…' } = {}) {
   const shell = mountShell();
   const t0 = new Date().toISOString();
   const paint = (status, msg) => {

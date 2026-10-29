@@ -101,7 +101,7 @@ export function compare(db, ids) {
   const all = new Set(present.flatMap(i => i.capabilities));
   const shared = [...all].filter(c => present.every(i => i.capabilities.includes(c)));
   const missingEvidence = present.flatMap(i => [
-    !i.last_verified && `${i.id}: fonte nunca verificada`,
+    !i.last_verified && `${i.id}: source never checked`,
     i.license === 'unknown' && `${i.id}: unknown licence`,
     !i.latest_snapshot && `${i.id}: no maintenance or activity snapshot`,
   ].filter(Boolean));

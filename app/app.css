@@ -288,7 +288,7 @@ table.t td.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* Empty / skeleton / spinners */
 .empty { display: grid; place-items: center; text-align: center; gap: 10px; padding: 40px 24px; color: var(--ink-3); }
 .empty .glyph { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--hairline); color: var(--ink-2); }
-.empty h4 { margin: 0; color: var(--ink-1); font-weight: 600; font-size: var(--t-base); } .empty p { margin: 0; max-width: 420px; font-size: var(--t-sm); }
+.empty h4, .empty h2 { margin: 0; color: var(--ink-1); font-weight: 600; font-size: var(--t-base); } .empty p { margin: 0; max-width: 420px; font-size: var(--t-sm); }
 .skel { position: relative; overflow: hidden; background: var(--surface-2); border-radius: var(--r-sm); }
 .skel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.04), transparent); animation: shimmer 1.3s linear infinite; }
 .spin { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1.6px solid var(--hairline-3); border-top-color: var(--signal); animation: spin .6s linear infinite; }

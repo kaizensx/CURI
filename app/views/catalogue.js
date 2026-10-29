@@ -1,10 +1,10 @@
 // Catalogue: the front of the Library. Browsing looks like a shop window (one big search, areas to
 // wander into, a featured row, shelves by kind); as soon as you search or filter it becomes a grid of
 // results with the filters that matter. Every card carries its real state and the one action that fits.
-import { h, relTime, compact, fill } from '../lib/dom.js';
+import { h, relTime, compact, fill, reducedMotion } from '../lib/dom.js';
 import { icon } from '../lib/icons.js';
 import { api, btn, toast, contextMenu, empty, promptDialog, pager } from '../lib/ui.js';
-import { go, params, compareTray } from '../app.js';
+import { go, params, compareTray, currentMotion } from '../app.js';
 import { STATE_HINT } from './common.js';
 import { resourceMenu, quickAction, quickLabel } from './library.js';
 
@@ -20,6 +20,7 @@ const DAY = 864e5;
 // Short state labels for cards; the full wording lives on the resource page.
 const SHORT = { installed: 'Installed', configured: 'Connected', account: 'On claude.ai' };
 const chip = st => h('span', { class: `state ${st}`, title: STATE_HINT[st] || '' }, SHORT[st] || st);
+const smooth = () => (reducedMotion() || currentMotion() !== 'full' ? 'auto' : 'smooth');
 const lsGet = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 
@@ -41,14 +42,14 @@ export async function catalogueView(tabs) {
   const prep = list => { for (const r of list) r.domains = [...new Set(r.capabilities.map(c => capDomain.get(c)).filter(Boolean))]; };
   prep(all);
   const st = { show: p.get('view') || 'all', kind: p.get('kind') || '', domain: p.get('domain') || '', col: p.get('col') || '', origin: '', upkeep: '', q: p.get('q') || '', sort: lsGet('curi-cat-sort', 'smart'), page: 0, sel: new Set(), hidden: false };
-  let ranked = null;
+  let ranked = null, searchError = null;
 
   const kindOf = r => (r.kind === 'skill-pack' ? 'skill' : r.kind);
   const inShow = (r, v = st.show) => v === 'all' || (v === 'here' && HERE.includes(r.state)) || (v === 'ready' && !r.state && r.ready) || (v === 'project' && ['library', 'framework', 'components'].includes(r.kind)) || (v === 'fav' && r.mine.fav);
   const passes = r => (st.hidden ? r.mine.hidden : !r.mine.hidden) && inShow(r) && (!st.kind || kindOf(r) === st.kind) && (!st.domain || r.domains.includes(st.domain)) && (!st.col || (r.mine.collections || []).includes(st.col))
     && (!st.origin || (st.origin === 'github' ? r.gh_full_name : !r.gh_full_name))
     && (!st.upkeep || (st.upkeep === 'active' ? r.pushed_at && Date.now() - new Date(r.pushed_at) < 90 * DAY : r.pushed_at && Date.now() - new Date(r.pushed_at) > 365 * DAY));
-  const browsing = () => !st.q && st.show === 'all' && !st.kind && !st.domain && !st.col && !st.origin && !st.upkeep && !st.hidden;
+  const browsing = () => st.q.length < 2 && st.show === 'all' && !st.kind && !st.domain && !st.col && !st.origin && !st.upkeep && !st.hidden;
   const visible = all.filter(r => !r.mine.hidden);
 
   const reload = async () => { const fresh = (await api('library')).filter(actionable); prep(fresh); all.splice(0, all.length, ...fresh); render(); };
@@ -67,7 +68,11 @@ export async function catalogueView(tabs) {
   };
   const wire = (el, r) => {
     el.addEventListener('click', e => { if (e.metaKey) { st.sel.has(r.id) ? st.sel.delete(r.id) : st.sel.add(r.id); render(); return; } if (!e.target.closest('button')) open(r); });
-    el.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target === el) open(r); });
+    el.addEventListener('keydown', e => {
+      if (e.target !== el) return;
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(r); }
+      if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) { e.preventDefault(); const b = el.getBoundingClientRect(); contextMenu(b.left + 24, b.top + 24, menuFor(r)); }
+    });
     el.addEventListener('contextmenu', e => { e.preventDefault(); contextMenu(e.clientX, e.clientY, menuFor(r)); });
     return el;
   };
@@ -76,8 +81,14 @@ export async function catalogueView(tabs) {
     b.addEventListener('click', e => { e.stopPropagation(); toggleFav(r); });
     return b;
   };
-  const card = r => wire(h('article', { class: `gcard ${st.sel.has(r.id) ? 'sel' : ''} ${r.state ? 'mine' : ''}`, tabindex: '0', role: 'listitem', 'aria-label': `${r.name}, ${r.kind_label}` },
-    h('div', { class: 'g-top' }, art(r), h('div', { class: 'g-id' }, h('strong', null, r.name), h('span', null, r.kind_label, owner(r) ? h('i', null, ` · ${owner(r)}`) : null)), fav(r)),
+  // Everything the right-click menu does, reachable from the keyboard too.
+  const more = r => {
+    const b = h('button', { type: 'button', class: 'more', 'aria-label': `More actions for ${r.name}`, 'aria-haspopup': 'menu', title: 'More' }, icon('dots', 'sm'));
+    b.addEventListener('click', e => { e.stopPropagation(); const x = b.getBoundingClientRect(); contextMenu(x.left, x.bottom + 6, menuFor(r)); });
+    return b;
+  };
+  const card = r => wire(h('article', { class: `gcard ${st.sel.has(r.id) ? 'sel' : ''} ${r.state ? 'mine' : ''}`, tabindex: '0', role: 'listitem', 'aria-label': `${r.name}, ${r.kind_label}${r.state ? `, ${SHORT[r.state] || r.state}` : ''}` },
+    h('div', { class: 'g-top' }, art(r), h('div', { class: 'g-id' }, h('strong', null, r.name), h('span', null, r.kind_label, owner(r) ? h('i', null, ` · ${owner(r)}`) : null)), fav(r), more(r)),
     h('p', null, r.description || ''),
     h('div', { class: 'g-foot' },
       h('div', { class: 'g-meta' }, r.stars != null ? h('span', null, icon('star', 'sm'), compact(r.stars)) : null, r.pushed_at && !r.state ? h('span', null, relTime(r.pushed_at)) : null),
@@ -92,7 +103,7 @@ export async function catalogueView(tabs) {
   const shelf = (title, sub, rows, seeAll) => {
     if (!rows.length) return null;
     const row = h('div', { class: 'shelf-row', role: 'list' }, rows.map(card));
-    const step = dir => row.scrollBy({ left: dir * row.clientWidth * 0.9, behavior: 'smooth' });
+    const step = dir => row.scrollBy({ left: dir * row.clientWidth * 0.9, behavior: smooth() });
     return h('section', { class: 'shelf' },
       h('header', null, h('div', null, h('h2', null, title), sub ? h('p', null, sub) : null),
         seeAll ? btn('See all', seeAll, { size: 'sm', kind: 'ghost', iconName: 'chevron' }) : null,
@@ -101,14 +112,16 @@ export async function catalogueView(tabs) {
   };
 
   // ---------- chrome ----------
-  const input = h('input', { type: 'search', id: 'page-search', value: st.q, placeholder: 'What should your agents be able to do?', 'aria-label': 'Search the catalogue', autocomplete: 'off', spellcheck: 'false' });
+  const input = h('input', { type: 'search', id: 'page-search', value: st.q, maxlength: '200', placeholder: 'What should your agents be able to do?', 'aria-label': 'Search the catalogue', autocomplete: 'off', spellcheck: 'false' });
   const clear = h('button', { type: 'button', class: 'cat-clear', 'aria-label': 'Clear search', hidden: !st.q }, icon('x', 'sm'));
   clear.addEventListener('click', () => { input.value = ''; search(); input.focus(); });
   const ideas = h('div', { class: 'cat-ideas' }, h('span', null, 'Try'), IDEAS.map(t => { const b = h('button', { type: 'button' }, t); b.addEventListener('click', () => { input.value = t; search(); }); return b; }));
-  const areas = h('div', { class: 'cat-areas', role: 'toolbar', 'aria-label': 'Areas' });
-  const kinds = h('div', { class: 'tabs cat-kinds', role: 'tablist', 'aria-label': 'Kind' });
+  const areas = h('div', { class: 'cat-areas', role: 'group', 'aria-label': 'Areas' });
+  const kinds = h('div', { class: 'tabs cat-kinds', role: 'group', 'aria-label': 'Kind' });
   const tools = h('div', { class: 'cat-tools' });
-  const body = h('div', { class: 'cat-body', 'aria-live': 'polite' });
+  const body = h('div', { class: 'cat-body' });
+  // One quiet announcement per change, instead of re-reading the whole grid.
+  const announce = h('p', { class: 'sr-only', role: 'status' });
   const bulk = h('div');
 
   const renderAreas = () => {
@@ -122,7 +135,7 @@ export async function catalogueView(tabs) {
   const renderKinds = () => fill(kinds, KINDS.map(([k, l]) => {
     const n = k ? visible.filter(r => kindOf(r) === k).length : visible.length;
     if (k && !n) return null;
-    const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.kind === k) }, l);
+    const b = h('button', { type: 'button', 'aria-pressed': String(st.kind === k) }, l);
     b.addEventListener('click', () => { st.kind = k; st.page = 0; render(); });
     return b;
   }));
@@ -132,7 +145,7 @@ export async function catalogueView(tabs) {
     const tick = on => (on ? 'check' : null);
     contextMenu(r.left, r.bottom + 6, [
       ...myCols.map(c => ({ label: `Collection: ${c}`, icon: tick(st.col === c) || 'layers', run: () => { st.col = st.col === c ? '' : c; render(); } })),
-      { label: 'New collection…', icon: 'plus', run: async () => { const name = await promptDialog({ title: 'New collection', placeholder: 'e.g. Client project, To try', confirm: 'Create' }); if (name?.trim()) { await api('collectionAdd', { name }); cols.push({ name: name.trim() }); render(); } } },
+      { label: 'New collection…', icon: 'plus', run: async () => { const name = await promptDialog({ title: 'New collection', placeholder: 'e.g. Client project, To try', confirm: 'Create' }); const n = name?.trim().slice(0, 40); if (n) { await api('collectionAdd', { name: n }); cols.push({ name: n }); render(); } } },
       '-',
       { label: 'From GitHub', icon: tick(st.origin === 'github') || 'git', run: () => { st.origin = st.origin === 'github' ? '' : 'github'; render(); } },
       { label: 'From websites', icon: tick(st.origin === 'web') || 'external', run: () => { st.origin = st.origin === 'web' ? '' : 'web'; render(); } },
@@ -145,7 +158,7 @@ export async function catalogueView(tabs) {
   const renderTools = rows => {
     const sortSel = h('select', { class: 'select', 'aria-label': 'Sort' }, SORTS.map(([v, l]) => h('option', { value: v, selected: st.sort === v || null }, l)));
     sortSel.addEventListener('change', () => { st.sort = sortSel.value; lsSet('curi-cat-sort', st.sort); render(); });
-    const show = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Show' }, SHOW.map(([v, l]) => { const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.show === v) }, l); b.addEventListener('click', () => { st.show = v; st.page = 0; render(); }); return b; }));
+    const show = h('div', { class: 'tabs', role: 'group', 'aria-label': 'Show' }, SHOW.map(([v, l]) => { const b = h('button', { type: 'button', 'aria-pressed': String(st.show === v) }, l); b.addEventListener('click', () => { st.show = v; st.page = 0; render(); }); return b; }));
     const extra = [st.col && `Collection: ${st.col}`, st.origin && (st.origin === 'github' ? 'GitHub' : 'Websites'), st.upkeep && (st.upkeep === 'active' ? 'Active' : 'Quiet'), st.hidden && 'Hidden', st.domain && capMap.domains.find(d => d.id === st.domain)?.label].filter(Boolean);
     const filtersBtn = btn(extra.length ? `Filters · ${extra.length}` : 'Filters', moreFilters, { size: 'sm', iconName: 'filter' });
     fill(tools, h('div', { class: 'cat-count' }, h('strong', null, String(rows.length)), ` ${rows.length === 1 ? 'result' : 'results'}`, extra.length ? h('span', { class: 'muted' }, ` · ${extra.join(' · ')}`) : null),
@@ -193,22 +206,30 @@ export async function catalogueView(tabs) {
       return;
     }
     tools.hidden = false;
+    if (searchError) { renderTools([]); announce.textContent = 'Search didn\'t work'; fill(body, empty('alert', 'Search didn\'t work', searchError, btn('Try again', () => search(), { iconName: 'refresh' }))); return; }
     const rows = sorted(all.filter(passes));
     renderTools(rows);
+    announce.textContent = `${rows.length} ${rows.length === 1 ? 'result' : 'results'}`;
     if (st.page * 48 >= rows.length) st.page = 0;
     fill(body, rows.length ? h('div', { class: 'cat-grid', role: 'list' }, rows.slice(st.page * 48, (st.page + 1) * 48).map(card))
       : empty('search', 'Nothing here yet', ranked ? 'Nothing in the catalogue matches. Discover can search GitHub for it.' : 'Try another area or kind.', ranked ? btn('Search GitHub', () => go(`discover?intent=${encodeURIComponent(st.q)}`), { iconName: 'radar' }) : null),
-      pager(rows.length, st.page, 48, n => { st.page = n; render(); body.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, { noun: 'resources' }));
+      pager(rows.length, st.page, 48, n => { st.page = n; render(); body.scrollIntoView({ block: 'start', behavior: smooth() }); }, { noun: 'resources' }));
   };
 
   let page = null, timer, seq = 0;
   const search = async () => {
     st.q = input.value.trim(); st.page = 0;
     const my = ++seq;
-    if (st.q.length < 2) { ranked = null; if (!st.q) st.q = ''; render(); return; }
-    const r = await api('search', { query: st.q, limit: 100 }).catch(() => null);
-    if (my !== seq) return;
-    ranked = r ? r.results.map(x => x.id) : null;
+    searchError = null;
+    if (st.q.length < 2) { ranked = null; render(); return; }
+    try {
+      const r = await api('search', { query: st.q, limit: 100 });
+      if (my !== seq) return;
+      ranked = r.results.map(x => x.id);
+    } catch (e) {
+      if (my !== seq) return;
+      ranked = null; searchError = e.message;
+    }
     render();
   };
   input.addEventListener('input', () => { clear.hidden = !input.value; clearTimeout(timer); timer = setTimeout(search, 160); });
@@ -224,7 +245,7 @@ export async function catalogueView(tabs) {
       ideas),
     areas,
     h('div', { class: 'cat-bar' }, h('div', { class: 'cat-bar-in' }, kinds, tools)),
-    body, bulk);
+    body, announce, bulk);
   if (st.q) search(); else render();
   return page;
 }

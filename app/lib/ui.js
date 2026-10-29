@@ -35,8 +35,8 @@ export const linkBtn = (label, href, { kind = '', iconName } = {}) => h('a', { c
 // ---------- Status language ----------
 const STATUS = {
   READY: ['good', 'check', 'Ready'], PARTIAL_READY: ['warn', 'alert', 'Partial'], FAILED: ['bad', 'x', 'Failed'], BLOCKED: ['bad', 'lock', 'Blocked'],
-  UNINITIALIZED: ['', 'clock', 'Not set up'], APPROVAL_REQUIRED: ['info', 'shield', 'Awaiting approval'], PROVISIONING: ['info', 'bolt', 'A aplicar'], VERIFYING: ['info', 'check', 'Verifying'],
-  PAUSED: ['warn', 'pause', 'Paused'], CANCELLED: ['', 'x', 'Cancelled'], ROLLING_BACK: ['warn', 'undo', 'A reverter'], RECOVERING: ['warn', 'refresh', 'A recuperar'],
+  UNINITIALIZED: ['', 'clock', 'Not set up'], APPROVAL_REQUIRED: ['info', 'shield', 'Awaiting approval'], PROVISIONING: ['info', 'bolt', 'Applying'], VERIFYING: ['info', 'check', 'Verifying'],
+  PAUSED: ['warn', 'pause', 'Paused'], CANCELLED: ['', 'x', 'Cancelled'], ROLLING_BACK: ['warn', 'undo', 'Rolling back'], RECOVERING: ['warn', 'refresh', 'Recovering'],
   ENVIRONMENT_AUDITED: ['info', 'check', 'Environment audited'], PLAN_READY: ['info', 'wizard', 'Plan ready'], PREFLIGHT: ['info', 'clock', 'Preflight'],
   INSTALLED: ['good', 'check', 'Installed'], CONFIGURED: ['good', 'check', 'Configured'], CATALOGUED: ['', 'library', 'Catalogued'], ON_DEMAND: ['info', 'bolt', 'On demand'],
   NEEDS_VERIFICATION: ['warn', 'clock', 'Needs verification'], PENDING_REVIEW: ['warn', 'clock', 'Pending review'], UNAVAILABLE: ['bad', 'x', 'Unavailable'], DEPRECATED: ['bad', 'alert', 'Deprecated'],
@@ -69,7 +69,7 @@ export function pageHead({ title, sub, actions }) {
 }
 
 export function empty(iconName, title, text, ...actions) {
-  return h('div', { class: 'empty' }, h('div', { class: 'glyph' }, icon(iconName, 'lg')), h('h4', null, title), text ? h('p', null, text) : null, actions.length ? h('div', { class: 'row', style: { justifyContent: 'center' } }, actions) : null);
+  return h('div', { class: 'empty' }, h('div', { class: 'glyph' }, icon(iconName, 'lg')), h('h2', null, title), text ? h('p', null, text) : null, actions.length ? h('div', { class: 'row', style: { justifyContent: 'center' } }, actions) : null);
 }
 
 export function notice(kind, text, iconName) {
@@ -114,11 +114,14 @@ export function segmented(options, value, onChange, label) {
 }
 
 // ---------- Overlays ----------
-let toastRoot;
+let toastRoot, alertRoot;
 export function toast(message, kind = 'info', { timeout } = {}) {
   toastRoot ||= document.body.appendChild(h('div', { class: 'toasts', role: 'status', 'aria-live': 'polite' }));
+  // Errors are announced right away; everything else waits its turn.
+  alertRoot ||= document.body.appendChild(h('div', { class: 'sr-only', role: 'alert' }));
   const t = h('div', { class: `toast ${kind}` }, icon(kind === 'good' ? 'check' : kind === 'bad' ? 'alert' : 'info'), h('div', { class: 'selectable' }, message));
   toastRoot.append(t);
+  if (kind === 'bad') alertRoot.textContent = String(message);
   let timer;
   const close = () => { t.classList.add('leaving'); setTimeout(() => t.remove(), 180); };
   const arm = () => { timer = setTimeout(close, timeout ?? (kind === 'bad' ? 7000 : 3800)); };
@@ -128,6 +131,9 @@ export function toast(message, kind = 'info', { timeout } = {}) {
   return close;
 }
 
+// Everything that can take keyboard focus inside a container, in order, skipping hidden or disabled.
+export const focusables = root => [...root.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])')].filter(x => !x.disabled && x.offsetParent !== null);
+
 export function overlay(node, { onClose } = {}) {
   const prev = document.activeElement;
   const scrim = h('div', { class: 'scrim' });
@@ -135,7 +141,7 @@ export function overlay(node, { onClose } = {}) {
   const onKey = e => {
     if (e.key === 'Escape') { e.preventDefault(); close(); }
     if (e.key === 'Tab') { // focus trap
-      const f = [...node.querySelectorAll('button, input, select, textarea, [tabindex="0"]')].filter(x => !x.disabled);
+      const f = focusables(node);
       if (!f.length) return;
       if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f.at(-1).focus(); }
       else if (!e.shiftKey && document.activeElement === f.at(-1)) { e.preventDefault(); f[0].focus(); }
@@ -188,11 +194,12 @@ export function contextMenu(x, y, items) {
   const onKey = e => {
     const items = [...node.querySelectorAll('button')];
     const i = items.indexOf(document.activeElement);
-    if (e.key === 'Escape') close();
+    if (e.key === 'Escape' || e.key === 'Tab') { if (e.key === 'Escape') e.preventDefault(); close(); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
   };
-  function close() { node.remove(); document.removeEventListener('mousedown', onDoc, true); document.removeEventListener('keydown', onKey, true); openMenu = null; }
+  const opener = document.activeElement;
+  function close() { node.remove(); document.removeEventListener('mousedown', onDoc, true); document.removeEventListener('keydown', onKey, true); openMenu = null; if (opener?.isConnected && !document.querySelector('.dialog')) opener.focus?.({ preventScroll: true }); }
   setTimeout(() => { document.addEventListener('mousedown', onDoc, true); document.addEventListener('keydown', onKey, true); });
   node.querySelector('button')?.focus();
   openMenu = close;

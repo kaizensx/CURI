@@ -54,8 +54,11 @@ export function planProjectCommand(command, project, { component } = {}) {
   const js = project.ecosystems.find(e => e.id === 'js'), py = project.ecosystems.find(e => e.id === 'py');
   if (parts[0] === 'npx' && parts.includes('shadcn@latest') && parts.includes('add')) {
     if (!js) return { error: 'The project isn\'t JavaScript (no package.json).' };
-    const target = parts.at(-1).replace('<componente>', component || '');
-    if (!component && /<componente>/.test(parts.at(-1))) return { needs: 'component' };
+    const target = parts.at(-1).replace(/<component>/, component || '');
+    if (!component && /<component>/.test(parts.at(-1))) return { needs: 'component' };
+    // Registry names only (e.g. "button", "@magicui/marquee"): a URL here would let a README pick
+    // a remote registry that writes arbitrary files into the project.
+    if (!/^@?[a-z0-9][a-z0-9._-]*(\/[a-z0-9][a-z0-9._-]*)?$/i.test(target)) return { error: `"${target}" isn't a component name CURI can add safely.` };
     return { cmd: 'npx', args: ['--yes', 'shadcn@latest', 'add', target, '--yes'], verify: null, ecosystem: 'js' };
   }
   if (parts[0] === 'npx' || parts[0] === 'npm' && parts[1] === 'init') return { error: 'This command creates a new project; run it in an empty folder.' };
