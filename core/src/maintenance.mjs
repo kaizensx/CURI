@@ -78,6 +78,9 @@ export async function maintenancePass(db, { actor = 'agent', force = false } = {
     doneTasks.add(c.task);
   }
   for (const t of doneTasks) setPref(db, `last_${t}`, now());
+  // Look for newer versions of what CURI installed once a day, so Library › Installed › Updates is current.
+  const updatesOn = ['update_skills', 'update_plugins', 'update_packages'].some(k => getPref(db, TASKS[k].every, TASKS[k].default));
+  if (updatesOn && (force || due(db, 'updates_check', 24))) { try { const { checkUpdates } = await import('./updates.mjs'); await checkUpdates(db); setPref(db, 'last_updates_check', now()); } catch {} }
   setPref(db, 'maintenance_suggestions', suggestions.slice(0, 30));
   setPref(db, 'last_maintenance', { at: now(), queued: queued.length, suggestions: suggestions.length });
   return { queued, suggestions };

@@ -140,6 +140,13 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
                 let _ = tx.send(line);
             } else if let Some(json) = line.strip_prefix("CURI-STATUS ") {
                 tray::on_status(&handle, json);
+            } else if let Some(json) = line.strip_prefix("CURI-NOTIFY ") {
+                // A system notification from the engine (e.g. a strong new project on GitHub).
+                if let Ok(v) = serde_json::from_str::<serde_json::Value>(json) {
+                    use tauri_plugin_notification::NotificationExt;
+                    let text = |k: &str| v[k].as_str().unwrap_or("").chars().take(200).collect::<String>();
+                    let _ = handle.notification().builder().title(text("title")).body(text("body")).show();
+                }
             } else if let Some(cmd) = line.strip_prefix("CURI-CMD ") {
                 // Requests from the window, relayed by the engine (the page has no IPC of its own).
                 let app = handle.clone();

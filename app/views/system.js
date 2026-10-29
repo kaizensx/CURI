@@ -7,7 +7,7 @@ import { withProgress } from '../lib/opmodal.js';
 export async function jobs() {
   const [events, scans, s] = await Promise.all([api('jobs', { limit: 300 }), api('scans'), api('status')]);
   return h('div', { class: 'page' },
-    pageHead({ eyebrow: 'System', title: 'Tasks and monitoring', sub: 'No hidden background jobs: each task runs only when asked, or under the maintenance schedule you set.' }),
+    pageHead({ eyebrow: 'Activity', title: 'Searches and quotas', sub: 'No hidden background jobs: each task runs only when asked, or under the maintenance schedule you set.' }),
     h('div', { class: 'stack-lg reveal' },
       panel({ title: 'Providers and quotas', flush: true }, s.providers.length ? h('div', { class: 'rows' }, s.providers.map(p => h('div', { class: 'r' },
         h('span', { class: 'itile' }, icon('git')), h('div', { class: 'grow' }, h('div', { class: 't1' }, p.provider), h('div', { class: 't2' }, `${p.detail || ''} · checked ${relTime(p.checked_at)}`)),
@@ -24,7 +24,7 @@ export async function audit() {
   const drawAct = () => fill(actWrap, panel({ title: 'Activity', meta: `${log.entries.length} most recent`, flush: true }, table([{ label: '#', num: true, cell: e => e.id }, { label: 'When', cell: e => when(e.ts) }, { label: 'Actor', cell: e => e.actor }, { label: 'Action', cell: e => h('span', { class: 'mono' }, e.action) }, { label: 'Target', cell: e => h('span', { class: 'mono' }, e.target || '—') }, { label: 'Hash', cell: e => h('span', { class: 'mono muted' }, e.hash.slice(0, 12)) }], log.entries.slice(auditPage * 50, (auditPage + 1) * 50))), pager(log.entries.length, auditPage, 50, n => { auditPage = n; drawAct(); }, { noun: 'entries' }));
   drawAct();
   return h('div', { class: 'page' },
-    pageHead({ eyebrow: 'System', title: 'Audit', sub: 'Append-only log with a SHA-256 hash chain: changing a past entry breaks the chain.' }),
+    pageHead({ eyebrow: 'Activity', title: 'Audit log', sub: 'Append-only log with a SHA-256 hash chain: changing a past entry breaks the chain.' }),
     h('section', { class: `panel bridge-hero ${log.chain.ok ? 'ok' : 'bad'}` }, h('div', { class: 'panel-body bh-status' }, h('span', { class: `result-ic ${log.chain.ok ? 'good' : 'bad'}` }, icon(log.chain.ok ? 'lock' : 'alert', 'lg')),
       h('div', null, h('h3', null, log.chain.ok ? 'Chain intact' : `Chain broken at entry ${log.chain.brokenAt}`), h('p', { class: 'muted' }, `${fmtInt(log.chain.checked)} entries verified just now.`)))),
     h('div', { class: 'stack-lg reveal' },
@@ -38,27 +38,25 @@ export async function settings() {
   const budget = h('input', { type: 'number', class: 'num-input', min: '0', max: '5000', value: String(p.github_budget), 'aria-label': 'GitHub budget' });
   const policy = h('select', { class: 'select', 'aria-label': 'Install policy' }, [['minimal-global', 'Minimal global (recommended)'], ['catalog-only', 'Catalogue only']].map(([v, l]) => h('option', { value: v, selected: v === p.install_policy || null }, l)));
   const model = h('input', { type: 'checkbox', role: 'switch', id: 'pm', checked: p.model_analysis || null });
+  const notifyNew = h('input', { type: 'checkbox', role: 'switch', id: 'pn', checked: p.notify_discoveries || null });
   const file = h('input', { type: 'file', accept: 'application/json', 'aria-label': 'Import file', class: 'file' });
   const impOut = h('div');
   const readFile = async () => { if (!file.files[0]) throw new Error('Pick a file first.'); return JSON.parse(await file.files[0].text()); };
   const row = (t1, t2, ctl) => h('div', { class: 'r' }, h('div', { class: 'grow' }, h('div', { class: 't1' }, t1), t2 ? h('div', { class: 't2' }, t2) : null), ctl);
-  return h('div', { class: 'page narrow' },
-    pageHead({ eyebrow: 'System', title: 'Settings' }),
+  return h('div', { class: 'page cat' },
+    pageHead({ eyebrow: 'Settings', title: 'How CURI ', em: 'works for you.', sub: 'Look and feel, discovery limits, and your data. What CURI may do on its own is under Autonomy.' }),
     h('div', { class: 'stack-lg reveal' },
       panel({ title: 'Appearance and motion', flush: true }, h('div', { class: 'rows' },
         row('Theme', 'Follows the system by default.', segmented([['system', 'System'], ['dark', 'Dark'], ['light', 'Light']], currentTheme(), v => applyTheme(v), 'Theme')),
         row('Motion', 'Reduced removes movement and staggered entrances; Off removes every animation (state never depends on them). Your system\'s "Reduce motion" setting is always respected.', segmented([['full', 'Full'], ['reduced', 'Reduced'], ['off', 'Off']], currentMotion(), v => applyMotion(v), 'Motion')))),
-      panel({ title: 'Integrations and control', flush: true }, h('div', { class: 'rows' },
-        row('Connections and credentials', 'Claude Code, GitHub, Anthropic API, OpenAI, Google AI.', h('a', { class: 'btn sm', href: '#/connections' }, 'Open')),
-        row('Autonomy and permissions', 'Management mode, permission matrix, trusted publishers, background work.', h('a', { class: 'btn sm', href: '#/automation' }, 'Open')),
-        row('Activity', 'What CURI installed or changed, and what waits for your OK.', h('a', { class: 'btn sm', href: '#/operations' }, 'Open')))),
       panel({ title: 'Discovery and installs', flush: true }, h('div', { class: 'rows' },
         row('GitHub request budget per run', 'Without a token: 60 requests/h and 10 searches/min.', budget),
         row('Install policy', 'Minimal global: only CURI\'s own skill and MCP; everything else on demand.', policy),
         row('Model-assisted analysis', 'Uses your Claude account; off by default.', h('span', { class: 'switch' }, model, h('span'))),
+        row('Notify me about strong new projects', 'A notification when CURI finds a project on GitHub with a high agent score that it can install here. Once per project.', h('span', { class: 'switch' }, notifyNew, h('span'))),
         row('Telemetry', 'Always off.', badge('off')),
         row('Scheduled searches', 'CURI looks for new projects once a week. Save your own searches in Library › New on GitHub; change how often in Autonomy.', badge('see Autonomy')),
-        h('div', { class: 'r' }, h('span', { class: 'spacer' }), btn('Save', async () => { await api('prefsSet', { github_budget: Number(budget.value), install_policy: policy.value, model_analysis: model.checked }); toast('Preferences saved', 'good'); }, { kind: 'primary' })))),
+        h('div', { class: 'r' }, h('span', { class: 'spacer' }), btn('Save', async () => { await api('prefsSet', { github_budget: Number(budget.value), install_policy: policy.value, model_analysis: model.checked, notify_discoveries: notifyNew.checked }); toast('Preferences saved', 'good'); }, { kind: 'primary' })))),
       panel({ title: 'Data', flush: true }, h('div', { class: 'rows' },
         row('CURI data', h('span', { class: 'mono' }, pf.paths.curi_data)), row('Claude profile', h('span', { class: 'mono' }, pf.paths.claude_home)), row('User MCP', h('span', { class: 'mono' }, pf.paths.claude_json)),
         row('Export registry', 'Versioned JSON (curi-registry-export v1) with original URLs, evidence and snapshots.', btn('Export', () => withProgress('Exporting the registry', () => api('exportFile').then(r => `${r.count} resources exported to ${r.file}`), { stage: 'Writing the JSON file…' }), { iconName: 'download' })),
@@ -70,9 +68,9 @@ const kvResult = r => kv(Object.entries(r).map(([k, v]) => [k, String(v)]));
 export async function about() {
   const [s, b] = await Promise.all([api('status'), api('bootstrapState')]);
   const keys = [[mod('K'), 'Command palette'], [mod('1–6'), 'Move between sections'], [mod(','), 'Settings'], ['/', 'Focus the page search'], [mod('R'), 'Refresh data'], ['Esc', 'Close dialogs and menus'], ['Right-click or ⋯', 'Actions on a resource'], ['Drag a URL', 'Add to the catalogue']];
-  return h('div', { class: 'page narrow' },
+  return h('div', { class: 'page' },
     h('div', { class: 'about-mark' }, brandMark({ size: 64 }), h('img', { src: 'brand/curi-wordmark-on-dark.svg', alt: 'CURI', class: 'about-wordmark' })),
-    pageHead({ eyebrow: 'System', title: 'About CURI', sub: `CURI ${s.version || ''}: Node engine (SQLite/FTS5), CLI, stdio MCP server, Claude skill and native Tauri app.` }),
+    pageHead({ eyebrow: 'Settings', title: 'About CURI', sub: `CURI ${s.version || ''}: Node engine (SQLite/FTS5), CLI, stdio MCP server, Claude skill and native Tauri app.` }),
     h('div', { class: 'grid cols-2 reveal' },
       panel({ title: 'Updates', actions: btn('Check', async () => {
         const box = document.getElementById('upd');

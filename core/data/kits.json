@@ -1,0 +1,21 @@
+{
+  "note": "Curated kits: a few resources that work well together for one kind of job. Installing a kit installs each member that isn't here yet, one visible operation at a time.",
+  "kits": [
+    { "id": "web-testing", "name": "Web testing", "glyph": "compass", "can": "Open sites, click through them, read the console and check what broke.",
+      "resources": ["gh:microsoft/playwright-mcp", "gh:chromedevtools/chrome-devtools-mcp", "gh:vercel-labs/agent-browser", "gh:firecrawl/firecrawl-mcp-server"] },
+    { "id": "design-taste", "name": "Design taste", "glyph": "sparkle", "can": "Interfaces that don't look generated: layout, type, motion and polish.",
+      "resources": ["gh:pbakaus/impeccable", "gh:leonxlnx/taste-skill", "gh:emilkowalski/skills", "gh:nextlevelbuilder/ui-ux-pro-max-skill"] },
+    { "id": "security-review", "name": "Security review", "glyph": "shield", "can": "Review code, find leaked secrets and test running apps.",
+      "resources": ["gh:anthropics/claude-code-security-review", "gh:cloudflare/security-audit-skill", "gh:semgrep/semgrep", "gh:gitleaks/gitleaks", "gh:usestrix/strix"] },
+    { "id": "video", "name": "Video", "glyph": "play", "can": "Edit, generate and animate video from code.",
+      "resources": ["gh:heygen-com/hyperframes", "gh:remotion-dev/remotion", "gh:ffmpeg/ffmpeg", "gh:manimcommunity/manim"] },
+    { "id": "reverse-engineering", "name": "Reverse engineering", "glyph": "search", "can": "Take apart binaries, firmware and running processes.",
+      "resources": ["gh:morluto/rea", "gh:nationalsecurityagency/ghidra", "gh:frida/frida", "gh:refirmlabs/binwalk"] },
+    { "id": "research", "name": "Research and docs", "glyph": "library", "can": "Current docs, web pages and Office files, read and turned into text.",
+      "resources": ["gh:upstash/context7", "gh:firecrawl/firecrawl", "gh:microsoft/markitdown", "gh:anthropics/skills"] },
+    { "id": "memory", "name": "Memory and context", "glyph": "database", "can": "Remember across sessions and fit big codebases into context.",
+      "resources": ["gh:thedotmack/claude-mem", "gh:yamadashy/repomix", "gh:graphify-labs/graphify"] },
+    { "id": "3d", "name": "3D and CAD", "glyph": "box", "can": "Drive Blender, model parts and prepare them for printing.",
+      "resources": ["gh:ahujasid/mcp-for-blender", "gh:openscad/openscad", "gh:earthtojake/text-to-cad"] }
+  ]
+}

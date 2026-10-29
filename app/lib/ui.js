@@ -64,8 +64,12 @@ export function panel({ title, meta, actions, flush, cls = '', id } = {}, ...bod
 }
 
 // Headings carry their own weight: no eyebrow labels above them (the parameter is accepted and ignored).
-export function pageHead({ title, sub, actions }) {
-  return h('header', { class: 'page-head' }, h('div', null, h('h1', null, title), sub ? h('p', null, sub) : null), actions ? h('div', { class: 'actions' }, actions) : null);
+// Every page opens the same way as the Library: section name and actions on one line (tabs join them),
+// then the headline and one line of context. Same markup as views/hero.js.
+export function pageHead({ eyebrow, title, em, sub, actions }) {
+  return h('header', { class: 'cat-hero' },
+    h('div', { class: 'cat-top' }, h('span', { class: 'cat-eyebrow' }, eyebrow || ''), h('div', { class: 'actions' }, actions || null)),
+    h('h1', null, title, em ? h('em', null, em) : null), sub ? h('p', null, sub) : null);
 }
 
 export function empty(iconName, title, text, ...actions) {
@@ -184,7 +188,7 @@ export function promptDialog({ title, body, placeholder = '', confirm = 'OK', va
 let openMenu;
 export function contextMenu(x, y, items) {
   openMenu?.();
-  const node = h('div', { class: 'menu', role: 'menu' }, items.map(it => it === '-' ? h('hr') : h('button', { type: 'button', role: 'menuitem', onclick: async () => { close(); try { await it.run(); } catch (e) { toast(e.message, 'bad'); } } }, icon(it.icon || 'chevron', 'sm'), it.label)));
+  const node = h('div', { class: 'menu', role: 'menu' }, items.map(it => it === '-' ? h('hr') : h('button', { type: 'button', role: 'menuitem', class: it.danger ? 'danger' : null, onclick: async () => { close(); try { await it.run(); } catch (e) { toast(e.message, 'bad'); } } }, icon(it.icon || 'chevron', 'sm'), it.label)));
   document.body.append(node);
   const r = node.getBoundingClientRect();
   const left = Math.min(x, innerWidth - r.width - 8), top = Math.min(y, innerHeight - r.height - 8);

@@ -63,11 +63,14 @@ function upsert(db, provider, fields) {
     .run(provider, row.method, row.account, row.has_secret, row.status, row.detail, row.capabilities, row.last_tested, row.last_ok, row.updated_at);
 }
 
+// Connections tested by versions before 3.3 stored their result in Portuguese.
+const englishDetail = d => (d ? d.replace(/^Ligado como /, 'Connected as ') : d);
+
 export function listConnections(db) {
   const rows = new Map(db.prepare('SELECT * FROM connections').all().map(r => [r.provider, r]));
   return Object.entries(PROVIDERS).map(([id, p]) => {
     const r = rows.get(id) || {};
-    return { provider: id, name: p.name, method: p.method, hint: p.hint, docs: p.docs, capabilities: p.capabilities, status: r.status || 'not_configured', account: r.account || null, detail: r.detail || null, has_secret: Boolean(r.has_secret), last_tested: r.last_tested || null, last_ok: r.last_ok || null, keychain: vault.available() };
+    return { provider: id, name: p.name, method: p.method, hint: p.hint, docs: p.docs, capabilities: p.capabilities, status: r.status || 'not_configured', account: r.account || null, detail: englishDetail(r.detail) || null, has_secret: Boolean(r.has_secret), last_tested: r.last_tested || null, last_ok: r.last_ok || null, keychain: vault.available() };
   });
 }
 

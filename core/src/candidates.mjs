@@ -1,6 +1,7 @@
 // Discovery candidates are inspected the same way catalogue resources are, so Discover only offers what
 // the app can actually install or connect here, and installs it in one step.
-import { now, tx } from './db.mjs';
+import { now, tx, getPref, setPref } from './db.mjs';
+import { notifyUser } from './notify.mjs';
 import { inspectGithub } from './inspect.mjs';
 import { profile } from './profile.mjs';
 import { deviceContext, setFacts } from './facts.mjs';
@@ -36,6 +37,7 @@ export async function inspectCandidates(db, { limit = 15, onStage = () => {}, ca
     installable += sum.installable ? 1 : 0;
     db.prepare('INSERT OR REPLACE INTO candidate_facts(full_name,data,install,inspected_at) VALUES (?,?,?,?)').run(c.full_name, JSON.stringify(facts), JSON.stringify(sum), now());
   }
+  notifyStrong(db, rows);
   return { inspected: rows.length, installable };
 }
 
@@ -48,4 +50,17 @@ export function adoptCandidate(db, candidateId) {
   try { r = promoteCandidate(db, candidateId); } catch (e) { r = db.prepare('SELECT id, name FROM resources WHERE gh_full_name=?').get(c.full_name); if (!r) throw e; }
   if (f) setFacts(db, r.id, JSON.parse(f.data), 'live');
   return r;
+}
+
+// A strong new project (high agent score, installable here) gets a notification, once per project.
+function notifyStrong(db, rows) {
+  if (!getPref(db, 'notify_discoveries', true)) return;
+  const told = new Set(getPref(db, 'notified_discoveries', []));
+  const strong = rows.filter(c => c.rel.score >= 0.85 && !told.has(c.full_name)
+    && JSON.parse(db.prepare('SELECT install FROM candidate_facts WHERE full_name=?').get(c.full_name)?.install || '{}').installable);
+  if (!strong.length) return;
+  const [first] = strong;
+  notifyUser(strong.length === 1 ? `New on GitHub: ${first.full_name.split('/')[1]}` : `${strong.length} strong new projects on GitHub`,
+    strong.length === 1 ? (first.description || '').slice(0, 160) : strong.slice(0, 3).map(c => c.full_name.split('/')[1]).join(', '));
+  setPref(db, 'notified_discoveries', [...told, ...strong.map(c => c.full_name)].slice(-500));
 }

@@ -346,26 +346,6 @@ main:focus, main:focus-visible { outline: none; }
 .mine textarea.area, .mine input { font-family: var(--font); font-size: 13px; }
 .mine input.mono { font-family: var(--mono); }
 
-/* ---------- Discover 3.4: install-first cards ---------- */
-.dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
-.dcard { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 16px; background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 70%, var(--surface-1)), var(--surface-1)); box-shadow: inset 0 0 0 1px var(--hairline), inset 0 1px 0 rgba(255,255,255,.04), var(--shadow-1); min-width: 0; transition: box-shadow var(--d-fast) ease, transform var(--d-base) var(--ease-out); }
-@media (hover: hover) { .dcard:hover { box-shadow: inset 0 0 0 1px var(--hairline-2), inset 0 1px 0 rgba(255,255,255,.06), var(--shadow-2); transform: translateY(-1px); } }
-.dc-top { display: flex; gap: 12px; align-items: center; }
-.dc-top .grow { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.dc-top .nm { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-.dc-top .nm strong { font-size: 14.5px; font-weight: 640; letter-spacing: -.012em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dc-top .own { color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dc-top .k { color: var(--ink-3); font-size: 11.5px; }
-.dc-top .score { font: 650 20px/1 var(--font); letter-spacing: -.03em; font-variant-numeric: tabular-nums; color: var(--ink-1); padding: 6px 9px; border-radius: 10px; background: var(--signal-wash); color: var(--signal); }
-.dcard .d { margin: 0; color: var(--ink-2); font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 3em; }
-.dcard .how { display: flex; flex-wrap: wrap; gap: 6px; }
-.dcard .tagd { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--surface-3); color: var(--ink-2); }
-.dcard .em { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--warn-wash); color: var(--warn); }
-.dc-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 10px; box-shadow: inset 0 1px 0 var(--hairline); }
-.dc-foot .meta { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-3); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.dc-foot .meta svg { width: 11px; height: 11px; }
-.dc-foot .via { color: var(--ink-2); font: 11.5px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.dc-foot .grow { flex: 1; }
 .pending-note { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 12px; background: var(--surface-1); box-shadow: inset 0 0 0 1px var(--hairline); color: var(--ink-2); font-size: 13px; margin-bottom: 14px; }
 .pending-note span { flex: 1; }
 
@@ -400,25 +380,7 @@ main:focus, main:focus-visible { outline: none; }
 .capchip-area:active { transform: scale(.97); }
 @media (hover: hover) { .capchip-area:hover { background: var(--surface-2); } }
 .capchip-area[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px var(--signal), 0 0 0 3px var(--signal-wash); }
-.capsections { display: flex; flex-direction: column; gap: 18px; }
-.capsec { border-radius: 16px; background: var(--surface-1); box-shadow: inset 0 0 0 1px var(--hairline), var(--shadow-1); overflow: hidden; }
-.capsec > header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: linear-gradient(180deg, rgba(255,255,255,.025), transparent); box-shadow: inset 0 -1px 0 var(--hairline); }
-.capsec > header h2 { margin: 0; font-size: 15px; font-weight: 640; letter-spacing: -.012em; }
-.capsec > header div span { color: var(--ink-3); font-size: 12px; }
-.capsec > header .count { margin-left: auto; color: var(--ink-2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.caprow { display: grid; grid-template-columns: 118px minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 11px 16px; }
-.caprow + .caprow { box-shadow: inset 0 1px 0 var(--hairline); }
-.caprow .what { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.caprow .what strong { font-size: 13.5px; font-weight: 600; }
-.caprow .what span { color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.caprow .prov { display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; }
-.caprow .prov a { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--hairline); white-space: nowrap; }
-.caprow .prov a.on { color: var(--presence); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--presence) 40%, transparent); background: var(--presence-wash); }
-.caprow .prov .more { color: var(--ink-4); font-size: 11.5px; align-self: center; }
-.caprow .act { display: flex; justify-content: flex-end; min-width: 120px; }
-.caprow.flash { animation: flash 1.6s var(--ease-out); }
 @keyframes flash { 0%, 30% { background: var(--signal-wash); } 100% { background: transparent; } }
-@media (max-width: 1100px) { .caprow { grid-template-columns: 110px minmax(0, 1fr) auto; } .caprow .prov { display: none; } }
 
 /* ---------- Library › Installed: places on the left, what lives there on the right ---------- */
 .lib-tabs a { gap: 6px; text-decoration: none; }

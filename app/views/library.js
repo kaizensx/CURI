@@ -22,7 +22,18 @@ export function resourceMenu(r) {
     '-',
     { label: compareTray.has(r.id) ? 'Remove from comparison' : 'Add to comparison', icon: 'compare', run: () => compareTray.toggle(r.id) },
     { label: 'Refresh project data', icon: 'refresh', run: () => runOperation('resource.inspect', { id: r.id }, `Refresh data: ${r.name}`) },
+    ...(r.state && r.state !== 'account' ? ['-', { label: 'Uninstall…', icon: 'trash', danger: true, run: () => uninstall(r) }] : []),
   ];
+}
+
+// Uninstall from a card: one place to remove it from runs straight away (after the usual confirmation);
+// several places open the page, where each has its own button.
+export async function uninstall(r, after = () => mount()) {
+  const v = await api('resourceView', { id: r.id });
+  const rm = v.actions.manage.filter(a => a.danger);
+  if (rm.length === 1) return runAction(rm[0], r.name, after);
+  if (!rm.length) toast(`${r.name} wasn't installed by an agent CURI can manage; remove it where it was installed.`, 'bad');
+  go(`resource/${encodeURIComponent(r.id)}`);
 }
 
 // The one useful thing to do from a row, for every kind of resource.
@@ -84,7 +95,9 @@ export async function resource(id) {
   const lead = A.primary ? null : pr.state ? `Already installed${pr.found?.length ? ` in ${[...new Set(pr.found.map(f => f.agent_label || 'this computer'))].join(', ')}` : ''}. Nothing to install.` : pf.kind === 'reference' ? 'Reference material.' : null;
   const bar = h('div', { class: 'actionbar' },
     A.primary ? actionButton(A.primary, r.name, after, { kind: 'primary' }) : !pr.state && A.project.length ? btn('Add to a project', () => addToProject(r.name, A.project).then(after), { kind: 'primary', iconName: 'plus' }) : lead ? h('span', { class: 'lead' }, lead) : null,
-    ...A.manage.slice(0, 4).map(a => actionButton(a, r.name, after, { kind: 'ghost' })),
+    // Removing is always on the bar, next to the routine actions, never cut off by them.
+    ...A.manage.filter(a => !a.danger).slice(0, 3).map(a => actionButton(a, r.name, after, { kind: 'ghost' })),
+    ...A.manage.filter(a => a.danger).slice(0, 2).map(a => actionButton(a, r.name, after)),
     h('span', { class: 'grow' }),
     ...A.docs.map(a => btn(a.label, () => runAction(a, r.name), { kind: 'ghost', iconName: 'external' })));
 

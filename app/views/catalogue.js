@@ -8,6 +8,7 @@ import { go, params, compareTray, currentMotion } from '../app.js';
 import { STATE_HINT } from './common.js';
 import { hero, searchCapsule } from './hero.js';
 import { resourceMenu, quickAction, quickLabel } from './library.js';
+import { kitCard } from './kits.js';
 
 const KINDS = [['', 'Everything'], ['plugin', 'Plugins'], ['skill', 'Skills'], ['mcp', 'MCP servers'], ['cli', 'Command line'], ['app', 'Apps'], ['components', 'UI components'], ['library', 'Libraries'], ['framework', 'Frameworks']];
 const KIND_SHELF = { plugin: 'Claude Code plugins', 'skill-pack': 'Skill packs', skill: 'Skills', mcp: 'MCP servers', cli: 'Command-line tools', app: 'Apps', components: 'UI components', library: 'Libraries for your projects', framework: 'Frameworks' };
@@ -36,7 +37,7 @@ const owner = r => (r.gh_full_name ? r.gh_full_name.split('/')[0] : (() => { try
 
 export async function catalogueView(tabs) {
   const p = params();
-  const [everything, capMap, cols] = await Promise.all([api('library'), api('capabilityMap'), api('collections')]);
+  const [everything, capMap, cols, kits] = await Promise.all([api('library'), api('capabilityMap'), api('collections'), api('kits')]);
   const actionable = r => Boolean(r.state || r.installable || r.has_project);
   const all = everything.filter(actionable);
   const capDomain = new Map(capMap.capabilities.map(c => [c.id, c.domain]));
@@ -200,6 +201,8 @@ export async function catalogueView(tabs) {
       const kindsShown = ['plugin', 'mcp', 'cli', 'skill', 'components', 'app', 'library'];
       fill(body,
         featured.length ? h('div', { class: 'features' }, featured.map(feature)) : null,
+        h('section', { class: 'shelf' }, h('header', null, h('div', null, h('h2', null, 'Kits'), h('p', null, 'A few tools that work well together, installed in one go.'))),
+          h('div', { class: 'shelf-row', role: 'list' }, kits.map(k => kitCard(k, everything)))),
         shelf('Ready in one click', 'Not on this computer yet, and nothing else to set up first.', oneClick.slice(2, 16), () => { st.show = 'ready'; render(); }),
         shelf('Already yours', 'In Claude Code, Codex, your claude.ai account or on this computer.', yours.slice(1, 15), () => { st.show = 'here'; render(); }),
         shelf('Busy lately', 'Projects that shipped something in the last two weeks.', recent, () => { st.upkeep = 'active'; st.sort = 'updated'; render(); }),
