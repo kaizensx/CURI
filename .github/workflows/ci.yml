@@ -11,10 +11,9 @@ permissions:
 jobs:
   core:
     name: Core tests (${{ matrix.os }})
-    # macOS is the supported platform; Linux and Windows run so we learn where the engine still breaks
-    # there, without blocking a release on it.
+    # The engine passes on all three; macOS-only features (LaunchAgent, /usr/local/bin link) are
+    # blocked with a reason elsewhere and their tests are skipped there.
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.os != 'macos-15' }}
     strategy:
       fail-fast: false
       matrix:
