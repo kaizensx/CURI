@@ -4,7 +4,7 @@
   <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-1b1c21?style=flat-square&logo=apple&logoColor=white">
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%2F%2011-1b1c21?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Linux x64 and ARM64" src="https://img.shields.io/badge/Linux-x64%20%C2%B7%20ARM64-1b1c21?style=flat-square&logo=linux&logoColor=white">
-  <img alt="Version 3.7.0" src="https://img.shields.io/badge/version-3.7.0-6e96ff?style=flat-square">
+  <img alt="Version 3.8.0" src="https://img.shields.io/badge/version-3.8.0-6e96ff?style=flat-square">
   <img alt="Runs locally" src="https://img.shields.io/badge/runs-100%25%20local-5fd39a?style=flat-square">
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-a6aab3?style=flat-square">
 </p>
@@ -79,7 +79,7 @@ Every install runs in a progress window that follows what the package manager is
 
 **Discovers with taste.** It reads your GitHub stars and runs saved searches on its own, but only keeps projects an agent can actually use (MCP, skill, command line, API, scriptable app) and that it can install here.
 
-**Stays on in the menu bar.** Closing the window, ⌘Q or "Quit" in the Dock don't stop CURI. It keeps an icon in the menu bar, opens at login, keeps checking in the background and sends a notification when something finishes or needs your OK. "Check Now", "Open at Login" and "Quit CURI" are right there in that menu, and "Quit CURI" there is the only thing that stops it. If it ever crashes, it comes back on its own.
+**Stays on in the menu bar.** Closing the window, ⌘Q or "Quit" in the Dock don't stop CURI. It keeps an icon in the menu bar, opens at login, keeps checking in the background and sends a notification when something finishes or needs your OK. "Check Now", "Open at Login" and "Quit CURI" are right there in that menu, and "Quit CURI" there is the only thing that stops it. If it ever crashes, it comes back on its own. When a new version is out it tells you, and *Install and restart* updates it in a few seconds: signed, checked, and without the warnings a browser download gets.
 
 **Looks after itself, within limits you set.** Three autonomy modes, with a clear table of what each one does without asking. Maintenance runs in the background. Removals and admin actions always ask, and everything ends up in an activity log with a tamper-evident audit trail.
 
@@ -87,7 +87,28 @@ Every install runs in a progress window that follows what the package manager is
 
 <p align="center"><img src="docs/screenshots/platforms.jpg" alt="CURI on macOS, Windows and Linux" width="100%"></p>
 
-Grab the file for your system from [Releases](../../releases). On first launch CURI installs whatever is missing (Node.js, Claude Code) into its own folder, shows the progress, and takes a first look at your device. Nothing is installed system-wide.
+One line, any system. It downloads the latest release, checks it against the published SHA-256, installs it and opens CURI:
+
+**macOS and Linux**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kaizensx/curi/main/install.sh | sh
+```
+
+**Windows** (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/kaizensx/curi/main/install.ps1 | iex
+```
+
+On first launch CURI installs whatever else is missing (Node.js, Claude Code) into its own folder, shows the progress, and takes a first look at your device. Nothing is installed system-wide, and on Windows nothing needs admin rights.
+
+<details>
+<summary>Prefer to download the file yourself?</summary>
+
+<br>
+
+Grab the file for your system from [Releases](../../releases):
 
 | | Download | Then |
 |---|---|---|
@@ -98,7 +119,9 @@ Grab the file for your system from [Releases](../../releases). On first launch C
 
 Every release has a `SHA256SUMS` file to check your download against.
 
-> The builds aren't signed yet. The first time, macOS asks you to confirm in *System Settings › Privacy & Security*, and Windows SmartScreen asks you to click *More info › Run anyway*.
+Files downloaded through a browser get the "from the internet" warning, because the builds aren't signed yet: macOS asks you to confirm in *System Settings › Privacy & Security*, and Windows SmartScreen asks you to click *More info › Run anyway*. The install commands above don't hit that.
+
+</details>
 
 **Where I've tried it.** macOS (Apple Silicon) is where I use it every day. I've also installed and run it on a clean Windows 11 (x64) and on Ubuntu 24.04 (ARM), from the first launch to installing a skill, and the engine's tests run on all three systems in CI.
 
@@ -126,7 +149,7 @@ brand/      visual identity, generated from a single geometry; README art in bra
 
 The CLI (`node core/bin/curi.mjs help`) does everything the app does, if you'd rather stay in the terminal.
 
-**Releases.** Pushing a version tag (`git tag v3.7.0 && git push origin v3.7.0`) builds macOS, Windows and Linux and puts them in a draft release with checksums and the notes from the CHANGELOG. Publishing the draft is a manual step. For a test build without a release, run the *Cross-platform build* workflow from the Actions tab.
+**Releases.** Pushing a version tag (`git tag v3.8.0 && git push origin v3.8.0`) builds macOS, Windows and Linux, signs the in-app updates, and puts everything in a draft release with checksums and the notes from the CHANGELOG. Once the draft is published, installed copies offer the update by themselves. Publishing the draft is a manual step. For a test build without a release, run the *Cross-platform build* workflow from the Actions tab.
 
 [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Design](docs/DESIGN.md) · [Internal contracts](docs/CONTRACTS.md)
 

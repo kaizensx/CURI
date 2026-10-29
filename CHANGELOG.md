@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.8.0 - 2026-10-29
+
+**Updates arrive on their own**
+- CURI checks GitHub for a new version shortly after launch and every six hours. When there's one, it says so in the menu bar or tray, with a notification and a banner in the window: *What's new*, *Later* or *Install and restart*.
+- Updates are signed with CURI's own release key and checked before anything is installed; a download that doesn't match is refused, CURI keeps the version you have and doesn't offer that download again.
+- Installing downloads the update, replaces the app and restarts it in a few seconds, on macOS, Windows and the Linux AppImage. With a `.deb` install, *Install* opens the release page instead.
+- An update downloaded by CURI itself doesn't get the unsigned-app warning, so people only see that once, on the first install.
+- *Check for Updates…* in the menu bar or tray, and *Check* in Settings › About, look right away.
+
+**Releases**
+- A version tag now also builds the signed update files and a `latest.json` for installed copies, with the CHANGELOG section as the *What's new* text. Release notes include the install commands.
+
 ## 3.7.0 - 2026-10-29
 
 CURI now runs on Windows and Linux, tested on real machines: Windows 11 (x64) and Ubuntu 24.04 (ARM).
@@ -25,6 +37,7 @@ CURI now runs on Windows and Linux, tested on real machines: Windows 11 (x64) an
 - A manual "Cross-platform build" workflow produces the Windows installer and Linux packages (x64 and ARM) for testing.
 - A version tag now builds macOS, Windows and Linux into one draft release, with `SHA256SUMS` and this changelog as the notes. The old release notes were still in Portuguese.
 - README: install steps for each system and real screenshots from all three.
+- One-line install on every system: `curl -fsSL …/install.sh | sh` on macOS and Linux, `irm …/install.ps1 | iex` on Windows. Each finds the latest release, checks it against `SHA256SUMS`, installs and opens CURI, without the unsigned-app warnings a browser download gets. Tested on macOS, Windows 11 and Ubuntu ARM.
 
 ## 3.6.2 - 2026-10-29
 

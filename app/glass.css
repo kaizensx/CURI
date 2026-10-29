@@ -219,3 +219,16 @@ main::-webkit-scrollbar-track { background: transparent; }
 /* ---------- reduced motion also stops transitions, not just animations ---------- */
 html[data-motion="reduced"] *, html[data-motion="reduced"] *::before, html[data-motion="reduced"] *::after { transition-duration: 1ms !important; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 1ms !important; } }
+
+/* ---------- update banner ---------- */
+.update-card { position: fixed; right: 20px; bottom: 20px; z-index: 40; width: min(380px, calc(100vw - 40px)); padding: 16px; border-radius: 18px;
+  background: color-mix(in srgb, var(--field) 86%, transparent); -webkit-backdrop-filter: blur(40px) saturate(190%); backdrop-filter: blur(40px) saturate(190%);
+  box-shadow: var(--shadow-pop), inset 0 0 0 1px var(--hairline-2), inset 0 1px 0 rgba(255,255,255,.12); }
+@starting-style { .update-card { opacity: 0; transform: translateY(12px); } }
+.update-card { transition: opacity var(--d-slow) var(--ease-out), transform var(--d-slow) var(--ease-out); }
+.u-top { display: flex; gap: 12px; align-items: flex-start; }
+.u-top strong { display: block; font: 650 14.5px/1.3 var(--font-display); }
+.u-top span { color: var(--ink-2); font-size: 12.5px; }
+.u-ic { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: #fff; background: linear-gradient(160deg, color-mix(in srgb, var(--signal) 80%, white), var(--signal-strong)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+.u-notes { margin-top: 12px; max-height: 180px; overflow: auto; white-space: pre-wrap; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04); }
+.u-actions { display: flex; gap: 6px; align-items: center; margin-top: 14px; }

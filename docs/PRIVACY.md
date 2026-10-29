@@ -13,6 +13,7 @@ Everything CURI knows stays on your computer, in its data folder. There's no CUR
 | `api.anthropic.com` | Checking connectivity; testing your API key if you saved one | A HEAD request; `GET /v1/models` with the key | Yes |
 | Claude (through Claude Code) | Only when you click "Verify with a real request" | A fixed test prompt; uses your account's quota | Yes (never automatic) |
 | `api.openai.com`, `generativelanguage.googleapis.com` | Testing a key you saved | A model listing request | Yes |
+| `github.com` (the release's `latest.json`) | Checking for a new version of CURI: shortly after launch, then every six hours, or when you click *Check for Updates* | A plain download request, no account or token; an update is only downloaded when you click *Install* | Not in this version; it never sends anything about you or your device |
 | `nodejs.org` | Installing missing dependencies on first launch | Download requests | Yes (if Node and Claude Code are already there) |
 | MCP servers you enable | When Claude uses them | Whatever that server sends, under its own policy | Disable the server |
 

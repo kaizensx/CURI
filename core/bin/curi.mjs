@@ -206,7 +206,7 @@ async function main() {
         // Desktop shell: stop when the parent app closes our stdin (also on parent crash).
         if (flags['exit-on-stdin-close']) { process.stdin.resume(); process.stdin.on('close', async () => { await s.close(); process.exit(0); }); }
         // Menu bar: status lines out, `check` in (see src/tray.mjs).
-        if (flags['status-lines']) (await import('../src/tray.mjs')).trayChannel(s.db, { check: s.maintain });
+        if (flags['status-lines']) { process.env.CURI_SHELL = '1'; (await import('../src/tray.mjs')).trayChannel(s.db, { check: s.maintain }); }
         return;
       }
       default:
