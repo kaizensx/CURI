@@ -1,6 +1,6 @@
 {
   "name": "curi-desktop",
-  "version": "3.6.1",
+  "version": "3.6.2",
   "private": true,
   "description": "Tauri v2 shell for CURI",
   "scripts": {

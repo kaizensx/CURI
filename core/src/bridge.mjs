@@ -52,7 +52,7 @@ function sameMcp(entry) {
 // Also covers a move between the source checkout and the bundled app (different curi.mjs path).
 function olderCuriMcp(entry) {
   const a = entry?.args || [];
-  return Boolean(entry) && !sameMcp(entry) && /(^|\/)node$/.test(entry.command || '') && a.length === 2 && a[1] === 'mcp' && /(^|\/)core\/bin\/curi\.mjs$/.test(a[0]);
+  return Boolean(entry) && !sameMcp(entry) && /(^|[\\/])node(\.exe)?$/i.test(entry.command || '') && a.length === 2 && a[1] === 'mcp' && /(^|[\\/])core[\\/]bin[\\/]curi\.mjs$/.test(a[0]);
 }
 
 export function planBridgeInstall() {
