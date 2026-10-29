@@ -87,7 +87,31 @@ Every install runs in a progress window that follows what the package manager is
 
 <p align="center"><img src="docs/screenshots/platforms.jpg" alt="CURI on macOS, Windows and Linux" width="100%"></p>
 
-One line, any system. It downloads the latest release, checks it against the published SHA-256, installs it and opens CURI:
+Download the file for your system from **[the latest release](../../releases/latest)**:
+
+| | Download | Then |
+|---|---|---|
+| **macOS** 13+ (Apple Silicon and Intel) | `CURI_x.y.z_universal.dmg` | Open it and drag CURI to Applications. |
+| **Windows** 10 / 11 (x64) | `CURI_x.y.z_x64-setup.exe` | Run it. It installs for your user only, no admin rights. |
+| **Ubuntu / Debian** (x64, ARM64) | `CURI_x.y.z_amd64.deb` or `_arm64.deb` | Double-click it, or `sudo apt install ./CURI_*.deb`. |
+| **Other Linux** (x64) | `CURI_x.y.z_amd64.AppImage` | Make it executable and run it. |
+
+On first launch CURI installs whatever else is missing (Node.js, Claude Code) into its own folder, shows the progress, and takes a first look at your device. Nothing is installed system-wide.
+
+**The first time only.** CURI isn't signed by Apple or Microsoft yet, so the system asks once whether you trust it:
+
+- **macOS** says it can't verify CURI. Open *System Settings › Privacy & Security*, scroll down and click **Open Anyway**, then confirm.
+- **Windows** shows "Windows protected your PC". Click **More info › Run anyway**.
+- **Linux** doesn't ask.
+
+After that you won't see it again: CURI tells you when a new version is out and **updates itself in one click**. Updates are signed with CURI's release key and checked before they're installed.
+
+<details>
+<summary>Rather use the terminal? One command, no warning at all.</summary>
+
+<br>
+
+It downloads the latest release, checks it against the published SHA-256, installs it and opens CURI.
 
 **macOS and Linux**
 
@@ -101,25 +125,7 @@ curl -fsSL https://raw.githubusercontent.com/kaizensx/curi/main/install.sh | sh
 irm https://raw.githubusercontent.com/kaizensx/curi/main/install.ps1 | iex
 ```
 
-On first launch CURI installs whatever else is missing (Node.js, Claude Code) into its own folder, shows the progress, and takes a first look at your device. Nothing is installed system-wide, and on Windows nothing needs admin rights.
-
-<details>
-<summary>Prefer to download the file yourself?</summary>
-
-<br>
-
-Grab the file for your system from [Releases](../../releases):
-
-| | Download | Then |
-|---|---|---|
-| **macOS** 13+ | `CURI_x.y.z_universal.dmg` | Drag CURI to Applications and open it. |
-| **Windows** 10 / 11 (x64) | `CURI_x.y.z_x64-setup.exe` | Run it. It installs for your user only, no admin rights. |
-| **Ubuntu / Debian** (x64, ARM64) | `CURI_x.y.z_amd64.deb` or `_arm64.deb` | `sudo apt install ./CURI_*.deb`, then open CURI from your apps. |
-| **Other Linux** (x64) | `CURI_x.y.z_amd64.AppImage` | `chmod +x` it and run it. |
-
-Every release has a `SHA256SUMS` file to check your download against.
-
-Files downloaded through a browser get the "from the internet" warning, because the builds aren't signed yet: macOS asks you to confirm in *System Settings › Privacy & Security*, and Windows SmartScreen asks you to click *More info › Run anyway*. The install commands above don't hit that.
+Every release also has a `SHA256SUMS` file, if you want to check a download yourself.
 
 </details>
 

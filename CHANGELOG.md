@@ -8,6 +8,7 @@
 - Installing downloads the update, replaces the app and restarts it in a few seconds, on macOS, Windows and the Linux AppImage. With a `.deb` install, *Install* opens the release page instead.
 - An update downloaded by CURI itself doesn't get the unsigned-app warning, so people only see that once, on the first install.
 - *Check for Updates…* in the menu bar or tray, and *Check* in Settings › About, look right away.
+- The README, the release notes and the macOS disk image explain the one-time "can't verify" step for the first install (*Open Anyway* on macOS, *More info › Run anyway* on Windows); downloading the file is the main way to install again, with the terminal command as an option.
 
 **Releases**
 - A version tag now also builds the signed update files and a `latest.json` for installed copies, with the CHANGELOG section as the *What's new* text. Release notes include the install commands.
