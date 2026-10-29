@@ -9,6 +9,7 @@ mod deps;
 #[cfg(target_os = "macos")]
 mod quit;
 mod tray;
+mod update;
 
 use std::{
     fs,
@@ -139,6 +140,22 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
                 let _ = tx.send(line);
             } else if let Some(json) = line.strip_prefix("CURI-STATUS ") {
                 tray::on_status(&handle, json);
+            } else if let Some(cmd) = line.strip_prefix("CURI-CMD ") {
+                // Requests from the window, relayed by the engine (the page has no IPC of its own).
+                let app = handle.clone();
+                match cmd.trim() {
+                    "update-check" => {
+                        tauri::async_runtime::spawn(async move {
+                            let _ = update::check(&app, true).await;
+                        });
+                    }
+                    "update-install" => {
+                        tauri::async_runtime::spawn(async move {
+                            let _ = update::install(&app).await;
+                        });
+                    }
+                    _ => {}
+                }
             }
         }
     });
@@ -324,9 +341,12 @@ fn main() {
     tauri::Builder::default()
         // Opening CURI again (Start menu, launcher, a second click) brings the running window back
         // instead of starting a second app and a second engine on the same database.
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_window(app)))
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            show_window(app)
+        }))
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             // The app menu is a macOS convention; on Windows and Linux it would sit inside the window,
             // and every shortcut it offers already works from the page (Ctrl+K, Ctrl+1…).
@@ -344,6 +364,7 @@ fn main() {
             quit::install(app.handle());
             let home = curi_home(app.handle())?;
             tray::build(app.handle(), &home)?;
+            update::start(app.handle());
             // Small screens (laptops, VMs): the default 1360×900 window would hang off the edge.
             if let Some(w) = app.get_webview_window("main") {
                 if let Ok(Some(m)) = w.current_monitor() {
@@ -370,6 +391,7 @@ fn main() {
         })
         .manage(CoreProc::default())
         .manage(CoreIn::default())
+        .manage(update::Pending::default())
         .invoke_handler(tauri::generate_handler![start])
         .build(tauri::generate_context!())
         .expect("error while starting CURI")

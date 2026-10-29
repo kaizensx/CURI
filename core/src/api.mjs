@@ -284,6 +284,14 @@ export const ACTIONS = {
     const assets = (j.assets || []).map(a => ({ name: a.name, url: a.browser_download_url, size: a.size }));
     return { current, latest, status: cmp(latest, current) > 0 ? 'available' : 'up_to_date', url: j.html_url, published_at: j.published_at, notes: String(j.body || '').slice(0, 4000), assets, has_checksums: assets.some(a => /SHA256SUMS/i.test(a.name)) };
   },
+  // Asks the desktop shell (which reads the engine's stdout) to check for or install an app update.
+  shellCommand: (db, p) => {
+    const cmd = S(p.cmd, 40);
+    if (!['update-check', 'update-install'].includes(cmd)) throw new Error('Unknown command.');
+    if (!process.env.CURI_SHELL) return { sent: false, native: false };
+    process.stdout.write(`CURI-CMD ${cmd}\n`);
+    return { sent: true, native: true };
+  },
   prefsAll: db => Object.fromEntries(db.prepare('SELECT key, value FROM user_preferences').all().map(r => [r.key, JSON.parse(r.value)])),
 };
 

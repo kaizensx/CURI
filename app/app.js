@@ -329,6 +329,31 @@ document.addEventListener('keydown', e => {
 });
 
 // ---------- native menu bridge (called by the Tauri shell via eval) ----------
+// ---------- app updates (called by the Tauri shell via eval) ----------
+// The shell checks GitHub releases on launch and every six hours. A newer version shows this banner;
+// installing downloads the signed update, installs it and restarts CURI.
+window.__curiUpdate = info => {
+  dispatchEvent(new CustomEvent('curi-update', { detail: info }));
+  if (info.error) { toast(`Update didn't work: ${info.error}`, 'bad'); document.querySelector('.update-card')?.remove(); return; }
+  if (!info.version) return;
+  try { if (sessionStorage.getItem('curi-update-later') === info.version) return; } catch {}
+  document.querySelector('.update-card')?.remove();
+  const notes = h('div', { class: 'u-notes selectable', hidden: true }, String(info.notes || 'No notes for this version.').slice(0, 4000));
+  const more = h('button', { type: 'button', class: 'btn ghost sm', 'aria-expanded': 'false' }, "What's new");
+  more.addEventListener('click', () => { notes.hidden = !notes.hidden; more.setAttribute('aria-expanded', String(!notes.hidden)); });
+  const later = h('button', { type: 'button', class: 'btn ghost sm' }, 'Later');
+  const go = h('button', { type: 'button', class: 'btn primary sm' }, icon('download', 'sm'), 'Install and restart');
+  const card = h('section', { class: 'update-card', role: 'status', 'aria-label': `CURI ${info.version} is available` },
+    h('div', { class: 'u-top' }, h('span', { class: 'u-ic', 'aria-hidden': 'true' }, icon('sparkle')), h('div', null, h('strong', null, `CURI ${info.version} is ready`), h('span', null, info.current ? `You have ${info.current}. It installs and restarts in a few seconds.` : 'It installs and restarts in a few seconds.'))),
+    notes, h('div', { class: 'u-actions' }, more, h('span', { class: 'spacer' }), later, go));
+  later.addEventListener('click', () => { try { sessionStorage.setItem('curi-update-later', info.version); } catch {} card.remove(); });
+  go.addEventListener('click', async () => {
+    go.disabled = true; later.disabled = true; go.lastChild.textContent = 'Installing…';
+    try { await api('shellCommand', { cmd: 'update-install' }); } catch (e) { toast(e.message, 'bad'); go.disabled = false; later.disabled = false; go.lastChild.textContent = 'Install and restart'; }
+  });
+  document.body.append(card);
+};
+
 window.__curiMenu = cmd => {
   if (cmd === 'palette') return openPalette();
   if (cmd === 'reload') return mount();

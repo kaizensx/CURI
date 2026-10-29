@@ -18,6 +18,8 @@ struct Tray {
     icon: TrayIcon<Wry>,
     status: MenuItem<Wry>,
     login: CheckMenuItem<Wry>,
+    /// "Check for Updates…", or "Install CURI x.y.z and Restart" once one is found.
+    update: MenuItem<Wry>,
     /// Last status seen, to notify only on changes.
     seen: Mutex<Option<serde_json::Value>>,
 }
@@ -150,6 +152,7 @@ pub fn build(app: &AppHandle, home: &Path) -> tauri::Result<()> {
         login_enabled(),
         None::<&str>,
     )?;
+    let update = MenuItem::with_id(app, "tray:update", "Check for Updates…", true, None::<&str>)?;
     let menu = Menu::with_items(
         app,
         &[
@@ -165,6 +168,7 @@ pub fn build(app: &AppHandle, home: &Path) -> tauri::Result<()> {
                 None::<&str>,
             )?,
             &PredefinedMenuItem::separator(app)?,
+            &update,
             &login,
             &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(app, "tray:quit", "Quit CURI", true, None::<&str>)?,
@@ -186,6 +190,7 @@ pub fn build(app: &AppHandle, home: &Path) -> tauri::Result<()> {
         icon,
         status,
         login,
+        update,
         seen: Mutex::new(None),
     });
     Ok(())
@@ -200,6 +205,20 @@ pub fn on_menu(app: &AppHandle, id: &str) -> bool {
                 let _ = t.status.set_text("Checking…");
             }
             crate::core_send(app, "check");
+        }
+        "tray:update" => {
+            let app = app.clone();
+            tauri::async_runtime::spawn(async move {
+                let pending = app
+                    .try_state::<Tray>()
+                    .map(|t| t.update.text().unwrap_or_default().starts_with("Install"))
+                    .unwrap_or(false);
+                let _ = if pending {
+                    crate::update::install(&app).await
+                } else {
+                    crate::update::check(&app, true).await
+                };
+            });
         }
         "tray:login" => {
             let want = !login_enabled();
@@ -303,4 +322,20 @@ pub fn on_status(app: &AppHandle, json: &str) {
         }
     }
     *seen = Some(s);
+}
+
+/// Shows a found update in the menu (or goes back to "Check for Updates…").
+pub fn set_update(app: &AppHandle, version: Option<&str>) {
+    if let Some(t) = app.try_state::<Tray>() {
+        let _ = t.update.set_text(match version {
+            Some(v) => format!("Install CURI {v} and Restart"),
+            None => "Check for Updates…".to_string(),
+        });
+    }
+}
+
+pub fn set_status(app: &AppHandle, text: &str) {
+    if let Some(t) = app.try_state::<Tray>() {
+        let _ = t.status.set_text(text);
+    }
 }
