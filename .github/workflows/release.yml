@@ -56,6 +56,9 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          # Without a Developer ID the secrets are empty strings, and an empty identity makes codesign
+          # fail. Sign ad hoc instead (what local builds do); the release then says "unsigned".
+          if [ "$HAS_CERT" != "true" ]; then unset APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; export APPLE_SIGNING_IDENTITY=-; fi
           npm ci
           npx tauri build --target universal-apple-darwin
 
