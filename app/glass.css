@@ -25,6 +25,7 @@
   --rim: var(--glass-rim);
   --hairline: rgba(255, 255, 255, .07);
   --r-lg: 18px; --r-xl: 24px; --r-md: 12px;
+  --sidebar-w: 246px;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
@@ -132,3 +133,52 @@ textarea { border-radius: var(--r-md); }
 /* Page content gets its own stacking layer so the glass inside it never paints over the top bar. */
 main > .page { position: relative; z-index: 0; isolation: isolate; }
 .pagebar { z-index: 30 !important; }
+
+/* ---------- sidebar: a floating pane of glass over the same field ---------- */
+.aurora, html:not(.native) .aurora { inset: 0; left: 0; }
+@media (max-width: 900px) { .aurora { left: 0; } }
+.shell { grid-template-columns: calc(var(--sidebar-w) + 12px) 1fr; }
+.sidebar, html.native .sidebar {
+  margin: 10px 0 10px 10px; border-radius: 22px; border-right: 0; z-index: 2; overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.025) 40%, rgba(255,255,255,.04));
+  -webkit-backdrop-filter: blur(44px) saturate(190%); backdrop-filter: blur(44px) saturate(190%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 30px 60px -30px rgba(0,0,0,.7), 0 8px 24px -12px rgba(0,0,0,.45);
+}
+.sidebar::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: var(--glass-rim); pointer-events: none; z-index: 3;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+html.native .sidebar { padding-top: calc(var(--titlebar-h) - 10px); }
+html:not(.native) .sidebar { padding-top: 18px; }
+:root[data-theme="light"] .sidebar { background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,.5)); }
+@media (prefers-color-scheme: light) { :root:not([data-theme]) .sidebar { background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,.5)); } }
+
+.brand { padding: 2px 16px 16px; gap: 11px; }
+.brand-mark { width: 32px; height: 32px; border-radius: 9px; background: radial-gradient(120% 100% at 30% 0%, #4d5a80, #161a26 70%); box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 6px 14px -6px rgba(60, 100, 255, .55); }
+.brand-name { font: 700 15px/1 var(--font-display); letter-spacing: .04em; }
+.search-trigger { margin: 0 12px 14px; height: 34px; padding: 0 12px; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), inset 0 1px 2px rgba(0,0,0,.2); }
+
+.nav { padding: 0 10px 12px; }
+.nav-group { margin-top: 14px; }
+.nav-group > .micro { padding: 4px 12px 6px; font-size: 10px; color: var(--ink-4); }
+.nav a { gap: 11px; border-radius: 13px; padding: 0 10px 0 6px; transition: color var(--d-fast) ease, background var(--d-fast) ease; }
+.nav a:has(.nav-txt small) { min-height: 46px; padding-top: 6px; padding-bottom: 6px; }
+.nav a + a { margin-top: 2px; }
+@media (hover: hover) and (pointer: fine) { .nav a:not([aria-current="page"]):hover { background: rgba(255,255,255,.045); } }
+/* Icons sit in small tiles; the current page's tile lights up. */
+.nav a > svg.i { flex: none; width: 30px; height: 30px; padding: 7px; border-radius: 9px; color: var(--ink-2);
+  background: rgba(255,255,255,.06); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 0 0 1px rgba(255,255,255,.04);
+  transition: background var(--d-base) ease, color var(--d-base) ease, box-shadow var(--d-base) ease; }
+.nav a[aria-current="page"] > svg.i { color: #fff; background: linear-gradient(160deg, color-mix(in srgb, var(--signal) 85%, white), var(--signal-strong));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 4px 12px -4px color-mix(in srgb, var(--signal-strong) 90%, transparent); }
+.nav-txt > span { font-size: 13px; font-weight: 560; }
+.nav-txt small { font-size: 11px; }
+.nav-indicator { left: 10px; right: 10px; border-radius: 13px;
+  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(255,255,255,.06), 0 8px 20px -10px rgba(0,0,0,.6); }
+:root[data-theme="light"] .nav-indicator { background: rgba(255,255,255,.9); }
+
+.sidebar-foot { margin: 0 10px 10px; padding: 10px 12px; border-top: 0; border-radius: 14px; background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+.sidebar-foot .row { font-size: 11px; }
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 74px 1fr; }
+  .nav a > svg.i { margin: 0 auto; }
+}
