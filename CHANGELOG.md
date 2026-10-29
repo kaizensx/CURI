@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.5.1 - 2026-10-29
+
+- ⌘Q, the Dock's "Quit" and the app menu now send CURI back to the menu bar instead of closing it. "Quit CURI" in the menu bar icon is the only way to stop it.
+- Logging out, restarting and shutting down are never held up: macOS marks those quits, and CURI lets them through.
+- If CURI crashes, it comes back on its own (when "Open at Login" is on). Quitting from the menu bar keeps it closed.
+
 ## 3.5.0 - 2026-10-29
 
 **Lives in the menu bar**

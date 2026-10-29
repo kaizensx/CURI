@@ -1,6 +1,7 @@
 //! The menu bar icon. It shows what the Core is doing (from its `CURI-STATUS` lines), sends
-//! `check` back, toggles "Open at login" (a user LaunchAgent, no privileges) and is the one place,
-//! with ⌘Q, that really quits CURI. Notifications only fire while the window isn't in front.
+//! `check` back, toggles "Open at login" (a user LaunchAgent, no privileges; it also brings CURI
+//! back if it crashes) and is the one place that really quits CURI. Notifications only fire while
+//! the window isn't in front.
 
 use std::{fs, path::Path, path::PathBuf, sync::Mutex};
 use tauri::{
@@ -48,6 +49,8 @@ fn set_login(on: bool) -> Result<(), String> {
   <key>Label</key><string>{LABEL}</string>
   <key>ProgramArguments</key><array><string>{}</string><string>--hidden</string></array>
   <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
+  <key>ThrottleInterval</key><integer>15</integer>
   <key>ProcessType</key><string>Interactive</string>
 </dict>
 </plist>
@@ -66,6 +69,9 @@ pub fn build(app: &AppHandle, home: &Path) -> tauri::Result<()> {
     if !marker.exists() {
         let _ = set_login(true);
         let _ = fs::write(&marker, "set\n");
+    } else if login_enabled() {
+        // Keep the login item current (app moved, new keys) without turning it back on.
+        let _ = set_login(true);
     }
     let status = MenuItem::with_id(app, "tray:status", "Starting…", false, None::<&str>)?;
     let login = CheckMenuItem::with_id(app, "tray:login", "Open at Login", true, login_enabled(), None::<&str>)?;
@@ -108,7 +114,11 @@ pub fn on_menu(app: &AppHandle, id: &str) -> bool {
                 let _ = t.login.set_checked(if ok { want } else { !want });
             }
         }
-        "tray:quit" => app.exit(0),
+        "tray:quit" => {
+            #[cfg(target_os = "macos")]
+            crate::quit::allow();
+            app.exit(0)
+        }
         _ => {
             let Some(route) = id.strip_prefix("tray:") else { return false };
             crate::show_window(app);
