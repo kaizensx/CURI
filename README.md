@@ -2,7 +2,7 @@
 
 <p align="center">
   <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-1b1c21?style=flat-square&logo=apple&logoColor=white">
-  <img alt="Version 3.5.0" src="https://img.shields.io/badge/version-3.5.0-6e96ff?style=flat-square">
+  <img alt="Version 3.5.1" src="https://img.shields.io/badge/version-3.5.1-6e96ff?style=flat-square">
   <img alt="Runs locally" src="https://img.shields.io/badge/runs-100%25%20local-5fd39a?style=flat-square">
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-a6aab3?style=flat-square">
 </p>
@@ -77,7 +77,7 @@ Every install runs in a progress window that follows what the package manager is
 
 **Discovers with taste.** It reads your GitHub stars and runs saved searches on its own, but only keeps projects an agent can actually use (MCP, skill, command line, API, scriptable app) and that it can install here.
 
-**Stays on in the menu bar.** Closing the window doesn't stop CURI. It keeps an icon in the menu bar, opens at login, keeps checking in the background and sends a notification when something finishes or needs your OK. "Check Now", "Open at Login" and "Quit CURI" are right there in that menu, and quitting is the only thing that stops it.
+**Stays on in the menu bar.** Closing the window, ⌘Q or "Quit" in the Dock don't stop CURI. It keeps an icon in the menu bar, opens at login, keeps checking in the background and sends a notification when something finishes or needs your OK. "Check Now", "Open at Login" and "Quit CURI" are right there in that menu, and "Quit CURI" there is the only thing that stops it. If it ever crashes, it comes back on its own.
 
 **Looks after itself, within limits you set.** Three autonomy modes, with a clear table of what each one does without asking. Maintenance runs in the background. Removals and admin actions always ask, and everything ends up in an activity log with a tamper-evident audit trail.
 

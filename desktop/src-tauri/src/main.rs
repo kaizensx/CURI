@@ -2,10 +2,12 @@
 //! CURI desktop shell. The boot window installs/verifies runtime dependencies with live progress,
 //! then starts CURI Core (loopback HTTP + token) as a child process and navigates to its UI.
 //! The CURI UI never gets Tauri IPC: all privileged work stays in Core's allowlisted actions.
-//! CURI lives in the menu bar: closing the window hides it and the Core keeps checking in the
-//! background. Only "Quit CURI" (menu bar icon or ⌘Q) stops it.
+//! CURI lives in the menu bar: closing the window, ⌘Q and the Dock's "Quit" all hide it, and the
+//! Core keeps checking in the background. Only "Quit CURI" in the menu bar icon stops it.
 
 mod deps;
+#[cfg(target_os = "macos")]
+mod quit;
 mod tray;
 
 use std::{
@@ -150,7 +152,8 @@ fn build_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         &PredefinedMenuItem::hide_others(app, Some("Hide Others"))?,
         &PredefinedMenuItem::show_all(app, Some("Show All"))?,
         &sep()?,
-        &PredefinedMenuItem::quit(app, Some("Quit CURI"))?,
+        // ⌘Q hides to the menu bar (see quit.rs); "Quit CURI" lives in the menu bar icon.
+        &PredefinedMenuItem::quit(app, Some("Hide to Menu Bar"))?,
     ])?;
     let file = Submenu::with_items(app, "File", true, &[
         &item("add-url", "Add URL…", Some("CmdOrCtrl+N"))?,
@@ -236,6 +239,8 @@ fn main() {
                     to_ui(app, id);
                 }
             });
+            #[cfg(target_os = "macos")]
+            quit::install(app.handle());
             let home = curi_home(app.handle())?;
             tray::build(app.handle(), &home)?;
             // Started at login: stay in the menu bar until asked.
