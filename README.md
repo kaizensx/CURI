@@ -87,7 +87,28 @@ Every install runs in a progress window that follows what the package manager is
 
 <p align="center"><img src="docs/screenshots/platforms.jpg" alt="CURI on macOS, Windows and Linux" width="100%"></p>
 
-Grab the file for your system from [Releases](../../releases). On first launch CURI installs whatever is missing (Node.js, Claude Code) into its own folder, shows the progress, and takes a first look at your device. Nothing is installed system-wide.
+One line, any system. It downloads the latest release, checks it against the published SHA-256, installs it and opens CURI:
+
+**macOS and Linux**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kaizensx/curi/main/install.sh | sh
+```
+
+**Windows** (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/kaizensx/curi/main/install.ps1 | iex
+```
+
+On first launch CURI installs whatever else is missing (Node.js, Claude Code) into its own folder, shows the progress, and takes a first look at your device. Nothing is installed system-wide, and on Windows nothing needs admin rights.
+
+<details>
+<summary>Prefer to download the file yourself?</summary>
+
+<br>
+
+Grab the file for your system from [Releases](../../releases):
 
 | | Download | Then |
 |---|---|---|
@@ -98,7 +119,9 @@ Grab the file for your system from [Releases](../../releases). On first launch C
 
 Every release has a `SHA256SUMS` file to check your download against.
 
-> The builds aren't signed yet. The first time, macOS asks you to confirm in *System Settings › Privacy & Security*, and Windows SmartScreen asks you to click *More info › Run anyway*.
+Files downloaded through a browser get the "from the internet" warning, because the builds aren't signed yet: macOS asks you to confirm in *System Settings › Privacy & Security*, and Windows SmartScreen asks you to click *More info › Run anyway*. The install commands above don't hit that.
+
+</details>
 
 **Where I've tried it.** macOS (Apple Silicon) is where I use it every day. I've also installed and run it on a clean Windows 11 (x64) and on Ubuntu 24.04 (ARM), from the first launch to installing a skill, and the engine's tests run on all three systems in CI.
 

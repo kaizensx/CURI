@@ -25,6 +25,7 @@ CURI now runs on Windows and Linux, tested on real machines: Windows 11 (x64) an
 - A manual "Cross-platform build" workflow produces the Windows installer and Linux packages (x64 and ARM) for testing.
 - A version tag now builds macOS, Windows and Linux into one draft release, with `SHA256SUMS` and this changelog as the notes. The old release notes were still in Portuguese.
 - README: install steps for each system and real screenshots from all three.
+- One-line install on every system: `curl -fsSL …/install.sh | sh` on macOS and Linux, `irm …/install.ps1 | iex` on Windows. Each finds the latest release, checks it against `SHA256SUMS`, installs and opens CURI, without the unsigned-app warnings a browser download gets. Tested on macOS, Windows 11 and Ubuntu ARM.
 
 ## 3.6.2 - 2026-10-29
 
