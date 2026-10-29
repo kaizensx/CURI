@@ -56,7 +56,7 @@ async function main() {
         const pf = await preflight();
         const integ = Object.values(db.prepare('PRAGMA quick_check').get())[0];
         return out({ ...pf, db: { integrity: integ, schema: currentVersion(db) }, drift: driftReport(db) }, d => {
-          console.log(`SO: ${d.os.platform} ${d.os.macos || d.os.release} ${d.os.arch} · disco livre ${d.disk_free_gb} GB · GitHub ${d.network.github ? 'reachable' : 'unreachable'}`);
+          console.log(`OS: ${d.os.platform} ${d.os.macos || d.os.release} ${d.os.arch} · ${d.disk_free_gb} GB free · GitHub ${d.network.github ? 'reachable' : 'unreachable'}`);
           console.log(`Node ${d.toolchain.node} · ${d.toolchain.git || 'no git'} · Rust ${d.toolchain.rust || 'missing'}`);
           console.log(`Claude Code: ${d.claude.binary ? `${d.claude.version} (${d.claude.on_path ? 'on PATH' : 'bundled with the Claude app'})` : 'NOT found'} · CLI session: ${d.claude.auth.loggedIn === true ? 'signed in' : d.claude.auth.loggedIn === false ? 'NOT signed in' : 'unknown'}`);
           console.log(`DB: ${d.db.integrity} · schema v${d.db.schema} · drift: ${d.drift.drift.length ? d.drift.drift.map(x => x.name).join(', ') : 'none'}`);

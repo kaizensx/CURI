@@ -5,7 +5,7 @@ import { icon } from './icons.js';
 // ---------- API ----------
 const m = location.hash.match(/token=([a-f0-9]{32,})/);
 // The native shell's ?native=1 must survive the token being removed from the address.
-if (new URLSearchParams(location.search).get('native') === '1') sessionStorage.setItem('curi-native', '1');
+{ const nv = new URLSearchParams(location.search).get('native'); if (nv) sessionStorage.setItem('curi-native', nv); }
 if (m) { sessionStorage.setItem('curi-token', m[1]); history.replaceState(null, '', location.pathname + '#/'); }
 export const TOKEN = sessionStorage.getItem('curi-token');
 

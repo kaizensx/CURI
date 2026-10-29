@@ -1,6 +1,6 @@
 // CURI shell: routing, navigation, command palette, global shortcuts, native-menu bridge,
 // drag-and-drop, theme, and long-running job watching. Views live in ./views/.
-import { h, reducedMotion, fill } from './lib/dom.js';
+import { h, reducedMotion, fill, mod } from './lib/dom.js';
 import { icon, brandMark } from './lib/icons.js';
 import { api, TOKEN, toast, status, empty, skeleton } from './lib/ui.js';
 import { library, resource, compare as compareView, TYPE_ICON } from './views/library.js';
@@ -17,8 +17,9 @@ import { startWatcher, withProgress } from './lib/opmodal.js';
 
 // ---------- environment ----------
 const q = new URLSearchParams(location.search);
-if (q.get('native') === '1') sessionStorage.setItem('curi-native', '1');
-if (sessionStorage.getItem('curi-native') === '1') document.documentElement.classList.add('native');
+if (q.get('native')) sessionStorage.setItem('curi-native', q.get('native'));
+// macOS ("1"): the page draws the title bar. Windows and Linux keep their own frame; we only note the OS.
+{ const nv = sessionStorage.getItem('curi-native'); if (nv === '1') document.documentElement.classList.add('native'); else if (nv) document.documentElement.dataset.os = nv; }
 
 // ---------- theme ----------
 export const currentTheme = () => { try { return localStorage.getItem('curi-theme') || 'system'; } catch { return 'system'; } };
@@ -52,7 +53,7 @@ const ROUTES = [
   { id: 'library', sub: 'Find and install new abilities', label: 'Library', icon: 'library', group: 'CURI', view: library, key: '2' },
   { id: 'discover', sub: 'New projects you can install', label: 'Discover', icon: 'radar', group: 'CURI', view: discoverView, key: '3' },
   { id: 'capabilities', sub: 'What your agents can do', label: 'Capabilities', icon: 'map', group: 'CURI', view: capabilitiesView, key: '4' },
-  { id: 'device', sub: 'Agents and tools on this Mac', label: 'This device', icon: 'device', group: 'CURI', view: device, key: '5' },
+  { id: 'device', sub: 'Your agents and tools', label: 'This device', icon: 'device', group: 'CURI', view: device, key: '5' },
   { id: 'connections', sub: 'Accounts and keys', label: 'Connections', icon: 'link', group: 'CURI', view: connections, key: '6' },
   { id: 'operations', sub: 'Installs and changes so far', label: 'Activity', icon: 'activity', group: 'System', view: tabbed(ACTIVITY_TABS, operations), key: '7' },
   { id: 'settings', sub: 'Autonomy, integration, privacy', label: 'Settings', icon: 'settings', group: 'System', view: tabbed(SETTINGS_TABS, settings), key: '8' },
@@ -127,7 +128,7 @@ function shell() {
   let group = null, wrap;
   for (const r of ROUTES.filter(x => !x.hidden)) {
     if (r.group !== group) { group = r.group; wrap = h('div', { class: 'nav-group' }, group === 'CURI' ? null : h('span', { class: 'micro' }, group)); nav.append(wrap); }
-    wrap.append(h('a', { href: `#/${r.id}`, 'data-route': r.id, title: r.key ? `${r.label} (⌘${r.key})` : r.label }, icon(r.icon), h('span', { class: 'nav-txt' }, h('span', null, r.label), r.sub ? h('small', null, r.sub) : null), h('span', { class: 'badge-slot' })));
+    wrap.append(h('a', { href: `#/${r.id}`, 'data-route': r.id, title: r.key ? `${r.label} (${mod(r.key)})` : r.label }, icon(r.icon), h('span', { class: 'nav-txt' }, h('span', null, r.label), r.sub ? h('small', null, r.sub) : null), h('span', { class: 'badge-slot' })));
   }
   nav.addEventListener('click', e => { if (e.target.closest('a') && e.detail === 0) navByKeyboard = true; });
   document.body.prepend(h('div', { class: 'titlebar', 'data-tauri-drag-region': '' }));
@@ -135,7 +136,7 @@ function shell() {
     h('div', { class: 'aurora', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')),
     h('aside', { class: 'sidebar', 'data-tauri-drag-region': '' },
       h('div', { class: 'brand', 'data-tauri-drag-region': '' }, h('span', { class: 'brand-mark', 'aria-hidden': 'true' }, brandMark({ small: true, size: 18 })), h('div', { class: 'brand-text' }, h('div', { class: 'brand-name' }, 'CURI'), h('div', { class: 'brand-sub' }, 'Capabilities for your agents'))),
-      h('button', { type: 'button', class: 'search-trigger', onclick: () => openPalette(), 'aria-label': 'Open command palette' }, icon('search', 'sm'), h('span', null, 'Search or run…'), h('kbd', null, '⌘K')),
+      h('button', { type: 'button', class: 'search-trigger', onclick: () => openPalette(), 'aria-label': 'Open command palette' }, icon('search', 'sm'), h('span', null, 'Search or run…'), h('kbd', null, mod('K'))),
       nav,
       h('div', { class: 'sidebar-foot', id: 'side-foot' })),
     h('main', { id: 'main', tabindex: '-1' })));
@@ -176,8 +177,8 @@ function histIndex() {
 }
 function pagebar(route, page) {
   const i = histIndex();
-  const back = h('button', { type: 'button', class: 'nav-arrow', 'aria-label': 'Back', title: 'Back (⌘[)', disabled: i <= 0 || null, onclick: () => history.back() }, icon('chevron'));
-  const fwd = h('button', { type: 'button', class: 'nav-arrow fwd', 'aria-label': 'Forward', title: 'Forward (⌘])', disabled: i >= histMax || null, onclick: () => history.forward() }, icon('chevron'));
+  const back = h('button', { type: 'button', class: 'nav-arrow', 'aria-label': 'Back', title: `Back (${mod('[')})`, disabled: i <= 0 || null, onclick: () => history.back() }, icon('chevron'));
+  const fwd = h('button', { type: 'button', class: 'nav-arrow fwd', 'aria-label': 'Forward', title: `Forward (${mod(']')})`, disabled: i >= histMax || null, onclick: () => history.forward() }, icon('chevron'));
   const parent = route.parent ? byId[route.parent] : null;
   const here = route.id === 'resource' ? page.querySelector?.('h1')?.textContent : route.label;
   const crumbs = h('ol', { class: 'crumbs', 'aria-label': 'You are here' },
@@ -278,7 +279,7 @@ function openPalette() {
   const render = async () => {
     const term = input.value.trim().toLowerCase();
     const my = ++seq;
-    const nav = ROUTES.filter(r => !r.hidden && (!term || r.label.toLowerCase().includes(term))).map(r => ({ section: 'Sections', label: r.label, icon: r.icon, hint: r.key ? `⌘${r.key}` : '', run: () => go(r.id) }));
+    const nav = ROUTES.filter(r => !r.hidden && (!term || r.label.toLowerCase().includes(term))).map(r => ({ section: 'Sections', label: r.label, icon: r.icon, hint: r.key ? mod(r.key) : '', run: () => go(r.id) }));
     const acts = actions.filter(a => !term || a.label.toLowerCase().includes(term)).map(a => ({ ...a, section: 'Actions' }));
     let res = [];
     if (term.length >= 2) {
