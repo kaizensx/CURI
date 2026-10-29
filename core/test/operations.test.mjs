@@ -86,11 +86,12 @@ test('S2 Maximum Autonomy: trusted skill with scripts and clean scan installs; M
   const r = await ops.runNext(db);
   assert.equal(r.status, 'verified', JSON.stringify(r.logs.slice(-3)));
   const prev = await ops.preview(db, 'agent.install', {});
-  assert.equal(prev.decision, 'auto');
+  // The background service is a LaunchAgent: automatic on macOS, blocked with a reason elsewhere.
+  assert.equal(prev.decision, process.platform === 'darwin' ? 'auto' : 'block', prev.reasons.join(' '));
   const destr = await ops.preview(db, 'skill.remove', { name: 'pdf' });
   assert.equal(destr.decision, 'ask', 'removals always ask');
   const priv = await ops.preview(db, 'cli.link', {});
-  assert.equal(priv.decision, 'ask', 'admin actions always ask');
+  assert.equal(priv.decision, process.platform === 'darwin' ? 'ask' : 'block', 'admin actions always ask');
 });
 
 test('S8 unknown publisher stays "ask" even in Maximum Autonomy', async () => {
