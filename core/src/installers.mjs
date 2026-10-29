@@ -14,6 +14,10 @@ import { planBridgeInstall, applyBridgeInstall, nodeBin } from './bridge.mjs';
 import { findClaudeBinary, mcpHealth, sha256File } from './env.mjs';
 import { credentialFor } from './connections.mjs';
 
+// Windows ships bsdtar on PATH; macOS and Linux have it in /usr/bin.
+const TAR = process.platform === 'win32' ? 'tar' : '/usr/bin/tar';
+const macOnly = what => { if (process.platform !== 'darwin') throw permanent(`${what} is only available on macOS for now.`); };
+
 const pexec = promisify(execFile);
 const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 const SKILL_NAME_RX = /^[a-z0-9][a-z0-9-]{0,63}$/;
@@ -84,7 +88,7 @@ registerHandler('skill.install', {
       fs.writeFileSync(path.join(work, 'pkg.tgz'), buf);
       const top = `${p.repo.split('/')[1]}-${commit}`;
       fs.mkdirSync(path.join(work, 'x'));
-      await pexec('/usr/bin/tar', ['-xzf', path.join(work, 'pkg.tgz'), '-C', path.join(work, 'x'), `${top}/${p.path}`], { timeout: 120000 });
+      await pexec(TAR, ['-xzf', path.join(work, 'pkg.tgz'), '-C', path.join(work, 'x'), `${top}/${p.path}`], { timeout: 120000 });
       const src = path.join(work, 'x', top, p.path);
       if (!fs.existsSync(path.join(src, 'SKILL.md'))) throw permanent(`No SKILL.md in ${p.path} at this commit.`);
       ctx.checkpoint({ commit, tarball_sha256: sha(buf) });
@@ -248,7 +252,7 @@ export async function agentStatus() {
 function readPlistInterval(p) { try { return fs.readFileSync(p, 'utf8').match(/<key>StartInterval<\/key>\s*<integer>(\d+)<\/integer>/)?.[1]; } catch { return null; } }
 
 registerHandler('agent.install', {
-  async plan(db, p) { return { category: 'background', resource: `launchagent:${AGENT_LABEL}`, lockKey: 'agent', source: 'local' }; },
+  async plan(db, p) { macOnly('The background service'); return { category: 'background', resource: `launchagent:${AGENT_LABEL}`, lockKey: 'agent', source: 'local' }; },
   async run(db, p, ctx) {
     const interval = Math.max(300, Math.min(Number(p.interval_s) || 1800, 86400));
     const logs = paths.logs;
@@ -284,7 +288,7 @@ registerHandler('agent.install', {
 });
 
 registerHandler('agent.remove', {
-  async plan() { return { category: 'destructive', resource: `launchagent:${AGENT_LABEL}`, lockKey: 'agent', source: 'local' }; },
+  async plan() { macOnly('The background service'); return { category: 'destructive', resource: `launchagent:${AGENT_LABEL}`, lockKey: 'agent', source: 'local' }; },
   async run() {
     try { await pexec('/bin/launchctl', ['bootout', `gui/${process.getuid()}/${AGENT_LABEL}`]); } catch {}
     fs.rmSync(agentPlistPath(), { force: true });
@@ -296,7 +300,7 @@ registerHandler('agent.remove', {
 // ---------- Privileged (allowlisted single action, native administrator dialog) ----------
 export const CLI_LINK = '/usr/local/bin/curi';
 registerHandler('cli.link', {
-  async plan() { return { category: 'privileged', resource: CLI_LINK, lockKey: 'cli.link', source: 'local', maxAttempts: 1 }; },
+  async plan() { macOnly('Adding curi to /usr/local/bin'); return { category: 'privileged', resource: CLI_LINK, lockKey: 'cli.link', source: 'local', maxAttempts: 1 }; },
   async run(db, p, ctx) {
     const wrapper = path.join(ensureDir(path.join(dataDir(), 'bin')), 'curi');
     fs.writeFileSync(wrapper, `#!/bin/sh\nexec "${nodeBin()}" "${paths.cliEntry}" "$@"\n`, { mode: 0o755 });
