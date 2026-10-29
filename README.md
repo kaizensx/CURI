@@ -2,7 +2,7 @@
 
 <p align="center">
   <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-1b1c21?style=flat-square&logo=apple&logoColor=white">
-  <img alt="Version 3.5.2" src="https://img.shields.io/badge/version-3.5.2-6e96ff?style=flat-square">
+  <img alt="Version 3.5.3" src="https://img.shields.io/badge/version-3.5.3-6e96ff?style=flat-square">
   <img alt="Runs locally" src="https://img.shields.io/badge/runs-100%25%20local-5fd39a?style=flat-square">
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-a6aab3?style=flat-square">
 </p>
