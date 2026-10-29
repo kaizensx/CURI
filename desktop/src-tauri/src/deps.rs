@@ -92,7 +92,7 @@ fn content_length(url: &str) -> Option<u64> {
     String::from_utf8_lossy(&out.stdout)
         .lines()
         .filter_map(|l| l.to_ascii_lowercase().strip_prefix("content-length:").map(|v| v.trim().to_string()))
-        .last()?
+        .next_back()?
         .parse()
         .ok()
 }
@@ -256,11 +256,10 @@ pub fn ensure(home: &Path, runtime: &Path, emit: &dyn Fn(Progress)) -> Result<Re
     // 1. Node.js (required)
     emit(p("node", "Runtime Node.js", "running", None, "Looking for Node ≥ 22.13 with SQLite…"));
     let (node, ver, how) = match find_node(&path_env, runtime, force) {
-        Some((n, v)) => (n, v, "encontrado"),
+        Some((n, v)) => (n, v, "found"),
         None => {
-            let (n, v) = install_node(runtime, emit).map_err(|e| {
+            let (n, v) = install_node(runtime, emit).inspect_err(|e| {
                 emit(p("node", "Runtime Node.js", "failed", None, e.clone()));
-                e
             })?;
             (n, v, "installed in the CURI runtime")
         }

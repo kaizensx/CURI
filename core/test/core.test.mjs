@@ -96,7 +96,7 @@ test('"alternativa a GSAP" does not rank GSAP itself first', () => {
 test('compare exposes shared capabilities and missing evidence', () => {
   const c = compare(db, ['gh:greensock/gsap', 'gh:juliangarnier/anime']);
   assert.ok(c.shared_capabilities.includes('timeline-animation'));
-  assert.ok(c.missing_evidence.some(m => m.includes('nunca verificada')));
+  assert.ok(c.missing_evidence.some(m => m.includes('source never checked')));
 });
 
 test('T09 add URL: dedup across spelling variants, provenance, immediately searchable', () => {

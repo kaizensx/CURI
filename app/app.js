@@ -270,7 +270,7 @@ function openPalette() {
     { label: 'Pending operations', icon: 'activity', run: () => go('operations?status=awaiting_approval') },
     { label: 'Revoke autonomy', icon: 'lock', run: async () => { await api('policyRevoke'); toast('Autonomy revoked', 'good'); } },
     { label: 'Add a URL to the catalogue', icon: 'plus', run: () => window.__curiMenu('add-url-dialog') },
-    { label: 'Export registry', icon: 'download', run: () => withProgress('A exportar o registo', () => api('exportFile').then(r => `${r.count} resources exported to ${r.file}`)) },
+    { label: 'Export registry', icon: 'download', run: () => withProgress('Exporting the registry', () => api('exportFile').then(r => `${r.count} resources exported to ${r.file}`)) },
     { label: 'Detect what\'s installed', icon: 'refresh', run: () => go('device') },
     { label: 'Toggle light/dark theme', icon: 'sparkle', run: () => applyTheme(matchMedia('(prefers-color-scheme: dark)').matches ? (currentTheme() === 'light' ? 'system' : 'light') : (currentTheme() === 'dark' ? 'system' : 'dark')) },
   ];
@@ -282,7 +282,7 @@ function openPalette() {
     const acts = actions.filter(a => !term || a.label.toLowerCase().includes(term)).map(a => ({ ...a, section: 'Actions' }));
     let res = [];
     if (term.length >= 2) {
-      try { res = (await api('search', { query: term, limit: 8 })).results.map(r => ({ section: 'Resources', label: r.name, icon: TYPE_ICON[r.type] || 'info', hint: r.type, run: () => go(`resource/${encodeURIComponent(r.id)}`) })); } catch {}
+      try { res = (await api('search', { query: term, limit: 8 })).results.map(r => ({ section: 'Resources', label: r.name, icon: TYPE_ICON[r.type] || 'info', hint: r.type, run: () => go(`resource/${encodeURIComponent(r.id)}`) })); } catch (e) { res = [{ section: 'Resources', label: `Search didn't work: ${e.message}`, icon: 'alert', hint: '', run: () => {} }]; }
       if (my !== seq) return;
     }
     items = term ? [...res, ...nav, ...acts] : [...nav, ...acts];
@@ -297,7 +297,7 @@ function openPalette() {
       out.push(el);
       return out;
     }) : [h('div', { class: 'empty' }, h('p', null, 'No local results.'), h('button', { type: 'button', class: 'btn', onclick: () => { close(); go(`radar?intent=${encodeURIComponent(input.value)}`); } }, icon('radar', 'sm'), 'Search GitHub'))]));
-    input.setAttribute('aria-activedescendant', `p-${sel}`);
+    if (items.length) input.setAttribute('aria-activedescendant', `p-${sel}`); else input.removeAttribute('aria-activedescendant');
   };
   const highlight = () => { list.querySelectorAll('.p-item').forEach(el => el.setAttribute('aria-selected', String(el.id === `p-${sel}`))); input.setAttribute('aria-activedescendant', `p-${sel}`); list.querySelector(`#p-${sel}`)?.scrollIntoView({ block: 'nearest' }); };
   const choose = async i => { const it = items[i]; if (!it) return; close(); navByKeyboard = true; try { await it.run(); } catch (e) { toast(e.message, 'bad'); } };
@@ -308,7 +308,10 @@ function openPalette() {
     else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(0, sel - 1); highlight(); }
     else if (e.key === 'Enter') { e.preventDefault(); choose(sel); }
     else if (e.key === 'Escape') { e.preventDefault(); close(); }
+    // Modal: Tab stays in the palette (the only other control is the "Search GitHub" button).
+    else if (e.key === 'Tab') { const b = node.querySelector('.empty .btn'); e.preventDefault(); b?.focus(); }
   });
+  node.addEventListener('keydown', e => { if (e.key === 'Tab' && e.target !== input) { e.preventDefault(); input.focus(); } });
   document.body.append(scrim, node);
   input.focus();
   render();

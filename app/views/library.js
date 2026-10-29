@@ -138,9 +138,9 @@ export async function compare() {
   if (linked) { compareTray.clear(); linked.split(',').slice(0, 5).forEach(id => compareTray.add(id)); }
   const ids = [...compareTray.ids];
   if (ids.length < 2) return h('div', { class: 'page' }, h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'Compare'))),
-    empty('compare', 'Pick at least two resources', 'In the Library, hover a row and tick the box on the left, or open a resource and use "Compare with these".', btn('Go to Library', () => go('library'), { kind: 'primary' })));
+    empty('compare', 'Pick at least two resources', 'In the catalogue, ⌘-click two or more cards (or use a card\'s ⋯ menu › Select), then choose Compare.', btn('Go to Library', () => go('library'), { kind: 'primary' })));
   const p = params();
-  const input = h('input', { type: 'search', value: p.get('use') || '', placeholder: 'What for? e.g. "test my site in the browser"', 'aria-label': 'Use case' });
+  const input = h('input', { type: 'search', value: p.get('use') || '', maxlength: '300', placeholder: 'What for? e.g. "test my site in the browser"', 'aria-label': 'Use case' });
   const out = h('div');
   const load = async () => {
     const r = await api('compareDecision', { ids, useCase: input.value.trim() });
@@ -170,7 +170,7 @@ export async function compare() {
           it.some(x => x.avoid_when) ? rowH('When to avoid it', x => x.avoid_when || '—') : null))));
   };
   let t;
-  input.addEventListener('input', () => { clearTimeout(t); t = setTimeout(load, 300); });
+  input.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => load().catch(e => toast(e.message, 'bad')), 300); });
   await load();
   return h('div', { class: 'page' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'Compare'), h('p', null, 'Concrete differences to help you decide: what each does, what only it does, what it takes to run here, risks and upkeep. No arbitrary scores.')),

@@ -74,7 +74,7 @@ function providerCard(c, refresh) {
     if (!input.value.trim()) { input.focus(); return; }
     const secret = input.value.trim();
     input.value = '';
-    await withProgress(`Testing and saving ${c.name}`, async () => { const r = await api('connectionSave', { provider: c.provider, secret }); return r.saved ? `${r.detail} Saved to the system vault.` : { ok: false, message: `${r.detail} Nothing was saved; the previous credential was kept.` }; }, { stage: `A contactar ${c.name}…` }).catch(() => {});
+    await withProgress(`Testing and saving ${c.name}`, async () => { const r = await api('connectionSave', { provider: c.provider, secret }); return r.saved ? `${r.detail} Saved to the system vault.` : { ok: false, message: `${r.detail} Nothing was saved; the previous credential was kept.` }; }, { stage: `Contacting ${c.name}…` }).catch(() => {});
     refresh();
   };
   input.addEventListener('keydown', e => e.key === 'Enter' && save());
@@ -84,7 +84,7 @@ function providerCard(c, refresh) {
     h('ul', { class: 'plain caps' }, c.capabilities.map(x => h('li', null, icon('check', 'sm'), x))),
     c.keychain ? h('div', { class: 'row nowrap' }, h('div', { class: 'field grow' }, icon('lock', 'sm'), input), btn(c.has_secret ? 'Replace' : 'Save and test', save, { kind: c.has_secret ? '' : 'primary' })) : notice('warn', 'Secure storage isn\'t available on this system.'),
     h('div', { class: 'row' },
-      c.has_secret ? btn('Test', async () => { await withProgress(`A testar ${c.name}`, async () => { const r = await api('connectionTest', { provider: c.provider }); return r.ok ? r.detail : { ok: false, message: r.detail || r.status }; }, { stage: `A contactar ${c.name}…` }).catch(() => {}); refresh(); }, { kind: 'ghost sm', iconName: 'refresh' }) : null,
+      c.has_secret ? btn('Test', async () => { await withProgress(`Testing ${c.name}`, async () => { const r = await api('connectionTest', { provider: c.provider }); return r.ok ? r.detail : { ok: false, message: r.detail || r.status }; }, { stage: `Contacting ${c.name}…` }).catch(() => {}); refresh(); }, { kind: 'ghost sm', iconName: 'refresh' }) : null,
       c.has_secret ? btn('Remove local access', async () => { if (await confirmDialog({ title: `Remove ${c.name}?`, body: 'Deletes the credential from the system vault. To invalidate it for good, revoke it on the provider\'s website too.', confirm: 'Remove', danger: true })) { await withProgress(`Removing ${c.name}`, () => api('connectionRemove', { provider: c.provider }).then(r => (r.removed ? 'Credential deleted from the system vault.' : 'There was no credential in the system vault.'))); refresh(); } }, { kind: 'ghost sm danger', iconName: 'trash' }) : null,
       h('span', { class: 'spacer' }), externalLink(c.docs, 'How to get one'),
       c.last_ok ? h('span', { class: 'muted small' }, `tested ${relTime(c.last_tested)}`) : null)));
@@ -181,7 +181,7 @@ function customMcpForm() {
   const pairs = t => Object.fromEntries(t.value.split('\n').map(l => l.trim()).filter(Boolean).map(l => [l.split('=')[0].trim(), l.slice(l.indexOf('=') + 1).trim()]));
   const sync = () => { const s = transport.value === 'stdio'; command.closest('.field').hidden = !s; args.hidden = !s; url.closest('.field').hidden = s; };
   transport.addEventListener('change', sync);
-  const el = h('details', { class: 'mcp-form' }, h('summary', { class: 'muted' }, icon('plus', 'sm'), ' Adicionar servidor personalizado'),
+  const el = h('details', { class: 'mcp-form' }, h('summary', { class: 'muted' }, icon('plus', 'sm'), ' Add a custom server'),
     h('div', { class: 'form-grid' },
       h('div', { class: 'field' }, name), transport, h('div', { class: 'field' }, command), h('div', { class: 'field' }, url), h('div', { class: 'field' }, publisher),
       args, env, secrets,
@@ -208,7 +208,7 @@ export function modePicker(pol, onChange) {
   return h('div', { class: 'modes', role: 'radiogroup', 'aria-label': 'Management mode' }, pol.modes.map(m => {
     const [t, d, ic] = MODE_COPY[m];
     const b = h('button', { type: 'button', class: `mode ${cur === m ? 'on' : ''} ${m === 'automatic' ? 'rec' : ''}`, role: 'radio', 'aria-checked': String(cur === m) },
-      h('div', { class: 'row nowrap' }, h('span', { class: 'itile' }, icon(ic)), h('strong', null, t), m === 'automatic' ? badge('recomendado', 'info') : null, h('span', { class: 'spacer' }), cur === m ? icon('check') : null),
+      h('div', { class: 'row nowrap' }, h('span', { class: 'itile' }, icon(ic)), h('strong', null, t), m === 'automatic' ? badge('recommended', 'info') : null, h('span', { class: 'spacer' }), cur === m ? icon('check') : null),
       h('p', null, d),
       h('div', { class: 'mode-counts micro' }, `${Object.values(pol.matrix).filter(x => x[m] === 'auto').length} of ${Object.keys(pol.matrix).length} categories without asking`));
     b.addEventListener('click', async () => {
@@ -221,18 +221,20 @@ export function modePicker(pol, onChange) {
   }));
 }
 
+// Upper bounds match the engine's validators; values are clamped to whole hours before saving.
+const MAX_HOURS = { auto_scan_hours: 168, auto_verify_hours: 168, auto_repair_hours: 168 };
 function maintenancePanel(m) {
   const inputs = new Map();
   return panel({ title: 'Automatic maintenance', meta: m.last ? `last ${relTime(m.last.at)}` : 'hasn\'t run yet', flush: true },
     h('div', { class: 'rows' }, m.tasks.map(t => {
-      const inp = h('input', { type: 'number', class: 'num-input', min: '0', max: '720', value: String(t.every_hours), 'aria-label': `Hours between runs: ${t.label}` });
+      const inp = h('input', { type: 'number', class: 'num-input', min: '0', max: String(MAX_HOURS[t.pref] || 720), step: '1', value: String(t.every_hours), 'aria-label': `Hours between runs: ${t.label}` });
       inputs.set(t.pref, inp);
-      return h('div', { class: 'r' }, h('div', { class: 'grow' }, h('div', { class: 't1' }, t.label), h('div', { class: 't2' }, t.last ? `Last run ${relTime(t.last)}` : 'Hasn\'t run yet')), h('span', { class: 'muted small' }, 'cada'), inp, h('span', { class: 'muted small' }, 'h'));
+      return h('div', { class: 'r' }, h('div', { class: 'grow' }, h('div', { class: 't1' }, t.label), h('div', { class: 't2' }, t.last ? `Last run ${relTime(t.last)}` : 'Hasn\'t run yet')), h('span', { class: 'muted small' }, 'every'), inp, h('span', { class: 'muted small' }, 'h'));
     }),
     m.suggestions.length ? h('div', { class: 'r' }, icon('shield', 'sm'), h('div', { class: 'grow' }, h('div', { class: 't1' }, `${m.suggestions.length} task(s) outside what the current mode covers`), h('div', { class: 't2' }, m.suggestions.slice(0, 3).map(s => s.label).join(' · ')))) : null,
     h('div', { class: 'r' }, h('span', { class: 'muted small grow' }, '0 = off. Each task only runs on its own if your autonomy mode covers it; the rest shows up on Home as a suggestion.'),
-      btn('Run now', async () => { const r = await api('maintenanceRun'); toast(`${r.queued.length} tarefa(s) iniciada(s)${r.suggestions.length ? `; ${r.suggestions.length} waiting for permission` : ''}`, 'good'); }, { iconName: 'play' }),
-      btn('Save', async () => { const prefs = {}; for (const [k, inp] of inputs) prefs[k] = Number(inp.value); await api('prefsSet', prefs); toast('Saved', 'good'); }, { kind: 'primary' }))));
+      btn('Run now', async () => { const r = await api('maintenanceRun'); toast(`${r.queued.length} task${r.queued.length === 1 ? '' : 's'} started${r.suggestions.length ? `; ${r.suggestions.length} waiting for permission` : ''}`, 'good'); }, { iconName: 'play' }),
+      btn('Save', async () => { const prefs = {}; for (const [k, inp] of inputs) { prefs[k] = Math.min(MAX_HOURS[k] || 720, Math.max(0, Math.round(Number(inp.value) || 0))); inp.value = String(prefs[k]); } await api('prefsSet', prefs); toast('Saved', 'good'); }, { kind: 'primary' }))));
 }
 
 export async function automation() {
@@ -265,7 +267,7 @@ export async function automation() {
 // =====================================================================================
 // Operations
 // =====================================================================================
-const OP_STATUS = { queued: ['info', 'Queued'], running: ['info', 'A executar'], awaiting_approval: ['warn', 'Awaiting approval'], verified: ['good', 'Verified'], completed: ['good', 'Done'], failed: ['bad', 'Failed'], cancelled: ['', 'Cancelled'], blocked: ['bad', 'Blocked'], rejected: ['', 'Rejected'], interrupted: ['warn', 'Interrupted'] };
+const OP_STATUS = { queued: ['info', 'Queued'], running: ['info', 'Running'], awaiting_approval: ['warn', 'Awaiting approval'], verified: ['good', 'Verified'], completed: ['good', 'Done'], failed: ['bad', 'Failed'], cancelled: ['', 'Cancelled'], blocked: ['bad', 'Blocked'], rejected: ['', 'Rejected'], interrupted: ['warn', 'Interrupted'] };
 const opBadge = s => { const [k, l] = OP_STATUS[s] || ['', s]; return h('span', { class: `badge ${k}` }, s === 'running' ? h('span', { class: 'spin' }) : null, l); };
 
 function opDetail(o) {
@@ -279,7 +281,7 @@ function opDetail(o) {
 export async function operations() {
   const root = h('div', { class: 'page' });
   let filter = params().get('status') || 'all', q = '', open = params().get('id'), page = 0;
-  const search = h('input', { type: 'search', placeholder: 'Search by kind or resource', 'aria-label': 'Search operations' });
+  const search = h('input', { type: 'search', maxlength: '100', placeholder: 'Search by kind or resource', 'aria-label': 'Search operations' });
   search.addEventListener('input', () => { q = search.value; page = 0; render(); });
   async function render() {
     const all = await api('ops', { limit: 500, q });
@@ -299,7 +301,7 @@ export async function operations() {
       return row;
     }));
     fill(root, ...[
-      pageHead({ eyebrow: 'Control', title: 'Operations', sub: 'A persistent queue: survives restarts, never duplicates work and records every decision. Cancel stops at the next safe point; anything already written is described under "Recovery".' }),
+      pageHead({ eyebrow: 'Control', title: 'Activity', sub: 'Everything CURI installed, changed or checked, and what is waiting for your OK. Work survives restarts and is never done twice; cancelling stops at the next safe point.' }),
       h('section', { class: 'panel kpis small' }, kpi('Awaiting approval', pending.length), kpi('Active', active.length), kpi('Verified', all.filter(o => o.status === 'verified').length), kpi('Failed', all.filter(o => o.status === 'failed').length), kpi('Total', all.length)),
       pending.length ? notice('warn', `${pending.length} operation(s) waiting for your decision.`) : null,
       h('div', { class: 'toolbar' }, segmented([['all', 'All'], ['awaiting_approval', 'Approval'], ['running', 'Running'], ['queued', 'Queued'], ['verified', 'Verified'], ['failed', 'Failed']], filter, v => { filter = v; page = 0; render(); }, 'Filter'), h('span', { class: 'spacer' }), h('div', { class: 'field' }, icon('search', 'sm'), search)),
