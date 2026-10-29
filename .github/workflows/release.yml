@@ -136,6 +136,9 @@ jobs:
       - name: Checksums and notes
         run: |
           cd dist
+          # Linux artifacts keep their deb/ and appimage/ folders; put every file at the top level.
+          find . -mindepth 2 -type f -exec mv {} . \;
+          find . -mindepth 1 -type d -empty -delete
           signing="$(cat signing-macos.txt)"; rm signing-macos.txt
           sha256sum * > SHA256SUMS
           v="${GITHUB_REF_NAME#v}"
