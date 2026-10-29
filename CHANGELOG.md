@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.5.0 - 2026-10-29
+
+**Lives in the menu bar**
+- Closing the window hides it; CURI keeps running with an icon in the menu bar and drops out of the Dock until you open it again.
+- The menu shows what's going on ("Up to date · checked 4 min ago", "2 things need your OK"), with Open CURI, Check Now, Activity, Open at Login and Quit CURI.
+- Opens at login, hidden, through a user LaunchAgent (no admin rights). Untick "Open at Login" to turn it off for good.
+- Notifications when an install finishes or fails, when something waits for your OK, and when new suggestions show up. Only while the window isn't in front.
+- The Core reports its status to the shell on stdout and takes commands on stdin, so none of this opens a new port.
+
+**A new catalogue, and the Library opens on it**
+- Big search up top, ideas to try, areas as a scrolling strip, and kinds as one segmented control.
+- Browsing shows featured cards and shelves: ready in one click, already yours, busy lately, and one per kind, each with "See all".
+- Searching or filtering turns it into a grid with the filters that matter (show, collections, source, upkeep, sort). The headline steps aside while you search.
+- Every resource gets its own icon colour, and every card says whether it's yours ("Open") or what gets it here ("Get", "Add to project").
+- Fixed: catalogue search asked the engine for more results than it allows and quietly showed everything instead of the matches.
+
+**Glass**
+- A slow field of colour behind the content, tinted per section, with translucent glass surfaces on top: blur, a light rim on the top edge and a highlight that follows the pointer.
+- Capsule buttons, tabs and search fields; bigger, tighter headings; the top bar blurs what scrolls under it.
+- Respects reduced motion and light mode.
+
 ## 3.4.0 - 2026-10-28
 
 - Recently added: one timeline across Claude Code, your claude.ai account, the other agents and this computer, newest first, filtered by place and period. Also on Home.

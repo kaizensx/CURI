@@ -2,7 +2,7 @@
 
 <p align="center">
   <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-1b1c21?style=flat-square&logo=apple&logoColor=white">
-  <img alt="Version 3.4.0" src="https://img.shields.io/badge/version-3.4.0-6e96ff?style=flat-square">
+  <img alt="Version 3.5.0" src="https://img.shields.io/badge/version-3.5.0-6e96ff?style=flat-square">
   <img alt="Runs locally" src="https://img.shields.io/badge/runs-100%25%20local-5fd39a?style=flat-square">
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-a6aab3?style=flat-square">
 </p>
@@ -24,8 +24,8 @@ So I built CURI. It reads what's already on your computer and in your agents, li
 
 ## A quick tour
 
-<p align="center"><img src="docs/screenshots/installed.jpg" alt="Library, Installed: everything grouped by where it lives" width="100%"></p>
-<p align="center"><sub><b>Installed.</b> Your claude.ai account, Claude Code, Claude Desktop, Codex and this computer, each with what it holds and the actions that make sense there.</sub></p>
+<p align="center"><img src="docs/screenshots/catalogue.jpg" alt="The catalogue: search, areas, featured resources and shelves" width="100%"></p>
+<p align="center"><sub><b>The catalogue.</b> The first thing the Library shows. Ask in plain words ("control Blender", "test my site"), wander by area, or browse the shelves. Everything already yours says so and opens instead of installing again.</sub></p>
 
 <table>
   <tr>
@@ -34,8 +34,8 @@ So I built CURI. It reads what's already on your computer and in your agents, li
       <p><b>Recently added.</b> One timeline across Claude Code, claude.ai and the rest, so the plugin you added this morning is never lost.</p>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/screenshots/catalogue.jpg" alt="The catalogue with filters">
-      <p><b>The catalogue.</b> Search in plain words ("control Blender", "test my site"), filter by kind and area, install in one click.</p>
+      <img src="docs/screenshots/installed.jpg" alt="Library, Installed: everything grouped by where it lives">
+      <p><b>Installed.</b> Your claude.ai account, Claude Code, Claude Desktop, Codex and this computer, each with what it holds and the actions that make sense there.</p>
     </td>
   </tr>
   <tr>
@@ -76,6 +76,8 @@ Every install runs in a progress window that follows what the package manager is
 **Bends to how you work.** Favourites, collections, notes, your own kind and project commands, hidden items. Back and forward, ⌘K for everything, pages instead of endless scrolling.
 
 **Discovers with taste.** It reads your GitHub stars and runs saved searches on its own, but only keeps projects an agent can actually use (MCP, skill, command line, API, scriptable app) and that it can install here.
+
+**Stays on in the menu bar.** Closing the window doesn't stop CURI. It keeps an icon in the menu bar, opens at login, keeps checking in the background and sends a notification when something finishes or needs your OK. "Check Now", "Open at Login" and "Quit CURI" are right there in that menu, and quitting is the only thing that stops it.
 
 **Looks after itself, within limits you set.** Three autonomy modes, with a clear table of what each one does without asking. Maintenance runs in the background. Removals and admin actions always ask, and everything ends up in an activity log with a tamper-evident audit trail.
 
