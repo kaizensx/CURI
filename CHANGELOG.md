@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.5.2 - 2026-10-29
+
+- New sidebar that matches the rest of the app: a floating pane of glass over the same colour field, instead of the grey system sidebar.
+- Each section's icon sits in a small tile, and the current one lights up in blue inside a glass capsule.
+- Wider, so the short descriptions under each section fit; the status at the bottom is its own small card.
+- Fresh screenshots.
+
 ## 3.5.1 - 2026-10-29
 
 - ⌘Q, the Dock's "Quit" and the app menu now send CURI back to the menu bar instead of closing it. "Quit CURI" in the menu bar icon is the only way to stop it.
