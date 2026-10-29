@@ -77,7 +77,7 @@ export async function discoverView() {
 
   const filters = h('div', { class: 'dfilters' });
   const listEl = h('div');
-  const tabs = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Source' });
+  const tabs = h('div', { class: 'tabs', role: 'group', 'aria-label': 'Source' });
   const allDomains = [...new Set(installable.flatMap(c => c.score?.agent?.domains || []))].sort();
 
   const card = c => {
@@ -105,7 +105,7 @@ export async function discoverView() {
   const toggle = (label, on, fn) => { const b = h('button', { type: 'button', class: `fchip ${on ? '' : 'off'}`, 'aria-pressed': String(on) }, label); b.addEventListener('click', () => { fn(); persist(); render(); }); return b; };
   const render = () => {
     fill(tabs, [['ready', 'Ready to install', installable.length], ['stars', 'From your stars', fromStars.length], ['done', 'In your library', done.length]].map(([id, l, n]) => {
-      const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.tab === id) }, l, h('span', { class: 'n' }, n));
+      const b = h('button', { type: 'button', 'aria-pressed': String(st.tab === id) }, l, h('span', { class: 'n' }, n));
       b.addEventListener('click', () => { st.tab = id; st.page = 0; render(); });
       return b;
     }));

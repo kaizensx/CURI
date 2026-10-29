@@ -78,8 +78,8 @@ export async function installedView(onCount) {
       h('div', { class: 'inv-scan' }, h('span', null, inv.scanned_at ? `Checked ${relTime(inv.scanned_at)}` : 'Not checked yet'), btn('Check again', rescan, { size: 'sm', kind: 'ghost', iconName: 'refresh' })));
   };
 
-  const seg = (opts, cur, set, label) => h('div', { class: 'tabs', role: 'tablist', 'aria-label': label }, opts.map(([v, l, n]) => {
-    const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(cur === v) }, l, n != null ? h('span', { class: 'n' }, String(n)) : null);
+  const seg = (opts, cur, set, label) => h('div', { class: 'tabs', role: 'group', 'aria-label': label }, opts.map(([v, l, n]) => {
+    const b = h('button', { type: 'button', 'aria-pressed': String(cur === v) }, l, n != null ? h('span', { class: 'n' }, String(n)) : null);
     b.addEventListener('click', () => { set(v); st.page = 0; render(); });
     return b;
   }));
