@@ -61,7 +61,7 @@ function packageOptions(facts) {
   const out = [];
   const pk = facts?.packages || {};
   const npmBin = (pk.npm || []).find(p => p.bin?.length);
-  if (npmBin) out.push({ method: 'package', manager: 'npm', name: npmBin.name, version: npmBin.version, bins: npmBin.bin, requires: ['node'], evidence: 'registry', label: `npm ${npmBin.name}` });
+  if (npmBin) out.push({ method: 'package', manager: 'npm', name: npmBin.name, version: npmBin.version, bins: npmBin.bin, requires: ['node'], evidence: 'registry', provenance: Boolean(npmBin.provenance), label: `npm ${npmBin.name}` });
   const py = (pk.pypi || [])[0];
   if (py && (facts.pyproject?.scripts?.length || facts.readme_commands?.pipx || facts.readme_commands?.uv || facts.readme_commands?.uvx)) {
     out.push({ method: 'package', manager: 'uv', name: py.name, version: py.version, bins: facts.pyproject?.scripts || [], requires: ['uv'], evidence: 'registry', label: `uv tool ${py.name}` });

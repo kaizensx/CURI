@@ -7,7 +7,7 @@ import { withProgress } from '../lib/opmodal.js';
 
 const CHECK_LABEL = {
   'db.integrity': 'Database integrity', 'registry.seed_preservation': 'All seed URLs preserved', 'index.fts_consistency': 'Search index consistent',
-  'search.smoke': 'Routing (REA, React Bits, Blender)', 'cli.smoke': 'CLI answers in JSON', 'mcp.live_stdio': 'MCP answers live', 'mcp.access_control': 'MCP recusa pedidos perigosos',
+  'search.smoke': 'Routing (REA, React Bits, Blender)', 'cli.smoke': 'CLI answers in JSON', 'mcp.live_stdio': 'MCP answers live', 'mcp.access_control': 'MCP refuses dangerous requests',
   'audit.hash_chain': 'Audit chain intact', 'bridge.skill_files': 'Skill installed and intact', 'bridge.mcp_config': 'MCP entry correct', 'bridge.idempotent_plan': 'Re-applying duplicates nothing',
   'bridge.mcp_health_via_claude': 'Claude Code connects to the MCP', 'claude.clean_session': 'A clean Claude session uses CURI',
 };
@@ -33,8 +33,8 @@ export async function skills() {
       panel({ title: 'Installed', flush: true }, inv.skills.length ? h('div', { class: 'rows' }, inv.skills.map(s => h('div', { class: 'r' },
         h('span', { class: 'itile' }, icon('skills')),
         h('div', { class: 'grow' }, h('div', { class: 't1' }, s.name), h('div', { class: 't2 clamp1' }, s.description || 'no description')),
-        badge(s.scope), s.managed_by_curi ? badge('CURI', 'info') : null, status(sevKind(s.security), s.security.high ? `${s.security.high} alto` : s.security.medium ? `${s.security.medium} medium` : 'limpo'),
-        btn('Scan', async () => { const r = await withProgress(`A analisar ${s.name}`, () => api('scanSkill', { dir: s.dir }).then(x => ({ ...x, message: `${x.findings.length} achado(s).` }))); fill(scanSlot, scanResult(r, s.name)); scanSlot.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, { kind: 'ghost sm', iconName: 'shield' }))))
+        badge(s.scope), s.managed_by_curi ? badge('CURI', 'info') : null, status(sevKind(s.security), s.security.high ? `${s.security.high} high` : s.security.medium ? `${s.security.medium} medium` : 'clean'),
+        btn('Scan', async () => { const r = await withProgress(`Scanning ${s.name}`, () => api('scanSkill', { dir: s.dir }).then(x => ({ ...x, message: `${x.findings.length} finding(s).` }))); fill(scanSlot, scanResult(r, s.name)); scanSlot.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, { kind: 'ghost sm', iconName: 'shield' }))))
         : empty('skills', 'No skills on disk')),
       scanSlot,
       panel({ title: 'Conflicts between scopes' }, inv.conflicts.length ? table([{ label: 'Name', cell: c => c.name }, { label: 'Locations', cell: c => h('span', { class: 'mono' }, c.locations.join(' · ')) }], inv.conflicts) : h('div', { class: 'row muted' }, icon('check'), 'No name conflicts on disk.')),
@@ -53,7 +53,7 @@ export async function mcp() {
     const hl = health.get(s.name);
     return h('article', { class: 'panel conn' }, h('div', { class: 'panel-body' },
       h('div', { class: 'row nowrap' }, h('span', { class: 'itile' }, icon('mcp')), h('div', { class: 'grow' }, h('div', { class: 't1' }, s.name), h('div', { class: 't2' }, `${s.scope}${s.project ? ` · ${s.project}` : ''} · ${s.transport}`)),
-        hl ? status(hl.healthy ? 'pass' : 'fail', hl.healthy ? 'Connected' : 'Failed') : badge(tested ? 'not listed' : 'configurado')),
+        hl ? status(hl.healthy ? 'pass' : 'fail', hl.healthy ? 'Connected' : 'Failed') : badge(tested ? 'not listed' : 'configured')),
       h('div', { class: 'mono conn-cmd selectable' }, [s.command, ...(s.args || [])].join(' ')),
       h('div', { class: 'row' }, s.env_keys.length ? s.env_keys.map(k => badge(`env ${k}`)) : h('span', { class: 'muted' }, 'no environment variables'), s.name === 'curi' ? badge('managed by CURI', 'info') : null),
       hl && !hl.healthy ? notice('bad', hl.status) : null));
@@ -82,7 +82,7 @@ export async function bridge() {
     if (!v?.checks) return;
     fill(results, panel({ title: 'Independent verification', meta: `${v.passed}/${v.total} · ${v.verdict}`, flush: true },
       h('div', { class: 'rows' }, v.checks.map(c => h('details', { class: 'r check' }, h('summary', { class: 'row nowrap' }, h('span', { class: `check-ic ${c.status}` }, icon(c.status === 'pass' ? 'check' : c.status === 'blocked' ? 'lock' : 'x', 'sm')),
-        h('div', { class: 'grow' }, h('div', { class: 't1' }, CHECK_LABEL[c.id] || c.id), h('div', { class: 't2 mono' }, `${c.id}${c.mandatory ? '' : ' · opcional'}`)), h('span', { class: 'muted num' }, `${c.ms} ms`), icon('chevronDown', 'sm')),
+        h('div', { class: 'grow' }, h('div', { class: 't1' }, CHECK_LABEL[c.id] || c.id), h('div', { class: 't2 mono' }, `${c.id}${c.mandatory ? '' : ' · optional'}`)), h('span', { class: 'muted num' }, `${c.ms} ms`), icon('chevronDown', 'sm')),
         h('pre', { class: 'evidence' }, JSON.stringify(c.evidence, null, 2))))),
       h('div', { class: 'panel-foot mono muted' }, v.receipt_file)));
   };
@@ -96,12 +96,12 @@ export async function bridge() {
       h('div', { class: 'bh-facts' },
         fact('Claude Code', pf.claude.version || 'not found'), fact('Connection', pf.claude.auth?.loggedIn === true ? 'connected' : h('a', { href: '#/connections', class: 'ext' }, pf.claude.auth?.loggedIn === false ? 'not connected, connect Claude' : 'unknown, see Connections')),
         fact('MCP protocol', 'stdio · 2024-11 → 2025-11'), fact('Profile', h('span', { class: 'mono' }, pf.paths.claude_home))),
-      h('div', { class: 'row' }, h('label', { class: 'row nowrap', for: 'b-cs' }, h('span', { class: 'switch' }, cs, h('span')), 'Include a real request to Claude ', badge('consome uso', 'warn')), h('span', { class: 'spacer' }), btn('Run verification', runVerify, { kind: 'primary', iconName: 'shield' })))),
+      h('div', { class: 'row' }, h('label', { class: 'row nowrap', for: 'b-cs' }, h('span', { class: 'switch' }, cs, h('span')), 'Include a real request to Claude ', badge('uses your quota', 'warn')), h('span', { class: 'spacer' }), btn('Run verification', runVerify, { kind: 'primary', iconName: 'shield' })))),
     h('div', { class: 'stack-lg reveal' },
       results,
       drift.drift.length ? notice('bad', `Drift: ${drift.drift.map(d => d.name).join(', ')} was changed outside CURI. It won't be overwritten automatically.`) : null,
       panel({ title: 'Observed state', flush: true }, integ.length ? h('div', { class: 'rows' }, integ.map(i => h('div', { class: 'r' }, h('span', { class: 'itile' }, icon(i.kind === 'mcp' ? 'mcp' : 'skills')), h('div', { class: 'grow' }, h('div', { class: 't1' }, `${i.kind} · ${i.name}`), h('div', { class: 't2' }, `observado ${relTime(i.observed_at)}`)), status(i.health)))) : empty('bridge', 'Nothing applied', 'Use the guided setup or approve the actions below.')),
-      panel({ title: 'Proposed changes', meta: pending.length ? `${pending.length} pendente(s)` : 'up to date' },
+      panel({ title: 'Proposed changes', meta: pending.length ? `${pending.length} pending` : 'up to date' },
         h('div', { class: 'stack' }, plan.actions.map(a => h('div', { class: 'row nowrap plan-row' }, status(a.state === 'already-applied' ? 'pass' : 'pending', a.state === 'already-applied' ? 'Applied' : a.state === 'update' ? 'Update' : 'New'), h('strong', null, a.id), badge(a.risk, 'warn'), h('span', { class: 'mono muted clamp1 grow' }, a.path || a.via || a.target))),
           plan.conflicts.map(c => notice('bad', `${c.action}: ${c.reason}`)),
           pending.find(a => a.preview) ? h('details', null, h('summary', { class: 'muted' }, 'Preview SKILL.md'), h('pre', null, pending.find(a => a.preview).preview)) : null,
@@ -124,7 +124,7 @@ export async function security() {
     pageHead({ eyebrow: 'Manage', title: 'Security', sub: 'External content is treated as untrusted data. Static analysis runs nothing and never grants authority.' }),
     h('div', { class: 'grid cols-main reveal' },
       panel({ title: 'Scan content' }, area, h('div', { class: 'row', style: { marginTop: '10px' } }, h('span', { class: 'muted' }, '12 rules: prompt injection, pipe-to-shell, credentials, hooks, persistence, hidden unicode…'), h('span', { class: 'spacer' }),
-        btn('Scan', async () => { if (!area.value.trim()) return; fill(out, scanResult(await api('scanText', { text: area.value }), 'texto colado')); }, { kind: 'primary', iconName: 'shield' })), out),
+        btn('Scan', async () => { if (!area.value.trim()) return; fill(out, scanResult(await api('scanText', { text: area.value }), 'pasted text')); }, { kind: 'primary', iconName: 'shield' })), out),
       panel({ title: 'Policy in force' }, h('ul', { class: 'plain policy' }, [
         ['lock', 'No silent installs; every risky action has its own approval.'], ['mcp', 'CURI\'s MCP: no shell, no file access, validated arguments.'],
         ['shield', 'App: 127.0.0.1 only, token, Host/Origin checks, strict CSP, no CORS.'], ['alert', 'Offensive tools (pentest, RE) only against authorised targets.'], ['activity', 'Telemetry off.']].map(([ic, t]) => h('li', null, icon(ic, 'sm'), t))))),

@@ -1,6 +1,6 @@
 [package]
 name = "curi-desktop"
-version = "3.5.3"
+version = "3.6.0"
 description = "CURI desktop shell: dependency bootstrap + CURI Core host"
 edition = "2021"
 license = "MIT"

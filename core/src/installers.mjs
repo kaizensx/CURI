@@ -29,7 +29,7 @@ function hashTree(dir) { return Object.fromEntries(walk(dir).map(f => [path.rela
 registerHandler('curi.integration', {
   async plan() { return { category: 'curi_integration', resource: 'curi-resource-router + mcp:curi', lockKey: 'curi.integration', source: 'local' }; },
   async run(db, params, ctx) {
-    ctx.stage('A planear', 0.1);
+    ctx.stage('Planning', 0.1);
     const plan = planBridgeInstall();
     if (plan.conflicts.length) throw permanent(`Conflict: ${plan.conflicts.map(c => c.reason).join(' ')}`, { action: 'Resolve the conflict in Settings › Claude integration' });
     const todo = plan.actions.filter(a => a.state !== 'already-applied').map(a => a.id);
@@ -60,10 +60,12 @@ registerHandler('skill.install', {
   async run(db, p, ctx) {
     const name = p.name || path.basename(p.path);
     const dest = skillTarget(name);
-    ctx.stage('A resolver o commit', 0.05);
+    ctx.stage('Resolving the commit', 0.05);
     const ls = await lsRemote(`https://github.com/${p.repo}.git`);
     if (!ls.exists) throw new Error(`Repository unreachable: ${ls.error}`);
-    const commit = p.commit && /^[0-9a-f]{40}$/.test(p.commit) ? p.commit : ls.head;
+    // After a pause for approval, install exactly the commit that was scanned and shown to the person.
+    const reviewed = ctx.approvedByUser ? ctx.checkpointData : null;
+    const commit = p.commit && /^[0-9a-f]{40}$/.test(p.commit) ? p.commit : reviewed?.commit && /^[0-9a-f]{40}$/.test(reviewed.commit) ? reviewed.commit : ls.head;
     const marker = readJson(path.join(dest, '.curi-managed.json'));
     if (fs.existsSync(dest) && !marker) throw permanent(`A skill named "${name}" already exists and isn't managed by CURI; it won't be overwritten.`, { action: 'Rename or remove the existing skill' });
     if (marker?.commit === commit && marker.files && Object.entries(marker.files).every(([f, h]) => sha256File(path.join(dest, f)) === h)) {
@@ -71,13 +73,14 @@ registerHandler('skill.install', {
       return { verified: true, verification: { commit, idempotent: true } };
     }
     if (ctx.cancelled()) return { cancelled: true };
-    ctx.stage('A transferir o pacote fixo', 0.2);
+    ctx.stage('Downloading the pinned package', 0.2);
     const work = fs.mkdtempSync(path.join(ensureDir(path.join(dataDir(), 'tmp')), 'skill-'));
     try {
       const res = await fetch(`https://codeload.github.com/${p.repo}/tar.gz/${commit}`, { signal: AbortSignal.timeout(120000) });
       if (!res.ok) throw new Error(`Download failed: HTTP ${res.status}`);
       const buf = Buffer.from(await res.arrayBuffer());
       if (buf.length > 50e6) throw permanent('Package too large (>50 MB).');
+      if (reviewed?.tarball_sha256 && reviewed.commit === commit && reviewed.tarball_sha256 !== sha(buf)) throw permanent('The package changed after it was reviewed; it won\'t be installed.', { action: 'Start the install again to review the new version' });
       fs.writeFileSync(path.join(work, 'pkg.tgz'), buf);
       const top = `${p.repo.split('/')[1]}-${commit}`;
       fs.mkdirSync(path.join(work, 'x'));
@@ -206,10 +209,10 @@ registerHandler('mcp.disable', {
 
 // ---------- Observation work (allowed in every mode) ----------
 registerHandler('sources.verify', {
-  async plan(db, p) { return { category: 'observe', resource: p.ids?.length === 1 ? p.ids[0] : `${p.ids?.length || p.limit || 40} fontes`, lockKey: p.ids?.length === 1 ? `verify:${p.ids[0]}` : 'sources.verify', source: 'github/http', maxAttempts: 1 }; },
+  async plan(db, p) { return { category: 'observe', resource: p.ids?.length === 1 ? p.ids[0] : `${p.ids?.length || p.limit || 40} sources`, lockKey: p.ids?.length === 1 ? `verify:${p.ids[0]}` : 'sources.verify', source: 'github/http', maxAttempts: 1 }; },
   async run(db, p, ctx) {
     const useApi = Boolean(await credentialFor('github')) || p.useApi === true;
-    const ids = Array.isArray(p.ids) && p.ids.length ? p.ids.slice(0, 400).map(String) : db.prepare(`SELECT id FROM resources ORDER BY last_verified IS NOT NULL, last_verified LIMIT ?`).all(Math.min(p.limit || 40, 400)).map(r => r.id);
+    const ids = Array.isArray(p.ids) && p.ids.length ? p.ids.slice(0, 400).map(String) : db.prepare(`SELECT id FROM resources WHERE status NOT IN ('PENDING_REVIEW','REJECTED') ORDER BY last_verified IS NOT NULL, last_verified LIMIT ?`).all(Math.min(p.limit || 40, 400)).map(r => r.id);
     let ok = 0, fail = 0;
     for (const [i, id] of ids.entries()) {
       if (ctx.cancelled()) return { cancelled: true, recovery: { verified_so_far: ok } };
@@ -264,7 +267,7 @@ registerHandler('agent.install', {
   <key>StandardErrorPath</key><string>${xml(path.join(logs, 'agent.log'))}</string>
 </dict></plist>
 `;
-    ctx.stage('A escrever o LaunchAgent', 0.3);
+    ctx.stage('Writing the LaunchAgent', 0.3);
     fs.mkdirSync(agentsDir(), { recursive: true });
     const target = agentPlistPath();
     const tmp = `${target}.tmp`;
@@ -311,7 +314,7 @@ registerHandler('cli.link', {
 // mcp-exec: resolve Keychain references to env vars and exec the real server (stdio inherited).
 export async function execMcp(db, name) {
   const d = db.prepare('SELECT * FROM mcp_definitions WHERE name=?').get(name);
-  if (!d || d.transport !== 'stdio') { process.stderr.write(`CURI: servidor MCP desconhecido: ${name}\n`); process.exit(2); }
+  if (!d || d.transport !== 'stdio') { process.stderr.write(`CURI: unknown MCP server: ${name}\n`); process.exit(2); }
   const env = { ...process.env, ...JSON.parse(d.env) };
   for (const [k, ref] of Object.entries(JSON.parse(d.secret_env))) {
     const v = await credentialFor(ref);
@@ -337,12 +340,12 @@ registerHandler('system.scan', {
 });
 
 registerHandler('discover', {
-  async plan(db, p) { return { category: 'observe', resource: p.mode === 'frontier' ? 'frontier sweep' : `descoberta: ${String(p.intent || '').slice(0, 60)}`, lockKey: 'discover', source: 'api.github.com', maxAttempts: 1 }; },
+  async plan(db, p) { return { category: 'observe', resource: p.mode === 'frontier' ? 'frontier sweep' : `discovery: ${String(p.intent || '').slice(0, 60)}`, lockKey: 'discover', source: 'api.github.com', maxAttempts: 1 }; },
   async run(db, p, ctx) {
     const { discover } = await import('./discover.mjs');
     let total = 1, done = 0;
     const r = await discover(db, { mode: p.mode === 'frontier' ? 'frontier' : 'task', intent: String(p.intent || ''), windows: p.windows, maxQueries: p.maxQueries || 6, actor: 'operations',
-      onPlan: qs => { total = qs.length; ctx.stage(`${total} consulta(s) planeada(s)`, 0.02); },
+      onPlan: qs => { total = qs.length; ctx.stage(`${total} planned queries`, 0.02); },
       onEvent: e => { done++; ctx.stage(`Query ${done}/${total}: ${e.q.q}${e.error ? ` (${e.error})` : ` (${e.n} results)`}`, done / total); } });
     ctx.log(`Run #${r.scanId}: ${r.status}, ${r.total} results.`);
     if (r.status === 'failed') throw permanent(`Discovery failed: ${r.errors} quer${r.errors === 1 ? 'y' : 'ies'} errored (network or GitHub rate limit).`);

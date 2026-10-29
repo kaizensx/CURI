@@ -50,7 +50,7 @@ export async function addToProject(name, commands) {
     const compRow = h('div', { class: 'field' }, comp);
     const list = h('div', { class: 'proj-list', role: 'radiogroup', 'aria-label': 'Project' });
     const other = h('input', { type: 'text', placeholder: '/path/to/your/project', 'aria-label': 'Another folder' });
-    const syncComp = () => { compRow.hidden = !/<componente>/.test(cmdSel.value); };
+    const syncComp = () => { compRow.hidden = !/<component>/.test(cmdSel.value); };
     const renderList = items => fill(list, items.length ? items.map(p => {
       const b = h('button', { type: 'button', class: 'proj', role: 'radio', 'aria-checked': String(p.path === sel) },
         h('strong', null, p.name), h('span', { class: 'p' }, p.path.replace(/^\/Users\/[^/]+/, '~')),
@@ -94,11 +94,11 @@ export async function personalPanel(id, mine, onChange) {
   }), btn('New collection', async () => { const n = await (await import('../lib/ui.js')).promptDialog({ title: 'New collection', placeholder: 'e.g. Client project, To try', confirm: 'Create' }); if (!n) return; cols.push({ name: n.trim() }); await save({ collections: [...(mine.collections || []), n.trim()] }); renderChips(); }, { size: 'sm', kind: 'ghost', iconName: 'plus' }));
   renderChips();
   const notes = h('textarea', { class: 'area', rows: '3', placeholder: 'Your notes about this resource (they stay on this device).', 'aria-label': 'Notes', value: mine.notes || '' });
-  let t; notes.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => save({ notes: notes.value }), 500); });
+  let t; notes.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => save({ notes: notes.value }).catch(e => toast(`Notes weren't saved: ${e.message}`, 'bad')), 500); });
   const kind = h('select', { class: 'select', 'aria-label': 'Kind' }, KINDS.map(([v, l]) => h('option', { value: v, selected: (mine.kind || '') === v || null }, l)));
   kind.addEventListener('change', async () => { await save({ kind: kind.value || null }); toast('Kind updated', 'good'); onChange?.(mine, true); });
-  const cmd = h('input', { type: 'text', class: 'mono', placeholder: 'ex.: pnpm add @minha/lib', value: mine.command || '', 'aria-label': 'Your own project command' });
-  const hide = btn(mine.hidden ? 'Show in Library' : 'Hide from Library', async () => { await save({ hidden: !mine.hidden }); toast(mine.hidden ? 'Hidden (see Show › Hidden)' : 'Visible again', 'good'); onChange?.(mine, true); }, { kind: 'ghost', size: 'sm', iconName: 'x' });
+  const cmd = h('input', { type: 'text', class: 'mono', placeholder: 'e.g. pnpm add @scope/lib', value: mine.command || '', 'aria-label': 'Your own project command' });
+  const hide = btn(mine.hidden ? 'Show in Library' : 'Hide from Library', async () => { await save({ hidden: !mine.hidden }); toast(mine.hidden ? 'Hidden (Library › Filters › Hidden)' : 'Visible again', 'good'); onChange?.(mine, true); }, { kind: 'ghost', size: 'sm', iconName: 'x' });
   return h('div', { class: 'box pad stack mine' },
     h('div', { class: 'row nowrap' }, fav, h('span', { class: 'grow' }), hide),
     h('div', { class: 'stack-xs' }, h('span', { class: 'micro' }, 'Collections'), chips),

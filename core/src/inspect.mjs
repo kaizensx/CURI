@@ -89,7 +89,10 @@ export async function npmPackage(name, full) {
   const latest = r.json['dist-tags']?.latest;
   const v = r.json.versions?.[latest] || {};
   const repo = typeof v.repository === 'string' ? v.repository : v.repository?.url;
-  return { name: r.json.name, version: latest, bin: v.bin ? Object.keys(typeof v.bin === 'string' ? { [r.json.name]: 1 } : v.bin) : [], linked: full ? pointsTo(repo, full) || pointsTo(v.homepage, full) : null, deprecated: v.deprecated || null, modified: r.json.time?.modified };
+  // npm only accepts signed provenance whose source repo matches package.json "repository", so a link
+  // backed by provenance is real; a bare "repository" field can be set by anyone.
+  const linked = full ? pointsTo(repo, full) || pointsTo(v.homepage, full) : null;
+  return { name: r.json.name, version: latest, bin: v.bin ? Object.keys(typeof v.bin === 'string' ? { [r.json.name]: 1 } : v.bin) : [], linked, provenance: Boolean(linked && v.dist?.attestations?.provenance), deprecated: v.deprecated || null, modified: r.json.time?.modified };
 }
 export async function pypiPackage(name, full) {
   const r = await getJson(`https://pypi.org/pypi/${encodeURIComponent(name)}/json`);
@@ -235,7 +238,8 @@ export async function inspectGithub(db, full, { onLog = () => {} } = {}) {
   await tryAll(pk.cask, (n, f) => brewFormula(n, f, true), 'cask');
   // Name-guessed matches that don't point back at the repo are someone else's package.
   for (const k of Object.keys(facts.packages)) {
-    facts.packages[k] = facts.packages[k].filter(p => p.linked !== false || (k === 'npm' && facts.package_json?.name === p.name) || (k === 'pypi' && facts.pyproject?.name === p.name) || (k === 'crates' && facts.cargo?.name === p.name));
+    // A registry name that merely equals the repo's manifest name may be unpublished and squatted.
+    facts.packages[k] = facts.packages[k].filter(p => p.linked !== false);
     if (!facts.packages[k].length) delete facts.packages[k];
   }
   const rel = await ghFetch(db, `/repos/${full}/releases/latest`).catch(() => null);

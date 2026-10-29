@@ -33,7 +33,7 @@ async function install(c, after) {
 
 export async function discoverView() {
   const p = params();
-  const [cands, gh, saved] = await Promise.all([api('candidatesAll', { limit: 1500 }), api('connections').then(l => l.find(x => x.provider === 'github')).catch(() => null), api('savedSearches')]);
+  const [cands, gh, saved] = await Promise.all([api('candidatesAll', { limit: 1500 }), api('connections').then(l => l.find(x => x.provider === 'github')), api('savedSearches')]);
   const seen = new Map();
   for (const c of cands) if (!seen.has(c.full_name)) seen.set(c.full_name, c);
   const all = [...seen.values()];
@@ -56,9 +56,9 @@ export async function discoverView() {
     && (!st.q || `${c.full_name} ${c.description || ''}`.toLowerCase().includes(st.q.toLowerCase()));
   const order = { score: (a, b) => sc(b) - sc(a), stars: (a, b) => (b.stars || 0) - (a.stars || 0), recent: (a, b) => (b.gh_pushed_at || '').localeCompare(a.gh_pushed_at || ''), new: (a, b) => (b.gh_created_at || '').localeCompare(a.gh_created_at || '') };
 
-  const input = h('input', { type: 'search', id: 'page-search', value: p.get('intent') || '', placeholder: 'What should an agent be able to do? e.g. "edit CAD files", "transcribe meetings"', 'aria-label': 'Need to search for on GitHub' });
+  const input = h('input', { type: 'search', id: 'page-search', value: p.get('intent') || '', maxlength: '500', placeholder: 'What should an agent be able to do? e.g. "edit CAD files", "transcribe meetings"', 'aria-label': 'Need to search for on GitHub' });
   const runSearch = (q = input.value.trim()) => { if (q.length < 3) { toast('Describe the need in a few words.', 'bad'); return null; } return runOperation('discover', { mode: 'task', intent: q }, `Search GitHub: ${q}`, { refresh: false }).then(refresh); };
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch()?.catch(err => toast(err.message, 'bad')); });
 
   const savedBox = h('div', { class: 'saved' });
   const renderSaved = list => fill(savedBox, list.map(s => h('span', { class: 'saved-chip' },
