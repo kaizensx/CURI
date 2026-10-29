@@ -10,8 +10,15 @@ permissions:
 
 jobs:
   core:
-    name: Core tests (macOS)
-    runs-on: macos-15
+    name: Core tests (${{ matrix.os }})
+    # macOS is the supported platform; Linux and Windows run so we learn where the engine still breaks
+    # there, without blocking a release on it.
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.os != 'macos-15' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04, windows-2025]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
