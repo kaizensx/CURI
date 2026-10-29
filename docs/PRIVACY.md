@@ -30,6 +30,7 @@ Your projects' contents, your files, your Claude conversation history, or creden
 ## Retention and removal
 - Audit log and operations history: local; exportable from Settings.
 - Removing a connection deletes the credential from the system vault (the key stays valid at the provider until you revoke it there).
+- CURI opens at login through `~/Library/LaunchAgents/app.curi.desktop.plist`. Untick "Open at Login" in the menu bar icon to remove it; "Quit CURI" stops everything until you open it again. Notifications are local macOS notifications.
 - Deleting CURI's data folder removes all of CURI's data; the Claude integration can be rolled back from Settings › Claude integration.
 
 Consent for automatic installs (Autonomy) is separate from consent to spend money (model requests), which is always asked for.

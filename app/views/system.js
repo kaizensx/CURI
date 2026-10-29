@@ -95,7 +95,7 @@ export async function about() {
   const keys = [['⌘ K', 'Command palette'], ['⌘ 1–9', 'Move between sections'], ['⌘ ,', 'Settings'], ['/', 'Focus the page search'], ['⌘ R', 'Refresh data'], ['Esc', 'Close dialogs and menus'], ['Right-click', 'Actions on a resource'], ['Drag a URL', 'Add to the catalogue']];
   return h('div', { class: 'page narrow' },
     h('div', { class: 'about-mark' }, brandMark({ size: 64 }), h('img', { src: 'brand/curi-wordmark-on-dark.svg', alt: 'CURI', class: 'about-wordmark' })),
-    pageHead({ eyebrow: 'System', title: 'About CURI', sub: 'CURI 3.4: Node engine (SQLite/FTS5), CLI, stdio MCP server, Claude skill and native Tauri app.' }),
+    pageHead({ eyebrow: 'System', title: 'About CURI', sub: 'CURI 3.5: Node engine (SQLite/FTS5), CLI, stdio MCP server, Claude skill and native Tauri app.' }),
     h('div', { class: 'grid cols-2 reveal' },
       panel({ title: 'Updates', actions: btn('Check', async () => {
         const u = await api('updateCheck');

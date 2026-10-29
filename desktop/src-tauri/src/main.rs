@@ -2,25 +2,40 @@
 //! CURI desktop shell. The boot window installs/verifies runtime dependencies with live progress,
 //! then starts CURI Core (loopback HTTP + token) as a child process and navigates to its UI.
 //! The CURI UI never gets Tauri IPC: all privileged work stays in Core's allowlisted actions.
+//! CURI lives in the menu bar: closing the window hides it and the Core keeps checking in the
+//! background. Only "Quit CURI" (menu bar icon or ⌘Q) stops it.
 
 mod deps;
+mod tray;
 
 use std::{
     fs,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Write},
     path::PathBuf,
-    process::{Child, Command, Stdio},
+    process::{Child, ChildStdin, Command, Stdio},
     sync::{mpsc, Arc, Mutex},
     thread,
     time::Duration,
 };
 use tauri::{
     menu::{AboutMetadata, Menu, MenuItem, PredefinedMenuItem, Submenu},
-    Emitter, Manager, RunEvent, Url,
+    Emitter, Manager, RunEvent, Url, WindowEvent,
 };
 
 #[derive(Default)]
 struct CoreProc(Mutex<Option<Child>>);
+
+/// The Core's stdin: kept open for the app's lifetime (closing it stops the Core) and used to send commands.
+#[derive(Default)]
+struct CoreIn(Mutex<Option<ChildStdin>>);
+
+/// Sends one line to the Core (`check`, `status`). Ignored before the Core is up.
+pub fn core_send(app: &tauri::AppHandle, cmd: &str) {
+    if let Some(stdin) = app.state::<CoreIn>().0.lock().unwrap().as_mut() {
+        let _ = writeln!(stdin, "{cmd}");
+        let _ = stdin.flush();
+    }
+}
 
 fn curi_home(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     if let Ok(h) = std::env::var("CURI_HOME") {
@@ -59,7 +74,7 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
     emit(deps::Progress { step: "core", label: "CURI Core".into(), state: "running", pct: None, detail: "Starting the local server (127.0.0.1)…".into() });
     let mut cmd = Command::new(&r.node);
     cmd.arg(root.join("core/bin/curi.mjs"))
-        .args(["app", "--port", "0", "--no-open", "--print-url", "--exit-on-stdin-close"])
+        .args(["app", "--port", "0", "--no-open", "--print-url", "--exit-on-stdin-close", "--status-lines"])
         .env("PATH", &r.path_env)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -69,6 +84,7 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
     }
     let mut child = cmd.spawn().map_err(|e| format!("Couldn't start the Core: {e}"))?;
     let stdout = child.stdout.take().ok_or("stdout")?;
+    *app.state::<CoreIn>().0.lock().unwrap() = child.stdin.take();
     let stderr = child.stderr.take().ok_or("stderr")?;
     let errbuf = Arc::new(Mutex::new(String::new()));
     let eb = errbuf.clone();
@@ -84,10 +100,13 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
         }
     });
     let (tx, rx) = mpsc::channel();
+    let handle = app.clone();
     thread::spawn(move || {
         for line in BufReader::new(stdout).lines().map_while(Result::ok) {
             if line.starts_with("http://127.0.0.1:") && line.contains("#token=") {
                 let _ = tx.send(line);
+            } else if let Some(json) = line.strip_prefix("CURI-STATUS ") {
+                tray::on_status(&handle, json);
             }
         }
     });
@@ -176,29 +195,77 @@ fn build_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     Menu::with_items(app, &[&app_menu, &file, &edit, &view, &window, &help])
 }
 
+/// Brings the window back (and the Dock icon with it).
+pub fn show_window(app: &tauri::AppHandle) {
+    #[cfg(target_os = "macos")]
+    let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_focus();
+    }
+}
+
+/// Hides the window and the Dock icon; CURI stays in the menu bar.
+pub fn hide_window(app: &tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.hide();
+    }
+    #[cfg(target_os = "macos")]
+    let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+}
+
+/// Forwards a menu command to the UI, which owns routing.
+pub fn to_ui(app: &tauri::AppHandle, id: &str) {
+    if let Some(w) = app.get_webview_window("main") {
+        let id = serde_json::to_string(id).unwrap_or_default();
+        let _ = w.eval(format!("window.__curiMenu && window.__curiMenu({id})"));
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             let menu = build_menu(app.handle())?;
             app.set_menu(menu)?;
             app.on_menu_event(|app, ev| {
-                if let Some(w) = app.get_webview_window("main") {
-                    let id = serde_json::to_string(ev.id().as_ref()).unwrap_or_default();
-                    let _ = w.eval(format!("window.__curiMenu && window.__curiMenu({id})"));
+                let id = ev.id().as_ref();
+                if !tray::on_menu(app, id) {
+                    to_ui(app, id);
                 }
             });
+            let home = curi_home(app.handle())?;
+            tray::build(app.handle(), &home)?;
+            // Started at login: stay in the menu bar until asked.
+            if std::env::args().any(|a| a == "--hidden") {
+                hide_window(app.handle());
+            }
             Ok(())
         })
+        .on_window_event(|w, ev| {
+            if let WindowEvent::CloseRequested { api, .. } = ev {
+                if w.label() == "main" {
+                    api.prevent_close();
+                    hide_window(w.app_handle());
+                }
+            }
+        })
         .manage(CoreProc::default())
+        .manage(CoreIn::default())
         .invoke_handler(tauri::generate_handler![start])
         .build(tauri::generate_context!())
         .expect("error while starting CURI")
-        .run(|app, ev| {
-            if let RunEvent::Exit = ev {
+        .run(|app, ev| match ev {
+            #[cfg(target_os = "macos")]
+            RunEvent::Reopen { .. } => show_window(app),
+            RunEvent::Exit => {
+                app.state::<CoreIn>().0.lock().unwrap().take();
                 if let Some(mut c) = app.state::<CoreProc>().0.lock().unwrap().take() {
                     let _ = c.kill();
                 }
             }
+            _ => {}
         });
 }
