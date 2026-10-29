@@ -26,8 +26,16 @@ jobs:
           node-version: 24
       # e2e.test.mjs needs a local Claude Code install and is skipped automatically when absent.
       - name: Test
+        if: runner.os != 'Linux'
         working-directory: core
         run: npm test
+      # On Linux the vault is the Secret Service (libsecret); run it for real inside a throwaway keyring.
+      - name: Test (with a Secret Service keyring)
+        if: runner.os == 'Linux'
+        working-directory: core
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libsecret-tools gnome-keyring dbus-x11 >/dev/null
+          dbus-run-session -- bash -c 'printf "ci" | gnome-keyring-daemon --unlock --components=secrets >/dev/null && npm test'
 
   desktop:
     name: Desktop build (unsigned)
@@ -51,6 +59,10 @@ jobs:
   secrets:
     name: Secret scan
     runs-on: ubuntu-latest
+    # gitleaks reads the pull request's commits.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:

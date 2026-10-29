@@ -196,7 +196,9 @@ test('S18 the MCP surface cannot enqueue, approve or run operations', () => {
   assert.ok(r.error);
 });
 
-test('S21/S24 Claude connection: disconnected → login → cancel → retry → wrong code fails → right code connects → logout', async () => {
+const POSIX = process.platform !== 'win32' ? false : 'uses POSIX stand-ins for the claude CLI and tools';
+
+test('S21/S24 Claude connection: disconnected → login → cancel → retry → wrong code fails → right code connects → logout', { skip: POSIX }, async () => {
   let s = await claudeAuth.status();
   assert.ok(['disconnected', 'offline'].includes(s.state), s.state);
   claudeAuth.startLogin(db);
@@ -239,7 +241,7 @@ test('S15 approved work runs from the background agent entry point with the app 
   assert.ok(res.ran.some(r => r.id === op.id && r.status === 'verified'), stdout);
 });
 
-test('background LaunchAgent installs, loads in launchd and is removed cleanly (test label)', async () => {
+test('background LaunchAgent installs, loads in launchd and is removed cleanly (test label)', { skip: process.platform !== 'darwin' && 'launchd is macOS only' }, async () => {
   const db2 = openDb();
   policy.grantMode(db2, 'maximum');
   await ops.enqueue(db2, 'agent.install', { interval_s: 3600 }, { actor: 'agent' });
@@ -253,7 +255,7 @@ test('background LaunchAgent installs, loads in launchd and is removed cleanly (
   db2.close();
 });
 
-test('detection: a tool appearing on PATH becomes INSTALLED with its version; removing it reverts; manual states untouched', async () => {
+test('detection: a tool appearing on PATH becomes INSTALLED with its version; removing it reverts; manual states untouched', { skip: POSIX }, async () => {
   const db3 = openDb();
   const bin = path.join(root, 'fakebin');
   fs.mkdirSync(bin, { recursive: true });
