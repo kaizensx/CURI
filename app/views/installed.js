@@ -8,7 +8,7 @@ import { api, btn, empty, pager } from '../lib/ui.js';
 import { go, params } from '../app.js';
 import { runOperation } from './control.js';
 import { runAction } from './common.js';
-import { noun } from './device.js';
+import { noun, computerOverview } from './device.js';
 
 const PLACE_ICON = { account: 'cloud', agent: 'agent', computer: 'device', recent: 'clock', all: 'layers' };
 const TYPE_ICON = { 'account-skill': 'skills', skill: 'skills', plugin: 'layers', mcp: 'mcp', app: 'grid' };
@@ -20,14 +20,14 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const SIZE = 40;
 
 export async function installedView(onCount) {
-  let inv = await api('installed');
+  let [inv, dev] = await Promise.all([api('installed'), api('device')]);
   const st = { place: params().get('place') ?? lsGet('curi-inst-place', 'recent'), group: '', q: '', page: 0,
     sort: lsGet('curi-inst-sort', 'name'), days: Number(lsGet('curi-inst-days', '30')), who: lsGet('curi-inst-who', 'claude') };
   const side = h('nav', { class: 'inv-places', 'aria-label': 'Where things are installed' });
   const main = h('div', { class: 'inv-main', 'aria-live': 'polite' });
   const input = h('input', { type: 'search', placeholder: 'Find something you installed, anywhere', 'aria-label': 'Search what is installed' });
 
-  const reload = async () => { inv = await api('installed'); render(); };
+  const reload = async () => { [inv, dev] = await Promise.all([api('installed'), api('device')]); render(); };
   const rescan = () => runOperation('system.scan', {}, 'Look at this device again', { refresh: false }).then(reload);
   const match = it => !st.q || `${it.name} ${it.description || ''} ${it.origin || ''} ${it.resource?.name || ''}`.toLowerCase().includes(st.q);
   const total = () => inv.places.reduce((n, p) => n + p.count, 0);
@@ -132,7 +132,7 @@ export async function installedView(onCount) {
       }
       return out.map(s => h('section', { class: 'inv-sec' }, h('h3', null, s.label, h('span', { class: 'n' }, String(s.n))), h('div', { class: 'inv-list', role: 'list' }, s.rows)));
     };
-    fill(main, head, h('div', { class: 'inv-tools' }, h('div', { class: 'searchbox' }, icon('search', 'sm'), input), tabs, sort),
+    fill(main, head, place?.kind === 'computer' ? computerOverview(dev) : null, h('div', { class: 'inv-tools' }, h('div', { class: 'searchbox' }, icon('search', 'sm'), input), tabs, sort),
       rows.length ? paged(rows, draw)
         : st.q ? empty('search', `Nothing installed matches "${st.q}"`, 'It may not be on this device yet. The catalogue can find and install it.', btn('Search the catalogue', () => go(`library?tab=catalogue&q=${encodeURIComponent(st.q)}`), { kind: 'primary' }))
         : empty('box', 'Nothing here yet', place?.kind === 'agent' && !place.present ? `${place.label} isn't installed on this computer.` : 'Install something from the catalogue and it shows up here.', btn('Browse the catalogue', () => go('library?tab=catalogue'), { kind: 'primary' })));

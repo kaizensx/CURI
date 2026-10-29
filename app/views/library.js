@@ -8,6 +8,7 @@ import { go, mount, params, compareTray } from '../app.js';
 import { runOperation } from './control.js';
 import { installedView } from './installed.js';
 import { catalogueView } from './catalogue.js';
+import { discoverView } from './discover.js';
 import { KIND_ICON, STATE_LABEL, stateChip, kindTile, where, runAction, actionButton, cmdLine, addToProject, personalPanel } from './common.js';
 
 export const TYPE_ICON = { Skill: 'skills', Plugin: 'layers', MCP: 'mcp', Library: 'library', Framework: 'library', Tool: 'terminal', Documentation: 'info', Registry: 'search', Template: 'copy', Inspiration: 'sparkle' };
@@ -47,7 +48,16 @@ export async function library() {
   const count = h('span', { class: 'n' });
   const tabs = h('nav', { class: 'tabs lib-tabs', 'aria-label': 'Library' },
     h('a', { href: '#/library?tab=catalogue', 'aria-current': tab === 'catalogue' ? 'page' : null }, icon('library', 'sm'), 'Catalogue'),
-    h('a', { href: '#/library?tab=installed', onclick: e => { if (tab === 'installed') e.preventDefault(); }, 'aria-current': tab === 'installed' ? 'page' : null }, icon('check', 'sm'), 'Installed', tab === 'installed' ? count : null));
+    h('a', { href: '#/library?tab=installed', onclick: e => { if (tab === 'installed') e.preventDefault(); }, 'aria-current': tab === 'installed' ? 'page' : null }, icon('check', 'sm'), 'Installed', tab === 'installed' ? count : null),
+    h('a', { href: '#/library?tab=new', 'aria-current': tab === 'new' ? 'page' : null }, icon('radar', 'sm'), 'New on GitHub'));
+  if (tab === 'new') {
+    // New projects found on GitHub that aren't in the catalogue yet; adding one puts it in the catalogue.
+    const page = await discoverView();
+    page.querySelector('.page-head h1')?.replaceChildren('New on GitHub');
+    const actions = page.querySelector('.page-head .actions');
+    if (actions) actions.prepend(tabs); else page.querySelector('.page-head')?.append(h('div', { class: 'actions' }, tabs));
+    return page;
+  }
   if (tab === 'installed') {
     const body = await installedView(n => { count.textContent = String(n); });
     return h('div', { class: 'page' },

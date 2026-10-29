@@ -115,7 +115,7 @@ export async function home() {
           h('div', null, h('div', { class: 'cap-t' }, r.label), h('div', { class: 'via' }, `${r.can} — `, h('a', { href: `#/resource/${encodeURIComponent(r.resource.id)}` }, r.resource.name), ` (${r.resource.kind_label})`)),
           btn('Get', () => getVia(r.resource), { size: 'sm', kind: 'primary', iconName: 'download' })))) : empty('check', 'Nothing urgent', 'Every agent capability with a provider in the catalogue is already available.')),
       h('section', null,
-        h('div', { class: 'sec' }, h('h2', null, 'Relevant discoveries'), h('span', { class: 'end' }, btn('Discover', () => go('discover'), { kind: 'ghost', size: 'sm', iconName: 'arrow' }))),
+        h('div', { class: 'sec' }, h('h2', null, 'New on GitHub'), h('span', { class: 'end' }, btn('See all', () => go('library?tab=new'), { kind: 'ghost', size: 'sm', iconName: 'arrow' }))),
         fresh.length ? h('div', { class: 'box' }, h('ul', { class: 'plain-list' }, fresh.slice(0, 5).map(c => h('li', null, icon('sparkle', 'sm'),
           h('div', { class: 'grow' }, h('div', null, c.full_name.split('/')[1]), h('div', { class: 't2' }, c.score.agent.how || c.description || '')),
           h('span', { class: 'muted num' }, `${compact(c.stars)} ★`))))) :

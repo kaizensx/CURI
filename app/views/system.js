@@ -57,7 +57,7 @@ export async function settings() {
         row('Install policy', 'Minimal global: only CURI\'s own skill and MCP; everything else on demand.', policy),
         row('Model-assisted analysis', 'Uses your Claude account; off by default.', h('span', { class: 'switch' }, model, h('span'))),
         row('Telemetry', 'Always off.', badge('off')),
-        row('Scheduled searches', 'Set them up in Discover (saved searches) and Autonomy.', badge('see Autonomy')),
+        row('Scheduled searches', 'CURI looks for new projects once a week. Save your own searches in Library › New on GitHub; change how often in Autonomy.', badge('see Autonomy')),
         h('div', { class: 'r' }, h('span', { class: 'spacer' }), btn('Save', async () => { await api('prefsSet', { github_budget: Number(budget.value), install_policy: policy.value, model_analysis: model.checked }); toast('Preferences saved', 'good'); }, { kind: 'primary' })))),
       panel({ title: 'Data', flush: true }, h('div', { class: 'rows' },
         row('CURI data', h('span', { class: 'mono' }, pf.paths.curi_data)), row('Claude profile', h('span', { class: 'mono' }, pf.paths.claude_home)), row('User MCP', h('span', { class: 'mono' }, pf.paths.claude_json)),
@@ -69,7 +69,7 @@ const kvResult = r => kv(Object.entries(r).map(([k, v]) => [k, String(v)]));
 
 export async function about() {
   const [s, b] = await Promise.all([api('status'), api('bootstrapState')]);
-  const keys = [[mod('K'), 'Command palette'], [mod('1–9'), 'Move between sections'], [mod(','), 'Settings'], ['/', 'Focus the page search'], [mod('R'), 'Refresh data'], ['Esc', 'Close dialogs and menus'], ['Right-click or ⋯', 'Actions on a resource'], ['Drag a URL', 'Add to the catalogue']];
+  const keys = [[mod('K'), 'Command palette'], [mod('1–6'), 'Move between sections'], [mod(','), 'Settings'], ['/', 'Focus the page search'], [mod('R'), 'Refresh data'], ['Esc', 'Close dialogs and menus'], ['Right-click or ⋯', 'Actions on a resource'], ['Drag a URL', 'Add to the catalogue']];
   return h('div', { class: 'page narrow' },
     h('div', { class: 'about-mark' }, brandMark({ size: 64 }), h('img', { src: 'brand/curi-wordmark-on-dark.svg', alt: 'CURI', class: 'about-wordmark' })),
     pageHead({ eyebrow: 'System', title: 'About CURI', sub: `CURI ${s.version || ''}: Node engine (SQLite/FTS5), CLI, stdio MCP server, Claude skill and native Tauri app.` }),

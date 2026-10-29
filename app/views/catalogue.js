@@ -212,7 +212,7 @@ export async function catalogueView(tabs) {
     announce.textContent = `${rows.length} ${rows.length === 1 ? 'result' : 'results'}`;
     if (st.page * 48 >= rows.length) st.page = 0;
     fill(body, rows.length ? h('div', { class: 'cat-grid', role: 'list' }, rows.slice(st.page * 48, (st.page + 1) * 48).map(card))
-      : empty('search', 'Nothing here yet', ranked ? 'Nothing in the catalogue matches. Discover can search GitHub for it.' : 'Try another area or kind.', ranked ? btn('Search GitHub', () => go(`discover?intent=${encodeURIComponent(st.q)}`), { iconName: 'radar' }) : null),
+      : empty('search', 'Nothing here yet', ranked ? 'Nothing in the catalogue matches. New on GitHub can look for it.' : 'Try another area or kind.', ranked ? btn('Search GitHub', () => go(`discover?intent=${encodeURIComponent(st.q)}`), { iconName: 'radar' }) : null),
       pager(rows.length, st.page, 48, n => { st.page = n; render(); body.scrollIntoView({ block: 'start', behavior: smooth() }); }, { noun: 'resources' }));
   };
 

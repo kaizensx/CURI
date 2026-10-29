@@ -130,7 +130,7 @@ export async function discoverView() {
   };
   render();
   return h('div', { class: 'page' },
-    h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'Discover'),
+    h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'New on GitHub'),
       h('p', null, 'New GitHub projects that give your agents something they can\'t do yet. CURI inspects each one and only shows what it can install here, in one click.')),
       h('div', { class: 'actions' },
         connected ? btn('Read my stars', () => runOperation('github.stars', {}, 'Read GitHub stars', { refresh: false }).then(refresh), { kind: 'ghost', iconName: 'star' }) : null,

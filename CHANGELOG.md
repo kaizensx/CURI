@@ -10,6 +10,12 @@
 - *Check for Updates…* in the menu bar or tray, and *Check* in Settings › About, look right away.
 - The README, the release notes and the macOS disk image explain the one-time "can't verify" step for the first install (*Open Anyway* on macOS, *More info › Run anyway* on Windows); downloading the file is the main way to install again, with the terminal command as an option.
 
+**Simpler layout**
+- Library has three tabs: **Catalogue**, **Installed** and **New on GitHub** (what used to be Discover). The sidebar is down to Home, Library, Capabilities, Connections, Activity and Settings.
+- *This device* is now *Installed › This computer*: the system, the base tools and the package managers sit above everything installed on it, instead of repeating the Installed lists on a page of their own.
+- Old links (Discover, This device) open the new places. Shortcuts follow the sidebar: ⌘1 Home, ⌘2 Library, ⌘3 Capabilities, ⌘4 Connections, ⌘5 Activity, ⌘6 Settings.
+- CURI now looks for new projects on GitHub once a week, and reviews your GitHub stars when GitHub is connected, so *New on GitHub* fills up on its own. Both only read; change how often (or turn them off) in Settings › Autonomy.
+
 **Releases**
 - A version tag now also builds the signed update files and a `latest.json` for installed copies, with the CHANGELOG section as the *What's new* text. Release notes include the install commands.
 
