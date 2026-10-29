@@ -16,7 +16,8 @@ import { credentialFor } from './connections.mjs';
 
 // Windows ships bsdtar on PATH; macOS and Linux have it in /usr/bin.
 const TAR = process.platform === 'win32' ? 'tar' : '/usr/bin/tar';
-const macOnly = what => { if (process.platform !== 'darwin') throw permanent(`${what} is only available on macOS for now.`); };
+// A failed check makes the policy block the action with this reason, on any system but macOS.
+const macOnly = what => (process.platform === 'darwin' ? [] : [{ name: 'macOS', ok: false, detail: `${what} is only available on macOS for now` }]);
 
 const pexec = promisify(execFile);
 const sha = b => crypto.createHash('sha256').update(b).digest('hex');
@@ -252,7 +253,7 @@ export async function agentStatus() {
 function readPlistInterval(p) { try { return fs.readFileSync(p, 'utf8').match(/<key>StartInterval<\/key>\s*<integer>(\d+)<\/integer>/)?.[1]; } catch { return null; } }
 
 registerHandler('agent.install', {
-  async plan(db, p) { macOnly('The background service'); return { category: 'background', resource: `launchagent:${AGENT_LABEL}`, lockKey: 'agent', source: 'local' }; },
+  async plan(db, p) { return { checks: macOnly('The background service'), category: 'background', resource: `launchagent:${AGENT_LABEL}`, lockKey: 'agent', source: 'local' }; },
   async run(db, p, ctx) {
     const interval = Math.max(300, Math.min(Number(p.interval_s) || 1800, 86400));
     const logs = paths.logs;
@@ -288,7 +289,7 @@ registerHandler('agent.install', {
 });
 
 registerHandler('agent.remove', {
-  async plan() { macOnly('The background service'); return { category: 'destructive', resource: `launchagent:${AGENT_LABEL}`, lockKey: 'agent', source: 'local' }; },
+  async plan() { return { checks: macOnly('The background service'), category: 'destructive', resource: `launchagent:${AGENT_LABEL}`, lockKey: 'agent', source: 'local' }; },
   async run() {
     try { await pexec('/bin/launchctl', ['bootout', `gui/${process.getuid()}/${AGENT_LABEL}`]); } catch {}
     fs.rmSync(agentPlistPath(), { force: true });
@@ -300,7 +301,7 @@ registerHandler('agent.remove', {
 // ---------- Privileged (allowlisted single action, native administrator dialog) ----------
 export const CLI_LINK = '/usr/local/bin/curi';
 registerHandler('cli.link', {
-  async plan() { macOnly('Adding curi to /usr/local/bin'); return { category: 'privileged', resource: CLI_LINK, lockKey: 'cli.link', source: 'local', maxAttempts: 1 }; },
+  async plan() { return { checks: macOnly('Adding curi to /usr/local/bin'), category: 'privileged', resource: CLI_LINK, lockKey: 'cli.link', source: 'local', maxAttempts: 1 }; },
   async run(db, p, ctx) {
     const wrapper = path.join(ensureDir(path.join(dataDir(), 'bin')), 'curi');
     fs.writeFileSync(wrapper, `#!/bin/sh\nexec "${nodeBin()}" "${paths.cliEntry}" "$@"\n`, { mode: 0o755 });
