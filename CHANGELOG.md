@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.7.0 - 2026-10-29
+
+CURI now runs on Windows and Linux, tested on real machines: Windows 11 (x64) and Ubuntu 24.04 (ARM).
+
+**First launch on a clean machine**
+- On Windows the first-launch installer works: it downloads Node (checked against the official SHA-256), installs the Claude Code CLI, and uses the real `claude.exe` rather than npm's `.cmd` shim. Before, it only knew macOS and Linux paths and couldn't get past the first launch.
+- No black console window next to the app on Windows: every process CURI starts is created without one.
+- The app and the engine keep their data in the same place on every OS (`%APPDATA%\CURI` on Windows, `~/.local/share/curi` on Linux).
+- The catalogue is there from the first launch, so "Explore in read-only mode" shows 220 real resources before setup. This also applies to macOS.
+
+**Feels native on each system**
+- Windows and Linux keep their own window frame; the macOS menu bar and title-bar spacing are macOS-only.
+- Shortcut labels say Ctrl outside macOS, and copy says "this computer" instead of "this Mac".
+- The tray icon uses the colour icon off macOS; "Open at Login" uses the Run key on Windows and an autostart entry on Linux.
+- Opening CURI while it's already running brings the window back instead of starting a second copy (and a second engine on the same database).
+- On screens smaller than the default window, CURI opens maximised; the narrow sidebar collapses cleanly.
+
+**Works without extra tools**
+- Skills install without git: the commit comes from GitHub when git isn't there (fresh Windows, or a Mac without the Command Line Tools).
+- Fixed: the "Open at Login" default was re-applied on every launch of a brand-new install, even after turning it off.
+
+**Builds**
+- A manual "Cross-platform build" workflow produces the Windows installer and Linux packages (x64 and ARM) for testing.
+
 ## 3.6.2 - 2026-10-29
 
 - CI runs again, and for real: the test command passed a folder to `node --test`, which the Node version CI uses doesn't accept, so no test had run there for a while.

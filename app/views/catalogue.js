@@ -67,7 +67,7 @@ export async function catalogueView(tabs) {
     return btn(label === 'Manage' ? 'View' : label, () => quickAction(r, reload), { size, kind: label === 'Manage' ? 'pill' : 'pill get', iconName: label === 'Manage' ? null : ic });
   };
   const wire = (el, r) => {
-    el.addEventListener('click', e => { if (e.metaKey) { st.sel.has(r.id) ? st.sel.delete(r.id) : st.sel.add(r.id); render(); return; } if (!e.target.closest('button')) open(r); });
+    el.addEventListener('click', e => { if (e.metaKey || e.ctrlKey) { st.sel.has(r.id) ? st.sel.delete(r.id) : st.sel.add(r.id); render(); return; } if (!e.target.closest('button')) open(r); });
     el.addEventListener('keydown', e => {
       if (e.target !== el) return;
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(r); }
@@ -199,7 +199,7 @@ export async function catalogueView(tabs) {
       const kindsShown = ['plugin', 'mcp', 'cli', 'skill', 'components', 'app', 'library'];
       fill(body,
         featured.length ? h('div', { class: 'features' }, featured.map(feature)) : null,
-        shelf('Ready in one click', 'Not on this Mac yet, and nothing else to set up first.', oneClick.slice(2, 16), () => { st.show = 'ready'; render(); }),
+        shelf('Ready in one click', 'Not on this computer yet, and nothing else to set up first.', oneClick.slice(2, 16), () => { st.show = 'ready'; render(); }),
         shelf('Already yours', 'In Claude Code, Codex, your claude.ai account or on this computer.', yours.slice(1, 15), () => { st.show = 'here'; render(); }),
         shelf('Busy lately', 'Projects that shipped something in the last two weeks.', recent, () => { st.upkeep = 'active'; st.sort = 'updated'; render(); }),
         kindsShown.map(k => { const rows = visible.filter(r => kindOf(r) === k).sort(byStars); return rows.length > 2 ? shelf(KIND_SHELF[k], null, rows.slice(0, 14), () => { st.kind = k; render(); }) : null; }));

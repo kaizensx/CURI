@@ -1,7 +1,7 @@
 // Library: every resource with its real kind, its real presence on this device, and the action that
 // fits it. Resource sheet: what it is, how an agent uses it, where it already is, every working way to
 // get it here, project usage, alternatives. Compare: a decision table, not a score.
-import { h, fmtDate, relTime, compact, fill } from '../lib/dom.js';
+import { h, fmtDate, relTime, compact, fill, mod } from '../lib/dom.js';
 import { icon } from '../lib/icons.js';
 import { api, btn, toast, contextMenu, empty, notice } from '../lib/ui.js';
 import { go, mount, params, compareTray } from '../app.js';
@@ -138,7 +138,7 @@ export async function compare() {
   if (linked) { compareTray.clear(); linked.split(',').slice(0, 5).forEach(id => compareTray.add(id)); }
   const ids = [...compareTray.ids];
   if (ids.length < 2) return h('div', { class: 'page' }, h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'Compare'))),
-    empty('compare', 'Pick at least two resources', 'In the catalogue, ⌘-click two or more cards (or use a card\'s ⋯ menu › Select), then choose Compare.', btn('Go to Library', () => go('library'), { kind: 'primary' })));
+    empty('compare', 'Pick at least two resources', `In the catalogue, ${mod()}click two or more cards (or use a card's ⋯ menu › Select), then choose Compare.`, btn('Go to Library', () => go('library'), { kind: 'primary' })));
   const p = params();
   const input = h('input', { type: 'search', value: p.get('use') || '', maxlength: '300', placeholder: 'What for? e.g. "test my site in the browser"', 'aria-label': 'Use case' });
   const out = h('div');

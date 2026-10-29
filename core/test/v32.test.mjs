@@ -191,7 +191,7 @@ test('capability map and decision comparison are grounded in the registry and th
 
 test('native shell flag survives the token clean-up (sidebar clears the macOS window buttons)', () => {
   const ui = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'app', 'lib', 'ui.js'), 'utf8');
-  const keep = ui.indexOf("sessionStorage.setItem('curi-native', '1')"), wipe = ui.indexOf('history.replaceState');
+  const keep = ui.indexOf("sessionStorage.setItem('curi-native', nv)"), wipe = ui.indexOf('history.replaceState');
   assert.ok(keep > 0 && keep < wipe, 'the native flag is stored before the address is rewritten');
 });
 
