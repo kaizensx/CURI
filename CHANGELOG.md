@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.6.1 - 2026-10-29
+
+- Discover, Capabilities and Installed filters now behave as toggle buttons for screen readers, like the catalogue.
+- Settings calls the history page "Activity", same as the sidebar.
+- CI runs the engine tests on Linux and Windows as well as macOS. macOS still decides whether a build passes; the other two show where the engine still needs work there.
+- Checked in the real window this time: window buttons sit inside the sidebar, edges are clean, and nothing grey shows around the window.
+
 ## 3.6.0 - 2026-10-29
 
 A full pass over security, reliability and accessibility before more people use CURI.
