@@ -16,8 +16,8 @@ export const TASKS = {
   update_skills: { label: 'Update skills CURI installed when their repository changes', every: 'auto_update_hours', default: 24 },
   update_plugins: { label: 'Update plugins CURI installed', every: 'auto_plugin_update_hours', default: 24 },
   update_packages: { label: 'Update tools CURI installed (Homebrew, npm, uv…)', every: 'auto_package_update_hours', default: 168 },
-  discover: { label: 'Look for relevant new projects on GitHub', every: 'auto_discover_hours', default: 0 },
-  stars: { label: 'Review your GitHub stars', every: 'auto_stars_hours', default: 0 },
+  discover: { label: 'Look for relevant new projects on GitHub', every: 'auto_discover_hours', default: 168 },
+  stars: { label: 'Review your GitHub stars', every: 'auto_stars_hours', default: 168 },
 };
 
 const due = (db, key, hours) => {

@@ -42,18 +42,18 @@ So I built CURI. It reads what's already on your computer and in your agents, li
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/screenshots/discover.jpg" alt="Discover new GitHub projects">
-      <p><b>Discover.</b> New GitHub projects, judged by what they'd add to an agent. CURI inspects each one and only shows what it can install.</p>
+      <img src="docs/screenshots/discover.jpg" alt="New on GitHub: projects CURI found and can install">
+      <p><b>New on GitHub.</b> Projects CURI finds each week (and from your stars), judged by what they'd add to an agent. It inspects each one and only shows what it can install. Each has its own page with why it showed up and how it would be installed.</p>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/screenshots/capabilities.jpg" alt="Capabilities grouped by area">
-      <p><b>Capabilities.</b> What your agents can already do, what's one step away, and the step that adds the most.</p>
+      <img src="docs/screenshots/capabilities.jpg" alt="Capabilities: a meter, the steps that add the most, and cards by area">
+      <p><b>Capabilities.</b> What your agents can already do, what's one step away, and the steps that add the most. Every capability opens a page with everything that provides it.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/screenshots/device.jpg" alt="This device overview">
-      <p><b>This device.</b> The computer, every agent on it and the tools they run on, at a glance.</p>
+      <img src="docs/screenshots/device.jpg" alt="Installed, This computer: system, base tools and package managers">
+      <p><b>This computer.</b> The system, the base tools your agents run on and the package managers CURI installs through, above everything installed on it.</p>
     </td>
     <td width="50%" valign="top">
       <img src="docs/screenshots/resource.jpg" alt="A resource page">

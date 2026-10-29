@@ -9,9 +9,8 @@ import { skills, mcp, bridge, security } from './views/manage.js';
 import { jobs, audit, settings, about } from './views/system.js';
 import { connections, integrations, automation, operations } from './views/control.js';
 import { home } from './views/home.js';
-import { capabilitiesView } from './views/capabilities.js';
-import { device } from './views/device.js';
-import { discoverView } from './views/discover.js';
+import { capabilitiesView, capabilityView } from './views/capabilities.js';
+import { projectView } from './views/discover.js';
 import { promptDialog } from './lib/ui.js';
 import { startWatcher, withProgress } from './lib/opmodal.js';
 
@@ -51,12 +50,10 @@ const tabbed = (tabs, view) => async (...a) => {
 const ROUTES = [
   { id: 'home', sub: 'Overview and next steps', label: 'Home', icon: 'home', group: 'CURI', view: home, key: '1' },
   { id: 'library', sub: 'Find and install new abilities', label: 'Library', icon: 'library', group: 'CURI', view: library, key: '2' },
-  { id: 'discover', sub: 'New projects you can install', label: 'Discover', icon: 'radar', group: 'CURI', view: discoverView, key: '3' },
-  { id: 'capabilities', sub: 'What your agents can do', label: 'Capabilities', icon: 'map', group: 'CURI', view: capabilitiesView, key: '4' },
-  { id: 'device', sub: 'Your agents and tools', label: 'This device', icon: 'device', group: 'CURI', view: device, key: '5' },
-  { id: 'connections', sub: 'Accounts and keys', label: 'Connections', icon: 'link', group: 'CURI', view: connections, key: '6' },
-  { id: 'operations', sub: 'Installs and changes so far', label: 'Activity', icon: 'activity', group: 'System', view: tabbed(ACTIVITY_TABS, operations), key: '7' },
-  { id: 'settings', sub: 'Autonomy, integration, privacy', label: 'Settings', icon: 'settings', group: 'System', view: tabbed(SETTINGS_TABS, settings), key: '8' },
+  { id: 'capabilities', sub: 'What your agents can do', label: 'Capabilities', icon: 'map', group: 'CURI', view: capabilitiesView, key: '3' },
+  { id: 'connections', sub: 'Accounts and keys', label: 'Connections', icon: 'link', group: 'CURI', view: connections, key: '4' },
+  { id: 'operations', sub: 'Installs and changes so far', label: 'Activity', icon: 'activity', group: 'System', view: tabbed(ACTIVITY_TABS, operations), key: '5' },
+  { id: 'settings', sub: 'Autonomy, integration, privacy', label: 'Settings', icon: 'settings', group: 'System', view: tabbed(SETTINGS_TABS, settings), key: '6' },
   { id: 'audit', hidden: true, parent: 'operations', label: 'Audit log', view: tabbed(ACTIVITY_TABS, audit) },
   { id: 'jobs', hidden: true, parent: 'operations', label: 'Searches and quotas', view: tabbed(ACTIVITY_TABS, jobs) },
   { id: 'automation', hidden: true, parent: 'settings', label: 'Autonomy', view: tabbed(SETTINGS_TABS, automation) },
@@ -65,14 +62,17 @@ const ROUTES = [
   { id: 'about', hidden: true, parent: 'settings', label: 'About', view: tabbed(SETTINGS_TABS, about) },
   { id: 'compare', hidden: true, parent: 'library', label: 'Compare', view: compareView },
   { id: 'resource', hidden: true, parent: 'library', label: 'Resource', view: resource },
+  { id: 'project', hidden: true, parent: 'library', label: 'Project', view: projectView },
+  { id: 'capability', hidden: true, parent: 'capabilities', label: 'Capability', view: capabilityView },
   { id: 'integrations', hidden: true, parent: 'library', label: 'Quick integrations', view: integrations },
-  { id: 'skills', hidden: true, parent: 'device', label: 'Skills', view: skills },
-  { id: 'mcp', hidden: true, parent: 'device', label: 'MCP servers', view: mcp },
+  { id: 'skills', hidden: true, parent: 'library', label: 'Skills', view: skills },
+  { id: 'mcp', hidden: true, parent: 'library', label: 'MCP servers', view: mcp },
   { id: 'welcome', hidden: true, label: 'Welcome', view: welcome },
   { id: 'wizard', hidden: true, label: 'Setup', view: wizard },
 ];
-// Old addresses keep working.
-const ALIASES = { dashboard: 'home', radar: 'discover', map: 'capabilities', machine: 'device' };
+// Old addresses keep working. Discover is now Library › New on GitHub; This device is Library ›
+// Installed › This computer.
+const ALIASES = { dashboard: 'home', radar: 'library?tab=new', discover: 'library?tab=new', map: 'capabilities', machine: 'library?tab=installed&place=computer', device: 'library?tab=installed&place=computer' };
 const byId = Object.fromEntries(ROUTES.map(r => [r.id, r]));
 
 export const params = () => new URLSearchParams(location.hash.split('?')[1] || '');
@@ -180,7 +180,7 @@ function pagebar(route, page) {
   const back = h('button', { type: 'button', class: 'nav-arrow', 'aria-label': 'Back', title: `Back (${mod('[')})`, disabled: i <= 0 || null, onclick: () => history.back() }, icon('chevron'));
   const fwd = h('button', { type: 'button', class: 'nav-arrow fwd', 'aria-label': 'Forward', title: `Forward (${mod(']')})`, disabled: i >= histMax || null, onclick: () => history.forward() }, icon('chevron'));
   const parent = route.parent ? byId[route.parent] : null;
-  const here = route.id === 'resource' ? page.querySelector?.('h1')?.textContent : route.label;
+  const here = ['resource', 'project', 'capability'].includes(route.id) ? page.querySelector?.('h1')?.textContent : route.label;
   const crumbs = h('ol', { class: 'crumbs', 'aria-label': 'You are here' },
     parent ? h('li', null, h('a', { href: `#/${parent.id}` }, parent.label)) : null,
     h('li', { 'aria-current': 'page' }, here || route.label));
@@ -201,7 +201,7 @@ export async function mount() {
   const main = document.getElementById('main');
   if (!TOKEN) { fill(main, h('div', { class: 'page' }, empty('lock', 'No session token', 'Open CURI from the app, or run "curi app" to get an authenticated link.'))); return; }
   const [path, arg] = location.hash.replace(/^#\//, '').split('?')[0].split('/');
-  if (ALIASES[path]) { location.replace(`#/${ALIASES[path]}${location.hash.includes('?') ? `?${location.hash.split('?')[1]}` : ''}`); return; }
+  if (ALIASES[path]) { const extra = location.hash.split('?')[1]; const to = ALIASES[path]; location.replace(`#/${to}${extra ? (to.includes('?') ? '&' : '?') + extra : ''}`); return; }
   const route = byId[path];
   if (!route) {
     const s = await api('bootstrapState').catch(() => ({ state: 'UNINITIALIZED' }));
@@ -221,7 +221,7 @@ export async function mount() {
   clearTimeout(pending);
   if (seq !== renderSeq) return;
   const h1 = page.querySelector?.('h1');
-  if (h1 && route.id === 'resource') document.title = `${h1.textContent} — CURI`;
+  if (h1 && ['resource', 'project', 'capability'].includes(route.id)) document.title = `${h1.textContent} — CURI`;
   const bar = pagebar(route, page);
   const swap = () => { fill(main, bar, page); main.scrollTop = 0; };
   // Animated page swap only for pointer navigation; keyboard navigation is instant.
@@ -272,7 +272,7 @@ function openPalette() {
     { label: 'Revoke autonomy', icon: 'lock', run: async () => { await api('policyRevoke'); toast('Autonomy revoked', 'good'); } },
     { label: 'Add a URL to the catalogue', icon: 'plus', run: () => window.__curiMenu('add-url-dialog') },
     { label: 'Export registry', icon: 'download', run: () => withProgress('Exporting the registry', () => api('exportFile').then(r => `${r.count} resources exported to ${r.file}`)) },
-    { label: 'Detect what\'s installed', icon: 'refresh', run: () => go('device') },
+    { label: 'Detect what\'s installed', icon: 'refresh', run: () => go('library?tab=installed&place=computer') },
     { label: 'Toggle light/dark theme', icon: 'sparkle', run: () => applyTheme(matchMedia('(prefers-color-scheme: dark)').matches ? (currentTheme() === 'light' ? 'system' : 'light') : (currentTheme() === 'dark' ? 'system' : 'dark')) },
   ];
   let items = [], sel = 0, seq = 0;

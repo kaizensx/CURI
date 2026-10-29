@@ -37,6 +37,7 @@ export async function startServer({ port = 0, host = '127.0.0.1', token = loadOr
   try {
     if (!db.prepare('SELECT COUNT(*) n FROM resources').get().n) { const { importSeeds } = await import('./registry.mjs'); launch.seeded = importSeeds(db).resourcesAfter; }
   } catch {}
+  try { const { syncCuratedCapabilities } = await import('./registry.mjs'); launch.capabilities_linked = syncCuratedCapabilities(db); } catch {}
   try { const { seedFacts } = await import('./facts.mjs'); launch.facts_seeded = seedFacts(db); } catch {}
   // Operations worker: resume interrupted work, then run anything approved or covered by consent.
   const opsMod = await import('./operations.mjs');

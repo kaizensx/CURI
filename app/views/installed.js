@@ -8,7 +8,7 @@ import { api, btn, empty, pager } from '../lib/ui.js';
 import { go, params } from '../app.js';
 import { runOperation } from './control.js';
 import { runAction } from './common.js';
-import { noun } from './device.js';
+import { noun, computerOverview } from './device.js';
 
 const PLACE_ICON = { account: 'cloud', agent: 'agent', computer: 'device', recent: 'clock', all: 'layers' };
 const TYPE_ICON = { 'account-skill': 'skills', skill: 'skills', plugin: 'layers', mcp: 'mcp', app: 'grid' };
@@ -19,15 +19,16 @@ const lsGet = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { r
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const SIZE = 40;
 
-export async function installedView(onCount) {
-  let inv = await api('installed');
+// `input` is the search box the Library header shows above every tab.
+export async function installedView(onCount, { input } = {}) {
+  let [inv, dev] = await Promise.all([api('installed'), api('device')]);
   const st = { place: params().get('place') ?? lsGet('curi-inst-place', 'recent'), group: '', q: '', page: 0,
     sort: lsGet('curi-inst-sort', 'name'), days: Number(lsGet('curi-inst-days', '30')), who: lsGet('curi-inst-who', 'claude') };
   const side = h('nav', { class: 'inv-places', 'aria-label': 'Where things are installed' });
   const main = h('div', { class: 'inv-main', 'aria-live': 'polite' });
-  const input = h('input', { type: 'search', placeholder: 'Find something you installed, anywhere', 'aria-label': 'Search what is installed' });
+  input ||= h('input', { type: 'search', placeholder: 'Find something you installed, anywhere', 'aria-label': 'Search what is installed' });
 
-  const reload = async () => { inv = await api('installed'); render(); };
+  const reload = async () => { [inv, dev] = await Promise.all([api('installed'), api('device')]); render(); };
   const rescan = () => runOperation('system.scan', {}, 'Look at this device again', { refresh: false }).then(reload);
   const match = it => !st.q || `${it.name} ${it.description || ''} ${it.origin || ''} ${it.resource?.name || ''}`.toLowerCase().includes(st.q);
   const total = () => inv.places.reduce((n, p) => n + p.count, 0);
@@ -46,7 +47,8 @@ export async function installedView(onCount) {
     const acts = it.actions.map(a => btn(a.label, () => (a.type === 'op'
       ? runOperation(a.op.kind, a.op.params, `${a.label} ${it.name}`, { refresh: false }).then(reload)
       : runAction(a, it.name)), { size: 'sm', kind: a.danger ? 'ghost danger' : 'ghost', iconName: a.type === 'open' ? 'external' : a.danger ? 'trash' : null }));
-    return h('div', { class: 'inv-row', role: 'listitem' },
+    // Things CURI knows from the catalogue open their page; the rest show what they are in place.
+    const rowEl = h('div', { class: `inv-row ${it.resource ? 'link' : ''}`, role: 'listitem', tabindex: it.resource ? '0' : null },
       h('span', { class: `inv-ic ${it.enabled === false ? 'off' : ''}`, 'aria-hidden': 'true' }, icon(TYPE_ICON[it.type] || 'terminal', 'sm')),
       h('div', { class: 'inv-what' },
         h('div', { class: 'inv-name' }, h('strong', null, it.name), tags),
@@ -57,6 +59,12 @@ export async function installedView(onCount) {
       h('div', { class: 'inv-act' },
         it.resource ? h('a', { class: 'btn sm ghost', href: `#/resource/${encodeURIComponent(it.resource.id)}`, title: `In the catalogue as ${it.resource.name}` }, h('span', { class: 'btn-content' }, 'Details', icon('chevron', 'sm'))) : null,
         acts));
+    if (it.resource) {
+      const open = () => go(`resource/${encodeURIComponent(it.resource.id)}`);
+      rowEl.addEventListener('click', e => { if (!e.target.closest('button, a')) open(); });
+      rowEl.addEventListener('keydown', e => { if (e.target === rowEl && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(); } });
+    }
+    return rowEl;
   };
 
   const pick = (id, extra = {}) => { Object.assign(st, { place: id, group: '', page: 0 }, extra); lsSet('curi-inst-place', id); render(); };
@@ -94,7 +102,7 @@ export async function installedView(onCount) {
     fill(main,
       h('header', { class: 'inv-head' }, h('div', { class: 'grow' }, h('h2', null, 'Recently added'),
         h('p', null, 'What arrived lately, newest first, from every place: a plugin added in Claude Code, a skill added on claude.ai, a tool installed from the terminal.'))),
-      h('div', { class: 'inv-tools' }, h('div', { class: 'searchbox' }, icon('search', 'sm'), input),
+      h('div', { class: 'inv-tools' },
         seg(WHO.map(([v, l]) => [v, l]), st.who, v => { st.who = v; lsSet('curi-inst-who', v); }, 'Where'),
         seg(PERIODS.map(([v, l]) => [v, l]), st.days, v => { st.days = v; lsSet('curi-inst-days', String(v)); }, 'Period')),
       rows.length ? paged(rows, take => h('div', { class: 'inv-list', role: 'list' }, take.map(x => row(x.it, x.p, true))))
@@ -132,7 +140,7 @@ export async function installedView(onCount) {
       }
       return out.map(s => h('section', { class: 'inv-sec' }, h('h3', null, s.label, h('span', { class: 'n' }, String(s.n))), h('div', { class: 'inv-list', role: 'list' }, s.rows)));
     };
-    fill(main, head, h('div', { class: 'inv-tools' }, h('div', { class: 'searchbox' }, icon('search', 'sm'), input), tabs, sort),
+    fill(main, head, place?.kind === 'computer' ? computerOverview(dev) : null, h('div', { class: 'inv-tools' }, tabs, sort),
       rows.length ? paged(rows, draw)
         : st.q ? empty('search', `Nothing installed matches "${st.q}"`, 'It may not be on this device yet. The catalogue can find and install it.', btn('Search the catalogue', () => go(`library?tab=catalogue&q=${encodeURIComponent(st.q)}`), { kind: 'primary' }))
         : empty('box', 'Nothing here yet', place?.kind === 'agent' && !place.present ? `${place.label} isn't installed on this computer.` : 'Install something from the catalogue and it shows up here.', btn('Browse the catalogue', () => go('library?tab=catalogue'), { kind: 'primary' })));

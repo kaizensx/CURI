@@ -10,6 +10,19 @@
 - *Check for Updates…* in the menu bar or tray, and *Check* in Settings › About, look right away.
 - The README, the release notes and the macOS disk image explain the one-time "can't verify" step for the first install (*Open Anyway* on macOS, *More info › Run anyway* on Windows); downloading the file is the main way to install again, with the terminal command as an option.
 
+**Simpler layout**
+- Library has three tabs: **Catalogue**, **Installed** and **New on GitHub** (what used to be Discover). The sidebar is down to Home, Library, Capabilities, Connections, Activity and Settings.
+- *This device* is now *Installed › This computer*: the system, the base tools and the package managers sit above everything installed on it, instead of repeating the Installed lists on a page of their own.
+- Old links (Discover, This device) open the new places. Shortcuts follow the sidebar: ⌘1 Home, ⌘2 Library, ⌘3 Capabilities, ⌘4 Connections, ⌘5 Activity, ⌘6 Settings.
+- CURI now looks for new projects on GitHub once a week, and reviews your GitHub stars when GitHub is connected, so *New on GitHub* fills up on its own. Both only read; change how often (or turn them off) in Settings › Autonomy.
+
+**One look across Library and Capabilities**
+- Catalogue, Installed, New on GitHub and Capabilities share the same header, search bar and cards, so switching tabs no longer swaps the whole page around.
+- Every card opens a page. Projects on *New on GitHub* get their own page: what the project is, why it showed up, its score and how CURI would install it, with *Install*, *Not interested* and a link to GitHub.
+- Capabilities is now a meter (available, one step away, missing) and a grid of cards per area. Each capability has a page with everything that provides it, an install button where one install is enough, and the other capabilities in the same area.
+- Four new capabilities: web search, GitHub workflow, Office documents and image generation, linked to what's already in the catalogue (Firecrawl, Agent-Reach, the Claude Code GitHub Action, Anthropic's document skills, ComfyUI).
+- Curated capability links are now added on every launch, so a capability that arrives in an update shows its providers on existing installs too.
+
 **Releases**
 - A version tag now also builds the signed update files and a `latest.json` for installed copies, with the CHANGELOG section as the *What's new* text. Release notes include the install commands.
 

@@ -27,6 +27,22 @@ export function ensureCapabilities(db) {
   for (const c of CAPABILITIES) ins.run(c.id, c.label, c.domain);
 }
 
+// The curated capability links ship with the app. The seed import only runs on an empty registry, so on
+// every launch the links are added to resources already catalogued: a new capability in an update shows
+// up with its providers without re-importing anything. Never removes a link.
+export function syncCuratedCapabilities(db) {
+  ensureCapabilities(db);
+  const find = db.prepare('SELECT resource_id id FROM resource_urls WHERE url_normalized=? LIMIT 1');
+  const ins = db.prepare("INSERT OR IGNORE INTO resource_capabilities(resource_id,capability_id,origin) VALUES (?,?,'curator')");
+  let added = 0;
+  for (const [url, e] of enrichment()) {
+    if (!e.c?.length) continue;
+    const r = find.get(url);
+    if (r) for (const cap of e.c) if (CAP_BY_ID.has(cap)) added += Number(ins.run(r.id, cap).changes);
+  }
+  return added;
+}
+
 // ---------- seed parsing ----------
 export const SEED_FILES = ['catalog.md', 'frontier.md'].map(f => path.join(paths.seedsDir, f));
 function sectionOf(line) {

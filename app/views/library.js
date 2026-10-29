@@ -8,6 +8,8 @@ import { go, mount, params, compareTray } from '../app.js';
 import { runOperation } from './control.js';
 import { installedView } from './installed.js';
 import { catalogueView } from './catalogue.js';
+import { discoverView } from './discover.js';
+import { hero, searchCapsule } from './hero.js';
 import { KIND_ICON, STATE_LABEL, stateChip, kindTile, where, runAction, actionButton, cmdLine, addToProject, personalPanel } from './common.js';
 
 export const TYPE_ICON = { Skill: 'skills', Plugin: 'layers', MCP: 'mcp', Library: 'library', Framework: 'library', Tool: 'terminal', Documentation: 'info', Registry: 'search', Template: 'copy', Inspiration: 'sparkle' };
@@ -47,12 +49,17 @@ export async function library() {
   const count = h('span', { class: 'n' });
   const tabs = h('nav', { class: 'tabs lib-tabs', 'aria-label': 'Library' },
     h('a', { href: '#/library?tab=catalogue', 'aria-current': tab === 'catalogue' ? 'page' : null }, icon('library', 'sm'), 'Catalogue'),
-    h('a', { href: '#/library?tab=installed', onclick: e => { if (tab === 'installed') e.preventDefault(); }, 'aria-current': tab === 'installed' ? 'page' : null }, icon('check', 'sm'), 'Installed', tab === 'installed' ? count : null));
+    h('a', { href: '#/library?tab=installed', onclick: e => { if (tab === 'installed') e.preventDefault(); }, 'aria-current': tab === 'installed' ? 'page' : null }, icon('check', 'sm'), 'Installed', tab === 'installed' ? count : null),
+    h('a', { href: '#/library?tab=new', 'aria-current': tab === 'new' ? 'page' : null }, icon('radar', 'sm'), 'New on GitHub'));
+  // New projects found on GitHub that aren't in the catalogue yet; adding one puts it in the catalogue.
+  if (tab === 'new') return discoverView(tabs);
   if (tab === 'installed') {
-    const body = await installedView(n => { count.textContent = String(n); });
-    return h('div', { class: 'page' },
-      h('header', { class: 'page-head' }, h('div', null, h('h1', null, 'Library'), h('p', null, 'What your agents and this computer already have, and where each thing lives.')), h('div', { class: 'actions' }, tabs)),
-      body);
+    const input = h('input', { type: 'search', id: 'page-search', placeholder: 'Find something you installed, anywhere', 'aria-label': 'Search what is installed', autocomplete: 'off', spellcheck: 'false' });
+    const sub = h('p');
+    const body = await installedView(n => { count.textContent = String(n); sub.textContent = `${n} things across your agents, your claude.ai account and this computer, and where each one lives.`; }, { input });
+    const head = hero({ eyebrow: 'Library', title: 'Everything your agents ', em: 'already have.', actions: [tabs], search: searchCapsule(input, h('kbd', null, '/')) });
+    head.querySelector('h1').after(sub);
+    return h('div', { class: 'page cat' }, head, body);
   }
   return catalogueView(tabs);
 }
@@ -96,7 +103,7 @@ export async function resource(id) {
   const mine = await personalPanel(r.id, v.mine || {}, (m, refresh) => { if (refresh) mount(); });
   const assist = A.assist.length ? h('div', { class: 'box' }, h('ul', { class: 'plain-list' }, A.assist.map(a => h('li', null, icon('info', 'sm'), h('div', { class: 'grow' }, h('div', null, a.label), a.hint ? h('div', { class: 't2' }, a.hint) : null), btn('Open', () => runAction(a, r.name), { size: 'sm', iconName: 'external' }))))) : null;
 
-  const capsBox = v.capabilities?.length ? h('div', { class: 'capchips' }, v.capabilities.map(c => h('a', { class: 'capchip', href: `#/capabilities?all=1&focus=${encodeURIComponent(c.id)}` }, c.label))) : null;
+  const capsBox = v.capabilities?.length ? h('div', { class: 'capchips' }, v.capabilities.map(c => h('a', { class: 'capchip', href: `#/capability/${encodeURIComponent(c.id)}` }, c.label))) : null;
   const dl = [];
   const fact = (k, val) => { if (val != null && val !== '') dl.push(h('dt', null, k), h('dd', null, val)); };
   if (f) {
