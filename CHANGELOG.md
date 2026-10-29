@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.5.3 - 2026-10-29
+
+- Fixed: the back and forward arrows didn't respond. The invisible strip that lets you drag the window was sitting on top of them since the glass update; it now sits underneath, so empty space still drags the window and the arrows work.
+- The window buttons (close, minimise, zoom) now sit properly inside the sidebar instead of on its top edge.
+- No more grey system blur showing at the window's edges, and a thinner scrollbar so the right edge doesn't show a band.
+
 ## 3.5.2 - 2026-10-29
 
 - New sidebar that matches the rest of the app: a floating pane of glass over the same colour field, instead of the grey system sidebar.

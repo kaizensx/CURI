@@ -133,7 +133,7 @@ function shell() {
   document.body.prepend(h('div', { class: 'titlebar', 'data-tauri-drag-region': '' }));
   document.body.append(h('div', { class: 'shell' },
     h('div', { class: 'aurora', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')),
-    h('aside', { class: 'sidebar' },
+    h('aside', { class: 'sidebar', 'data-tauri-drag-region': '' },
       h('div', { class: 'brand', 'data-tauri-drag-region': '' }, h('span', { class: 'brand-mark', 'aria-hidden': 'true' }, brandMark({ small: true, size: 18 })), h('div', { class: 'brand-text' }, h('div', { class: 'brand-name' }, 'CURI'), h('div', { class: 'brand-sub' }, 'Capabilities for your agents'))),
       h('button', { type: 'button', class: 'search-trigger', onclick: () => openPalette(), 'aria-label': 'Open command palette' }, icon('search', 'sm'), h('span', null, 'Search or run…'), h('kbd', null, '⌘K')),
       nav,
