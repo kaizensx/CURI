@@ -2,6 +2,8 @@
 
 <p align="center">
   <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-1b1c21?style=flat-square&logo=apple&logoColor=white">
+  <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%2F%2011-1b1c21?style=flat-square&logo=windows11&logoColor=white">
+  <img alt="Linux x64 and ARM64" src="https://img.shields.io/badge/Linux-x64%20%C2%B7%20ARM64-1b1c21?style=flat-square&logo=linux&logoColor=white">
   <img alt="Version 3.7.0" src="https://img.shields.io/badge/version-3.7.0-6e96ff?style=flat-square">
   <img alt="Runs locally" src="https://img.shields.io/badge/runs-100%25%20local-5fd39a?style=flat-square">
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-a6aab3?style=flat-square">
@@ -20,7 +22,7 @@
 
 I use Claude Code, Codex and Claude Desktop every day. Each one keeps its own skills, MCP servers and plugins in its own files, my claude.ai account has a few hundred more, and I never knew what was installed where, or whether something better existed for the job in front of me.
 
-So I built CURI. It reads what's already on your computer and in your agents, lines it up against a library of 220+ checked resources, and does the boring part for you: installing, connecting, updating and repairing. Everything from the app, nothing from the terminal.
+So I built CURI. It reads what's already on your computer and in your agents, lines it up against a library of 220+ checked resources, and does the boring part for you: installing, connecting, updating and repairing. Everything from the app, nothing from the terminal. It lives in your menu bar (or tray), keeps an eye on things in the background, and runs on macOS, Windows and Linux.
 
 ## A quick tour
 
@@ -83,13 +85,22 @@ Every install runs in a progress window that follows what the package manager is
 
 ## Install
 
-1. Download the `.dmg` from [Releases](../../releases).
-2. Drag CURI to Applications and open it.
-3. On first launch CURI installs anything missing (Node.js, Claude Code) into its own folder, shows the progress, and takes a first look at your device.
+<p align="center"><img src="docs/screenshots/platforms.jpg" alt="CURI on macOS, Windows and Linux" width="100%"></p>
 
-> Builds aren't signed with an Apple Developer ID yet. The first time, macOS asks you to confirm in *System Settings › Privacy & Security*.
+Grab the file for your system from [Releases](../../releases). On first launch CURI installs whatever is missing (Node.js, Claude Code) into its own folder, shows the progress, and takes a first look at your device. Nothing is installed system-wide.
 
-**Platforms.** macOS (Apple Silicon, 13 or later) is where I use it every day. Windows 11 and Linux work too: I've installed and run CURI on a clean Windows 11 (x64) and on Ubuntu 24.04 (ARM), from first launch to installing a skill, and the engine's tests pass on all three in CI. Windows and Linux builds aren't published as releases yet; the "Cross-platform build" workflow makes them.
+| | Download | Then |
+|---|---|---|
+| **macOS** 13+ | `CURI_x.y.z_universal.dmg` | Drag CURI to Applications and open it. |
+| **Windows** 10 / 11 (x64) | `CURI_x.y.z_x64-setup.exe` | Run it. It installs for your user only, no admin rights. |
+| **Ubuntu / Debian** (x64, ARM64) | `CURI_x.y.z_amd64.deb` or `_arm64.deb` | `sudo apt install ./CURI_*.deb`, then open CURI from your apps. |
+| **Other Linux** (x64) | `CURI_x.y.z_amd64.AppImage` | `chmod +x` it and run it. |
+
+Every release has a `SHA256SUMS` file to check your download against.
+
+> The builds aren't signed yet. The first time, macOS asks you to confirm in *System Settings › Privacy & Security*, and Windows SmartScreen asks you to click *More info › Run anyway*.
+
+**Where I've tried it.** macOS (Apple Silicon) is where I use it every day. I've also installed and run it on a clean Windows 11 (x64) and on Ubuntu 24.04 (ARM), from the first launch to installing a skill, and the engine's tests run on all three systems in CI.
 
 ## Privacy
 
@@ -109,10 +120,13 @@ app/        interface (plain HTML, CSS and JS, no dependencies)
 core/       Node engine: SQLite registry, detection, profiles, operations, policy, CLI and MCP server
 desktop/    Tauri v2 shell in Rust
 bridge/     the Claude skill that connects your agent to CURI
+.github/    CI on macOS, Linux and Windows; release builds for all three
 brand/      visual identity, generated from a single geometry; README art in brand/readme
 ```
 
 The CLI (`node core/bin/curi.mjs help`) does everything the app does, if you'd rather stay in the terminal.
+
+**Releases.** Pushing a version tag (`git tag v3.7.0 && git push origin v3.7.0`) builds macOS, Windows and Linux and puts them in a draft release with checksums and the notes from the CHANGELOG. Publishing the draft is a manual step. For a test build without a release, run the *Cross-platform build* workflow from the Actions tab.
 
 [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Design](docs/DESIGN.md) · [Internal contracts](docs/CONTRACTS.md)
 

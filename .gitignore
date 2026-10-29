@@ -4,3 +4,6 @@ node_modules/
 brand/export/CURI.iconset/
 desktop/icon-source.png
 *.curi-staging-*
+
+# Local installer builds (published through Releases, not the repo)
+dist/

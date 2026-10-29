@@ -1,8 +1,8 @@
 name: Release
 
-# Builds the macOS app and DMG for a version tag and attaches them to a DRAFT release.
-# Publishing the draft is a manual step. Signing and notarization run only when the
-# Apple secrets below exist; otherwise the artifacts are clearly labelled "unsigned".
+# Builds CURI for macOS, Windows and Linux from a version tag and attaches everything to a DRAFT
+# release. Publishing the draft is a manual step. macOS signing and notarisation run only when the
+# Apple secrets exist; otherwise the release says the builds are unsigned.
 on:
   push:
     tags: ['v*']
@@ -59,23 +59,98 @@ jobs:
           npm ci
           npx tauri build --target universal-apple-darwin
 
-      - name: Checksums and signing status
+      - name: Signing status
         run: |
-          cd desktop/src-tauri/target/universal-apple-darwin/release/bundle
-          app=macos/CURI.app
-          if codesign --verify --deep --strict "$app" 2>/dev/null && codesign -dv "$app" 2>&1 | grep -q "Authority=Developer ID"; then echo "SIGNED=yes" >> "$GITHUB_ENV"; else echo "SIGNED=no" >> "$GITHUB_ENV"; fi
-          if xcrun stapler validate "$app" >/dev/null 2>&1; then echo "NOTARIZED=yes" >> "$GITHUB_ENV"; else echo "NOTARIZED=no" >> "$GITHUB_ENV"; fi
-          shasum -a 256 dmg/*.dmg > dmg/SHA256SUMS
+          app=desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/CURI.app
+          if codesign --verify --deep --strict "$app" 2>/dev/null && codesign -dv "$app" 2>&1 | grep -q "Authority=Developer ID"; then s=yes; else s=no; fi
+          if xcrun stapler validate "$app" >/dev/null 2>&1; then n=yes; else n=no; fi
+          mkdir -p out && echo "macOS: signed $s, notarised $n" > out/signing-macos.txt
+          cp desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg out/
 
-      - name: Draft release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: out/*
+
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build installer
+        working-directory: desktop
+        run: |
+          npm ci
+          npx tauri build --bundles nsis
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: desktop/src-tauri/target/release/bundle/nsis/*.exe
+
+  linux:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            bundles: deb,appimage
+          - os: ubuntu-24.04-arm
+            bundles: deb
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev libjavascriptcoregtk-4.1-dev >/dev/null
+      - name: Build packages
+        working-directory: desktop
+        run: |
+          npm ci
+          npx tauri build --bundles ${{ matrix.bundles }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.os }}
+          path: |
+            desktop/src-tauri/target/release/bundle/deb/*.deb
+            desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+
+  draft:
+    needs: [macos, windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums and notes
+        run: |
+          cd dist
+          signing="$(cat signing-macos.txt)"; rm signing-macos.txt
+          sha256sum * > SHA256SUMS
+          v="${GITHUB_REF_NAME#v}"
+          # This version's section of the CHANGELOG, up to the next heading.
+          awk -v v="$v" '$0 ~ "^## "v" " {on=1; next} /^## / && on {exit} on' ../CHANGELOG.md > ../notes.md
+          {
+            echo
+            echo "### Downloads"
+            echo "- **macOS** (Apple Silicon and Intel): the \`.dmg\`"
+            echo "- **Windows 10/11** (x64): the \`-setup.exe\`"
+            echo "- **Linux**: \`.deb\` for Debian/Ubuntu (x64 or arm64), or the \`.AppImage\` (x64)"
+            echo
+            echo "$signing. Windows builds aren't signed yet, so SmartScreen will ask you to confirm."
+            echo "Check a download with \`sha256sum -c SHA256SUMS\` (on macOS: \`shasum -a 256 -c SHA256SUMS\`)."
+          } >> ../notes.md
+      - uses: softprops/action-gh-release@v2
         with:
           draft: true
-          name: CURI ${{ github.ref_name }}${{ env.SIGNED == 'no' && ' (unsigned)' || '' }}
-          body: |
-            Assinado: ${{ env.SIGNED }} · Notarizado: ${{ env.NOTARIZED }}
-            Verifique o download com `shasum -a 256 -c SHA256SUMS`.
-            Notas completas em CHANGELOG.md.
-          files: |
-            desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
-            desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/SHA256SUMS
+          name: CURI ${{ github.ref_name }}
+          body_path: notes.md
+          files: dist/*
