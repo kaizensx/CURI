@@ -4,8 +4,7 @@
 //! Logging out, restarting and shutting down always go through: macOS marks those quits with a reason.
 
 use objc2::{
-    ffi,
-    msg_send,
+    ffi, msg_send,
     runtime::{AnyClass, AnyObject, Imp, Sel},
     sel,
 };
@@ -29,7 +28,9 @@ pub fn allow() {
 }
 
 fn system_is_quitting() -> bool {
-    let Some(cls) = AnyClass::get(c"NSAppleEventManager") else { return false };
+    let Some(cls) = AnyClass::get(c"NSAppleEventManager") else {
+        return false;
+    };
     unsafe {
         let mgr: *mut AnyObject = msg_send![cls, sharedAppleEventManager];
         if mgr.is_null() {
@@ -44,7 +45,11 @@ fn system_is_quitting() -> bool {
     }
 }
 
-extern "C-unwind" fn should_terminate(_this: *mut AnyObject, _cmd: Sel, _sender: *mut AnyObject) -> usize {
+extern "C-unwind" fn should_terminate(
+    _this: *mut AnyObject,
+    _cmd: Sel,
+    _sender: *mut AnyObject,
+) -> usize {
     if ALLOWED.load(Ordering::SeqCst) || system_is_quitting() {
         return TERMINATE_NOW;
     }
@@ -57,7 +62,9 @@ extern "C-unwind" fn should_terminate(_this: *mut AnyObject, _cmd: Sel, _sender:
 /// Installs the guard on the app delegate. Call once, after the event loop exists (in `setup`).
 pub fn install(app: &AppHandle) {
     let _ = APP.set(app.clone());
-    let Some(ns_app) = AnyClass::get(c"NSApplication") else { return };
+    let Some(ns_app) = AnyClass::get(c"NSApplication") else {
+        return;
+    };
     unsafe {
         let shared: *mut AnyObject = msg_send![ns_app, sharedApplication];
         let delegate: *mut AnyObject = msg_send![shared, delegate];
@@ -65,7 +72,14 @@ pub fn install(app: &AppHandle) {
             return;
         }
         let cls: *const AnyClass = msg_send![delegate, class];
-        let imp: Imp = std::mem::transmute(should_terminate as extern "C-unwind" fn(*mut AnyObject, Sel, *mut AnyObject) -> usize);
-        ffi::class_replaceMethod(cls as *mut AnyClass, sel!(applicationShouldTerminate:), imp, c"Q@:@".as_ptr());
+        let imp: Imp = std::mem::transmute(
+            should_terminate as extern "C-unwind" fn(*mut AnyObject, Sel, *mut AnyObject) -> usize,
+        );
+        ffi::class_replaceMethod(
+            cls as *mut AnyClass,
+            sel!(applicationShouldTerminate:),
+            imp,
+            c"Q@:@".as_ptr(),
+        );
     }
 }

@@ -72,9 +72,24 @@ export async function lsRemote(url, { timeoutMs = 20000 } = {}) {
     const branch = stdout.match(/^ref: refs\/heads\/(\S+)\s+HEAD$/m)?.[1];
     return head ? { exists: true, head, branch } : { exists: false, error: 'no HEAD' };
   } catch (e) {
+    // No git on this machine (fresh Windows, a Mac without the Command Line Tools): ask GitHub directly.
+    if (e.code === 'ENOENT') return headFromApi(url, timeoutMs);
     const msg = String(e.stderr || e.message);
     if (/not found|Repository not found|could not read Username/i.test(msg)) return { exists: false, error: 'repository missing or private' };
     return { exists: null, error: msg.split('\n')[0].slice(0, 200) };
+  }
+}
+
+async function headFromApi(url, timeoutMs) {
+  const full = url.match(/github\.com\/([\w.-]+\/[\w.-]+?)(?:\.git)?$/)?.[1];
+  if (!full) return { exists: null, error: 'git is not installed' };
+  try {
+    const res = await fetch(`https://api.github.com/repos/${full}/commits/HEAD`, { headers: { Accept: 'application/vnd.github.sha', 'User-Agent': UA }, signal: AbortSignal.timeout(timeoutMs) });
+    if (res.status === 404) return { exists: false, error: 'repository missing or private' };
+    const sha = (await res.text()).trim();
+    return /^[0-9a-f]{40}$/.test(sha) ? { exists: true, head: sha, branch: null } : { exists: null, error: `GitHub API: HTTP ${res.status}` };
+  } catch (err) {
+    return { exists: null, error: err.message };
   }
 }
 

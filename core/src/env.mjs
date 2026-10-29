@@ -24,12 +24,15 @@ function cmpVer(a, b) {
 
 export function findClaudeBinary() {
   if (process.env.CURI_CLAUDE_BIN) return fs.existsSync(process.env.CURI_CLAUDE_BIN) ? process.env.CURI_CLAUDE_BIN : null;
+  // Windows: npm's claude.cmd shim can't be spawned without a shell; the package ships a real claude.exe.
+  const names = process.platform === 'win32' ? ['claude.exe'] : ['claude'];
   for (const dir of (process.env.PATH || '').split(path.delimiter)) {
-    const p = path.join(dir, 'claude');
-    if (dir && fs.existsSync(p)) return p;
+    for (const n of names) { const p = path.join(dir, n); if (dir && fs.existsSync(p)) return p; }
   }
   const home = os.homedir();
-  for (const p of [path.join(home, '.local', 'bin', 'claude'), path.join(home, '.claude', 'local', 'claude')]) if (fs.existsSync(p)) return p;
+  const ownRuntime = path.join(dataDir(), 'runtime', 'claude', 'node_modules');
+  const extra = [path.join(home, '.local', 'bin'), path.join(home, '.claude', 'local'), path.join(ownRuntime, '@anthropic-ai', 'claude-code', 'bin'), path.join(ownRuntime, '.bin')];
+  for (const d of extra) for (const n of names) { const p = path.join(d, n); if (fs.existsSync(p)) return p; }
   const bundled = path.join(home, 'Library', 'Application Support', 'Claude', 'claude-code');
   if (fs.existsSync(bundled)) {
     const vers = fs.readdirSync(bundled).filter(v => /^\d+\.\d+\.\d+$/.test(v)).sort(cmpVer).reverse();

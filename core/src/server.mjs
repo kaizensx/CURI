@@ -31,6 +31,12 @@ export async function startServer({ port = 0, host = '127.0.0.1', token = loadOr
   if (!['127.0.0.1', '::1', 'localhost'].includes(host)) throw new Error('The app server only accepts loopback.');
   const db = openDb();
   const launch = await launchCheck(db);
+  // The starter catalogue ships with the app and only writes to CURI's own database, so it's there from
+  // the first launch: "Explore in read-only mode" shows real resources before setup. Setup re-imports
+  // it idempotently.
+  try {
+    if (!db.prepare('SELECT COUNT(*) n FROM resources').get().n) { const { importSeeds } = await import('./registry.mjs'); launch.seeded = importSeeds(db).resourcesAfter; }
+  } catch {}
   try { const { seedFacts } = await import('./facts.mjs'); launch.facts_seeded = seedFacts(db); } catch {}
   // Operations worker: resume interrupted work, then run anything approved or covered by consent.
   const opsMod = await import('./operations.mjs');

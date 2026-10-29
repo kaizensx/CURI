@@ -1,4 +1,4 @@
-import { h, relTime, fmtDate, fmtInt, fill } from '../lib/dom.js';
+import { h, relTime, fmtDate, fmtInt, fill, mod } from '../lib/dom.js';
 import { icon, brandMark } from '../lib/icons.js';
 import { api, btn, status, badge, panel, pageHead, empty, notice, kv, table, toast, meter, when, segmented, pager } from '../lib/ui.js';
 import { go, params, applyTheme, currentTheme, applyMotion, currentMotion } from '../app.js';
@@ -69,7 +69,7 @@ const kvResult = r => kv(Object.entries(r).map(([k, v]) => [k, String(v)]));
 
 export async function about() {
   const [s, b] = await Promise.all([api('status'), api('bootstrapState')]);
-  const keys = [['⌘ K', 'Command palette'], ['⌘ 1–9', 'Move between sections'], ['⌘ ,', 'Settings'], ['/', 'Focus the page search'], ['⌘ R', 'Refresh data'], ['Esc', 'Close dialogs and menus'], ['Right-click or ⋯', 'Actions on a resource'], ['Drag a URL', 'Add to the catalogue']];
+  const keys = [[mod('K'), 'Command palette'], [mod('1–9'), 'Move between sections'], [mod(','), 'Settings'], ['/', 'Focus the page search'], [mod('R'), 'Refresh data'], ['Esc', 'Close dialogs and menus'], ['Right-click or ⋯', 'Actions on a resource'], ['Drag a URL', 'Add to the catalogue']];
   return h('div', { class: 'page narrow' },
     h('div', { class: 'about-mark' }, brandMark({ size: 64 }), h('img', { src: 'brand/curi-wordmark-on-dark.svg', alt: 'CURI', class: 'about-wordmark' })),
     pageHead({ eyebrow: 'System', title: 'About CURI', sub: `CURI ${s.version || ''}: Node engine (SQLite/FTS5), CLI, stdio MCP server, Claude skill and native Tauri app.` }),

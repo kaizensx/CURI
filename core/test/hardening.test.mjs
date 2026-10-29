@@ -31,3 +31,13 @@ test('a package install request cannot claim its own provenance or publisher', a
   assert.equal(p.decision, 'ask');
   db.close();
 });
+
+test('skill installs work without git: the commit comes from GitHub when git is missing', async () => {
+  const { lsRemote } = await import('../src/github.mjs');
+  const saved = process.env.PATH;
+  process.env.PATH = '';
+  try {
+    const r = await lsRemote('https://github.com/anthropics/skills.git');
+    assert.ok(r.exists === true && /^[0-9a-f]{40}$/.test(r.head) || r.exists === null, JSON.stringify(r));
+  } finally { process.env.PATH = saved; }
+});
