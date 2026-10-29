@@ -11,7 +11,7 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "test": "node --test --test-concurrency=1 test/",
+    "test": "node --test --test-concurrency=1 \"test/*.test.mjs\"",
     "app": "node bin/curi.mjs app"
   },
   "license": "MIT"
