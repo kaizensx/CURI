@@ -61,12 +61,19 @@ fn curi_home(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     })
 }
 
+/// Windows can hand out paths in the verbatim form (`\\?\C:\...`). Node can't start a script from
+/// one (nodejs/node#60438: it ends up calling lstat('C:') and stops with EISDIR), so every path
+/// given to the Core goes through here first. Elsewhere, and for paths without the prefix, a no-op.
+fn plain(p: &std::path::Path) -> PathBuf {
+    dunce::simplified(p).to_path_buf()
+}
+
 fn repo_root(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     if let Ok(r) = std::env::var("CURI_REPO_ROOT") {
-        return Ok(r.into());
+        return Ok(plain(std::path::Path::new(&r)));
     }
     if let Ok(res) = app.path().resource_dir() {
-        let p = res.join("curi");
+        let p = plain(&res.join("curi"));
         if p.join("core/bin/curi.mjs").exists() {
             return Ok(p);
         }
@@ -95,7 +102,7 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
         pct: None,
         detail: "Starting the local server (127.0.0.1)…".into(),
     });
-    let mut cmd = deps::quiet(&r.node);
+    let mut cmd = deps::quiet(&plain(&r.node));
     cmd.arg(root.join("core/bin/curi.mjs"))
         .args([
             "app",
@@ -144,8 +151,19 @@ fn boot(app: tauri::AppHandle) -> Result<(), String> {
                 // A system notification from the engine (e.g. a strong new project on GitHub).
                 if let Ok(v) = serde_json::from_str::<serde_json::Value>(json) {
                     use tauri_plugin_notification::NotificationExt;
-                    let text = |k: &str| v[k].as_str().unwrap_or("").chars().take(200).collect::<String>();
-                    let _ = handle.notification().builder().title(text("title")).body(text("body")).show();
+                    let text = |k: &str| {
+                        v[k].as_str()
+                            .unwrap_or("")
+                            .chars()
+                            .take(200)
+                            .collect::<String>()
+                    };
+                    let _ = handle
+                        .notification()
+                        .builder()
+                        .title(text("title"))
+                        .body(text("body"))
+                        .show();
                 }
             } else if let Some(cmd) = line.strip_prefix("CURI-CMD ") {
                 // Requests from the window, relayed by the engine (the page has no IPC of its own).
