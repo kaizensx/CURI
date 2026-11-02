@@ -1,6 +1,6 @@
 [package]
 name = "curi-desktop"
-version = "3.9.0"
+version = "3.9.1"
 description = "CURI desktop shell: dependency bootstrap + CURI Core host"
 edition = "2021"
 license = "MIT"
@@ -17,6 +17,7 @@ tauri-plugin-updater = "2"
 tokio = { version = "1", features = ["time"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+dunce = "1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"

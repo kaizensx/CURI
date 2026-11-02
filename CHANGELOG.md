@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.9.1 - 2026-11-02
+
+- Fixed: on some Windows computers CURI stopped at "The Core didn't start within 45 s" with `EISDIR: illegal operation on a directory, lstat 'C:'`. Windows gave the app its own folder in the `\\?\C:\…` form, and Node can't start a script from a path written that way. CURI now passes plain paths to Node. Thanks to adamap03 for the report.
+
 ## 3.9.0 - 2026-10-30
 
 **Every page looks like the Library**
