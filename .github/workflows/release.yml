@@ -83,7 +83,7 @@ jobs:
           cp $b/macos/CURI.app.tar.gz "out/CURI_${v}_universal.app.tar.gz"
           cp $b/macos/CURI.app.tar.gz.sig "out/CURI_${v}_universal.app.tar.gz.sig"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-macos
           path: out/*
@@ -101,7 +101,7 @@ jobs:
         run: |
           npm ci
           npx tauri build --bundles nsis --config "$env:UPDATER"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-windows
           path: |
@@ -132,7 +132,7 @@ jobs:
         run: |
           npm ci
           npx tauri build --bundles ${{ matrix.bundles }} --config "$UPDATER"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.os }}
           path: |
