@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.9.2 - 2026-11-05
+
+- Fixed: the security scan refused to install a skill whenever a file mentioned the word "keychain", even in plain documentation. Cloudflare's security-audit-skill was stopped this way. The word on its own now asks you to review the skill. Commands that read or unlock the keychain are still blocked.
+
 ## 3.9.1 - 2026-11-02
 
 - Fixed: on some Windows computers CURI stopped at "The Core didn't start within 45 s" with `EISDIR: illegal operation on a directory, lstat 'C:'`. Windows gave the app its own folder in the `\\?\C:\…` form, and Node can't start a script from a path written that way. CURI now passes plain paths to Node. Thanks to adamap03 for the report.

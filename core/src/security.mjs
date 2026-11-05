@@ -8,7 +8,9 @@ const RULES = [
   { id: 'pipe-to-shell', sev: 'high', rx: /(curl|wget)[^\n|]{0,200}\|\s*(sudo\s+)?(ba|z)?sh\b/i, msg: 'Runs a remote script directly (curl | sh).' },
   { id: 'encoded-exec', sev: 'high', rx: /(base64\s+(-d|--decode)[^\n]{0,80}\|\s*(ba)?sh|eval\s*\(\s*atob|python\d?\s+-c\s+["'][^"']*exec\()/i, msg: 'Runs an encoded payload.' },
   { id: 'destructive', sev: 'high', rx: /\brm\s+-rf\s+(\/|~|\$HOME)(\s|$)|\bmkfs\.|\bdd\s+if=.+of=\/dev\//i, msg: 'Destructive command.' },
-  { id: 'credential-access', sev: 'high', rx: /(~|\$HOME)\/\.(ssh|aws|gnupg|config\/gh)\b|\.aws\/credentials|security\s+find-(generic|internet)-password|keychain/i, msg: 'Reads local credentials.' },
+  { id: 'credential-access', sev: 'high', rx: /(~|\$HOME)\/\.(ssh|aws|gnupg|config\/gh)\b|\.aws\/credentials|security\s+(find-(generic|internet)-password|dump-keychain|unlock-keychain)/i, msg: 'Reads local credentials.' },
+  // The word alone is normal in docs about secure storage: a person looks at it, it doesn't stop the install.
+  { id: 'credential-mention', sev: 'medium', rx: /keychain/i, msg: 'Mentions the system keychain.' },
   { id: 'claude-config-write', sev: 'medium', rx: /(>{1,2}|tee|writeFile[^\n]{0,40})\s*[^\n]{0,40}(\.claude\/(settings|CLAUDE)|\.claude\.json)/i, msg: 'Writes to Claude\'s global configuration.' },
   { id: 'exfil', sev: 'medium', rx: /(curl|wget|fetch|requests\.post)[^\n]{0,120}(-d\b|--data|POST)[^\n]{0,120}(env|token|secret|key|\$\w+)/i, msg: 'Possible data exfiltration over the network.' },
   { id: 'hooks', sev: 'low', rx: /"(PreToolUse|PostToolUse|SessionStart|UserPromptSubmit|Stop|Notification)"\s*:/, msg: 'Defines hooks that run automatically.' },

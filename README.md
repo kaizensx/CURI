@@ -4,7 +4,7 @@
   <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-1b1c21?style=flat-square&logo=apple&logoColor=white">
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%2F%2011-1b1c21?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Linux x64 and ARM64" src="https://img.shields.io/badge/Linux-x64%20%C2%B7%20ARM64-1b1c21?style=flat-square&logo=linux&logoColor=white">
-  <img alt="Version 3.9.1" src="https://img.shields.io/badge/version-3.9.1-6e96ff?style=flat-square">
+  <img alt="Version 3.9.2" src="https://img.shields.io/badge/version-3.9.2-6e96ff?style=flat-square">
   <img alt="Runs locally" src="https://img.shields.io/badge/runs-100%25%20local-5fd39a?style=flat-square">
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-a6aab3?style=flat-square">
 </p>
@@ -165,7 +165,7 @@ brand/      visual identity, generated from a single geometry; README art in bra
 
 The CLI (`node core/bin/curi.mjs help`) does everything the app does, if you'd rather stay in the terminal.
 
-**Releases.** Pushing a version tag (`git tag v3.9.1 && git push origin v3.9.1`) builds macOS, Windows and Linux, signs the in-app updates, and puts everything in a draft release with checksums and the notes from the CHANGELOG. Once the draft is published, installed copies offer the update by themselves. Publishing the draft is a manual step. For a test build without a release, run the *Cross-platform build* workflow from the Actions tab.
+**Releases.** Pushing a version tag (`git tag v3.9.2 && git push origin v3.9.2`) builds macOS, Windows and Linux, signs the in-app updates, and puts everything in a draft release with checksums and the notes from the CHANGELOG. Once the draft is published, installed copies offer the update by themselves. Publishing the draft is a manual step. For a test build without a release, run the *Cross-platform build* workflow from the Actions tab.
 
 [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Design](docs/DESIGN.md) · [Internal contracts](docs/CONTRACTS.md)
 
