@@ -43,3 +43,12 @@ test('activity reads as sentences, by status', () => {
   assert.equal(op('discover', 'running', { mode: 'task', intent: 'noodle' }), 'Search GitHub for "noodle"…');
   assert.equal(describeOp({ kind: 'system.scan', status: 'verified', params: {}, actor: 'user-approved' }).who, 'You');
 });
+
+test('the word keychain asks for a review, reading it still blocks', async () => {
+  const { scanText } = await import('../src/security.mjs');
+  const prose = scanText('A keychain/keystore item is readable by another app with less authority.');
+  assert.equal(prose.verdict, 'review');
+  assert.deepEqual(prose.findings.map(f => f.rule), ['credential-mention']);
+  for (const line of ['security find-generic-password -s github -w', 'security dump-keychain -d login.keychain', 'security unlock-keychain', 'cat ~/.ssh/id_rsa', 'cat ~/.aws/credentials'])
+    assert.equal(scanText(line).verdict, 'block', line);
+});
